@@ -4,6 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using System.Threading.Tasks;
+using System.Web.Http.Controllers;
+
+// Other References
+using Newtonsoft.Json;
 
 // Quantify API References
 using Avontus.Core;
@@ -13,14 +18,17 @@ using Avontus.Rental.Library.Accounting.XeroAccounting;
 using Avontus.Rental.Library.Security;
 using Avontus.Rental.Library.ToolWatchImport;
 
+
 namespace QuantifyWebAPI.Controllers
 {
     public class HomeController : Controller
     {
+        /*
+         * Default Methods
+         */
         public ActionResult Index()
         {
             ViewBag.Title = "Home Page";
-
 
             return View();
         }
@@ -29,13 +37,32 @@ namespace QuantifyWebAPI.Controllers
         {
             ViewBag.Title = "Home Page";
 
-
             return View();
+        }
+
+        /*
+         * Test Methods
+         */
+        public async Task<string> TestConnection()
+        {
+            return "S";
         }
 
         /*
          * Quantify API methods
          */
+        // Update Customer Record
+        public async Task<JsonResult> UpdateCustomer()
+        {
+            QuantifyLogin();
+            // Get list of all customers
+            //BusinessPartner customer = BusinessPartner.GetBusinessPartner(CustomerID);
+            
+            var result = new JsonResult();
+
+            return result;
+        }
+
         // GET Quantify Jobs
         // **Need to implement ability to return JSON file
         public string GetJobs(byte VersionStamp)
