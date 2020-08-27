@@ -17,6 +17,9 @@ using Avontus.Rental.Library.Accounting;
 using Avontus.Rental.Library.Accounting.XeroAccounting;
 using Avontus.Rental.Library.Security;
 using Avontus.Rental.Library.ToolWatchImport;
+using QuantifyWebAPI.Classes;
+
+
 
 
 namespace QuantifyWebAPI.Controllers
@@ -45,6 +48,50 @@ namespace QuantifyWebAPI.Controllers
          */
         public async Task<string> TestConnection()
         {
+
+            string MyJSonResponse = @"{
+                                        'entity': 'Customer',
+                                        'CustomerData': {
+                                        'customer_id': '1',
+                                        'customer_name': '1',
+                                        'customer_phone': '1025',
+                                        'customer_email': 'Jane',
+                                        'customer_fax': 'Smith',
+
+                                        'Addresses': [
+                                        {
+                                        'addressTypeCode': 'Primary',
+                                        'address1': 'One Main St',
+                                        'address2': '',
+                                        'city': 'Minneapolis',
+                                        'state': 'MN',
+                                        'zip': '55417'
+                                        },
+                                        {
+                                        'addressTypeCode': 'Mailing',
+                                        'address1': 'One Main St',
+                                        'address2': '',
+                                        'city': 'Minneapolis',
+                                        'state': 'MN',
+                                        'zip': '55417'
+                                        }
+                                        ],
+                                        'Contacts': [
+                                        {
+                                        'contact_name': 'Primary',
+                                        'contact_phone': 'One Main St',
+                                        'contact_email': ''
+                                        },
+                                        {
+                                        'contact_name': 'Primary',
+                                        'contact_phone': 'One Main St',
+                                        'contact_email': ''
+                                        }
+                                        ]
+                                        }}";
+
+            //CustomerRootClass MyCustomer = JsonSerializer.Deserialize<CustomerRootClass>(MyJSonResponse);
+            CustomerRootClass myDeserializedClass = JsonConvert.DeserializeObject<CustomerRootClass>(MyJSonResponse);
             return "S";
         }
 

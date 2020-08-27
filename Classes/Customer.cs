@@ -6,37 +6,38 @@ using Newtonsoft.Json.Linq;
 
 namespace QuantifyWebAPI.Classes
 {
-    public class Customer
+    // Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(myJsonResponse); 
+    public class Address
     {
-        public Customer(string json)
-        {
-            JObject jObject = JObject.Parse(json);
-            JToken jUser = jObject["user"];
-            name = (string)jUser["name"];
-            teamname = (string)jUser["teamname"];
-            email = (string)jUser["email"];
-            players = jUser["players"].ToArray();
-        }
-
-        public string name { get; set; }
-        public string teamname { get; set; }
-        public string email { get; set; }
-        public Array players { get; set; }
+        public string addressTypeCode { get; set; }
+        public string address1 { get; set; }
+        public string address2 { get; set; }
+        public string city { get; set; }
+        public string state { get; set; }
+        public string zip { get; set; }
     }
 
-    // Use
-    //private void Run()
-    //{
-    //    string json = @"{""user"":{""name"":""asdf"",""teamname"":""b"",""email"":""c"",""players"":[""1"",""2""]}}";
-    //    User user = new User(json);
+    public class Contact
+    {
+        public string contact_name { get; set; }
+        public string contact_phone { get; set; }
+        public string contact_email { get; set; }
+    }
 
-    //    Console.WriteLine("Name : " + user.name);
-    //    Console.WriteLine("Teamname : " + user.teamname);
-    //    Console.WriteLine("Email : " + user.email);
-    //    Console.WriteLine("Players:");
+    public class CustomerData
+    {
+        public string customer_id { get; set; }
+        public string customer_name { get; set; }
+        public string customer_phone { get; set; }
+        public string customer_email { get; set; }
+        public string customer_fax { get; set; }
+        public List<Address> Addresses { get; set; }
+        public List<Contact> Contacts { get; set; }
+    }
 
-    //    foreach (var player in user.players)
-    //        Console.WriteLine(player);
-    //}
-
+    public class CustomerRootClass
+    {
+        public string entity { get; set; }
+        public CustomerData CustomerData { get; set; }
+    }
 }
