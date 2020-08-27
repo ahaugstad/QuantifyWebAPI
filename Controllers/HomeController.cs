@@ -92,6 +92,9 @@ namespace QuantifyWebAPI.Controllers
 
             //CustomerRootClass MyCustomer = JsonSerializer.Deserialize<CustomerRootClass>(MyJSonResponse);
             CustomerRootClass myDeserializedClass = JsonConvert.DeserializeObject<CustomerRootClass>(MyJSonResponse);
+
+
+
             return "S";
         }
 
