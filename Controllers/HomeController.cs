@@ -48,12 +48,12 @@ namespace QuantifyWebAPI.Controllers
          */
         public async Task<string> TestConnection()
         {
-
+            QuantifyLogin();
             string MyJSonResponse = @"{
                                         'entity': 'Customer',
                                         'CustomerData': {
                                         'customer_id': '1',
-                                        'customer_name': '1',
+                                        'customer_name': 'TestCust1',
                                         'customer_phone': '1025',
                                         'customer_email': 'Jane',
                                         'customer_fax': 'Smith',
@@ -91,7 +91,52 @@ namespace QuantifyWebAPI.Controllers
                                         }}";
 
             //CustomerRootClass MyCustomer = JsonSerializer.Deserialize<CustomerRootClass>(MyJSonResponse);
+
+            // Deserialize Json object to create class we can work with
             CustomerRootClass myDeserializedClass = JsonConvert.DeserializeObject<CustomerRootClass>(MyJSonResponse);
+
+            // Define fields and convert necessary for use with API
+            // Guid PartnerID = Guid.Parse(myDeserializedClass.CustomerData.customer_id);
+            string CustomerNumber = myDeserializedClass.CustomerData.customer_id;
+            string CustomerName = myDeserializedClass.CustomerData.customer_name;
+            string CustomerPhone = myDeserializedClass.CustomerData.customer_phone;
+            string CustomerEmail = myDeserializedClass.CustomerData.customer_email;
+            string CustomerFax = myDeserializedClass.CustomerData.customer_fax;
+            //string CustomerPrimaryAddress = myDeserializedClass.CustomerData.Addresses.Find(x => x.addressTypeCode == "Primary");
+
+            // Instantiate customer we are inserting/updating; check if it already exists first
+            //if(IsNull(BusinessPartner.GetBusinessPartnerByNumber(CustomerNumber)))
+            //{
+                // Create new customer
+                BusinessPartner customer = BusinessPartner.NewBusinessPartner(PartnerTypes.Customer);
+
+                // Set general customer fields
+                customer.AccountingID = CustomerNumber;
+                customer.Name = CustomerName;
+                customer.PhoneNumber = CustomerPhone;
+                customer.EmailAddress = CustomerEmail;
+                customer.FaxNumber = CustomerFax;
+                customer.PartnerNumber = CustomerNumber;
+
+                customer.Save();
+            //}
+            //else
+            //{
+            //    // Get existing customer
+            //    BusinessPartner customer = BusinessPartner.GetBusinessPartnerByNumber(CustomerNumber);
+
+            //    // Set general customer fields
+            //    customer.AccountingID = CustomerNumber;
+            //    customer.Name = CustomerName;
+            //    customer.PhoneNumber = CustomerPhone;
+            //    customer.EmailAddress = CustomerEmail;
+            //    customer.FaxNumber = CustomerFax;
+            //    customer.PartnerNumber = CustomerNumber;
+
+            //    customer.Save();
+            //}
+            
+
             return "S";
         }
 
