@@ -52,7 +52,7 @@ namespace QuantifyWebAPI.Controllers
             string MyJSonResponse = @"{
                                         'entity': 'Customer',
                                         'CustomerData': {
-                                        'customer_id': '1',
+                                        'customer_id': 'CUS-0000123',
                                         'customer_name': 'TestCust1',
                                         'customer_phone': '1025',
                                         'customer_email': 'Jane',
@@ -106,7 +106,8 @@ namespace QuantifyWebAPI.Controllers
 
             // Instantiate customer we are inserting/updating; check if it already exists first
             //if(IsNull(BusinessPartner.GetBusinessPartnerByNumber(CustomerNumber)))
-            //{
+            if(2 == 3)
+            {
                 // Create new customer
                 BusinessPartner customer = BusinessPartner.NewBusinessPartner(PartnerTypes.Customer);
 
@@ -119,23 +120,73 @@ namespace QuantifyWebAPI.Controllers
                 customer.PartnerNumber = CustomerNumber;
 
                 customer.Save();
-            //}
+            }
+            else
+            {
+                // Get existing customer
+                BusinessPartner customer = BusinessPartner.GetBusinessPartnerByNumber(CustomerNumber);
+
+                // Set general customer fields
+                customer.AccountingID = CustomerNumber;
+                customer.Name = CustomerName;
+                customer.PhoneNumber = CustomerPhone;
+                customer.EmailAddress = CustomerEmail;
+                customer.FaxNumber = CustomerFax;
+
+                if(customer.IsSavable)
+                {
+                    try
+                    {
+                        // Attempt to save
+                        customer.Save();
+                    }
+                    catch (DataPortalException ex)
+                    {
+                        // Get the object back from the data tier
+                        customer = ex.BusinessObject as BusinessPartner;
+
+                        // We can check to see if the name is unique
+                        if (!customer.IsUnique)
+                        {
+                            // Fix the name
+                        }
+                        else
+                        {
+                            // Check the rules
+                        }
+                    }
+                }
+
+                else
+                {
+                    foreach (Avontus.Core.Validation.BrokenRule rule in customer.BrokenRulesCollection)
+                    {
+                        if (rule.Property == "Name")
+                        {
+                            // Fix the name here 
+                        }
+                    }
+                }
+            }
             //else
             //{
-            //    // Get existing customer
-            //    BusinessPartner customer = BusinessPartner.GetBusinessPartnerByNumber(CustomerNumber);
+            //    // Add customer
+            //    BusinessPartner cust = BusinessPartner.NewBusinessPartner(PartnerTypes.Customer);
+            //    cust.Name = "Customer Name";
+            //    cust.PartnerNumber = "999999";
+            //    cust.Save();
 
-            //    // Set general customer fields
-            //    customer.AccountingID = CustomerNumber;
-            //    customer.Name = CustomerName;
-            //    customer.PhoneNumber = CustomerPhone;
-            //    customer.EmailAddress = CustomerEmail;
-            //    customer.FaxNumber = CustomerFax;
-            //    customer.PartnerNumber = CustomerNumber;
-
-            //    customer.Save();
+            //    // Fetch customer added above, by number
+            //    cust = BusinessPartner.GetBusinessPartnerByNumber("999999");
+            //    // Address
+            //    cust.Addresses.GetAddressByType(AddressTypes.Billing).Street = "1201 Mason St";
+            //    cust.Addresses.GetAddressByType(AddressTypes.Billing).City = "San Francisco";
+            //    cust.Addresses.GetAddressByType(AddressTypes.Billing).StateName = "CA";
+            //    cust.Addresses.GetAddressByType(AddressTypes.Billing).PostalCode = "94108";
+            //    cust.Addresses.GetAddressByType(AddressTypes.Billing).Country = "USA";
+            //    cust.Save();
             //}
-            
+
 
             return "S";
         }
