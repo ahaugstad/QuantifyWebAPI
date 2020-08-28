@@ -75,7 +75,7 @@ namespace QuantifyWebAPI.Controllers
         //}
 
         [HttpPost]
-        public HttpResponseMessage UpsertCustomerData(string JSonIn)
+        public HttpResponseMessage UpsertCustomerData([FromBody] string JSonIn)
         {
             // Initialization  
             HttpResponseMessage response = null;
