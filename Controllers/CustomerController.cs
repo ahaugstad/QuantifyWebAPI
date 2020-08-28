@@ -1,12 +1,10 @@
-﻿using System;
+﻿// System References
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
-
-// Other References
-using Newtonsoft.Json;
 
 // Quantify API References
 using Avontus.Core;
@@ -16,9 +14,14 @@ using Avontus.Rental.Library.Accounting.XeroAccounting;
 using Avontus.Rental.Library.Security;
 using Avontus.Rental.Library.ToolWatchImport;
 
-
-// Internal Class referances
+// Internal Class references
 using QuantifyWebAPI.Classes;
+using System.Net.NetworkInformation;
+using System.Net.Mail;
+
+// Other References
+using Newtonsoft.Json;
+
 
 namespace QuantifyWebAPI.Controllers
 {
@@ -40,28 +43,30 @@ namespace QuantifyWebAPI.Controllers
             string MyJSonResponse = @"{
                                         'entity': 'Customer',
                                         'CustomerData': {
-                                        'customer_id': 'Test123',
-                                        'customer_name': 'TestCust123',
+                                        'customer_id': 'Test789',
+                                        'customer_name': 'TestCust789',
                                         'customer_phone': '612-867-5309',
                                         'customer_email': 'John@Smith.com',
                                         'customer_fax': '612-867-5309',
 
                                         'Addresses': [
                                         {
-                                        'addressTypeCode': 'Primary',
+                                        'addressTypeCode': 'Business',
                                         'address1': 'One Main St',
                                         'address2': '',
                                         'city': 'Minneapolis',
                                         'state': 'MN',
-                                        'zip': '55417'
+                                        'zip': '55417',
+                                        'country': 'USA'
                                         },
                                         {
-                                        'addressTypeCode': 'Mailing',
-                                        'address1': 'One Main St',
+                                        'addressTypeCode': 'Billing',
+                                        'address1': 'Two Main St',
                                         'address2': '',
                                         'city': 'Minneapolis',
                                         'state': 'MN',
-                                        'zip': '55417'
+                                        'zip': '55417',
+                                        'country': 'USA'
                                         }
                                         ],
                                         'Contacts': [
@@ -78,22 +83,22 @@ namespace QuantifyWebAPI.Controllers
                                         ]
                                         }}";
 
-            //CustomerRootClass MyCustomer = JsonSerializer.Deserialize<CustomerRootClass>(MyJSonResponse);
-
             // Deserialize Json object to create class we can work with
             CustomerRootClass myDeserializedClass = JsonConvert.DeserializeObject<CustomerRootClass>(MyJSonResponse);
 
-            // Define fields and convert necessary for use with API
-            // Guid PartnerID = Guid.Parse(myDeserializedClass.CustomerData.customer_id);
+            // string mySerializedClass = JsonConvert.SerializeObject(myDeserializedClass);
+
+            // Define fields
             string CustomerNumber = myDeserializedClass.CustomerData.customer_id;
             string CustomerName = myDeserializedClass.CustomerData.customer_name;
             string CustomerPhone = myDeserializedClass.CustomerData.customer_phone;
             string CustomerEmail = myDeserializedClass.CustomerData.customer_email;
             string CustomerFax = myDeserializedClass.CustomerData.customer_fax;
-            //string CustomerPrimaryAddress = myDeserializedClass.CustomerData.Addresses.Find(x => x.addressTypeCode == "Primary");
+
 
             // Instantiate customer we are inserting/updating; check if it already exists before updating/inserting
             BusinessPartner customer;
+
             //if(IsNull(BusinessPartner.GetBusinessPartnerByNumber(CustomerNumber)))
             if (CustomerName != "TestCust123")
             {
@@ -107,6 +112,7 @@ namespace QuantifyWebAPI.Controllers
                 customer = BusinessPartner.GetBusinessPartnerByNumber(CustomerNumber);
             }
 
+
             // Set general customer fields
             customer.AccountingID = CustomerNumber;
             customer.Name = CustomerName;
@@ -114,42 +120,48 @@ namespace QuantifyWebAPI.Controllers
             customer.EmailAddress = CustomerEmail;
             customer.FaxNumber = CustomerFax;
 
-            bool isDirty = customer.IsDirty;
+            // Validate and save the Customer record
+            customerValidateAndSave(customer);
 
-            if (customer.IsSavable)
+            
+
+            // Update appropriate address information for Customer based on address type provided
+            foreach (QuantifyWebAPI.Classes.Address myAddress in myDeserializedClass.CustomerData.Addresses)
             {
-                try
+                // Re-fetch customer record each time we update address data
+                customer = BusinessPartner.GetBusinessPartnerByNumber("Test789");
+                if (myAddress.addressTypeCode == "Business")
                 {
-                    // Attempt to save
-                    customer.Save();
+                        customer.Addresses.GetAddressByType(AddressTypes.Business).Street = myAddress.address1;
+                        customer.Addresses.GetAddressByType(AddressTypes.Business).Street1 = myAddress.address2;
+                        customer.Addresses.GetAddressByType(AddressTypes.Business).City = myAddress.city;
+                        customer.Addresses.GetAddressByType(AddressTypes.Business).StateName = myAddress.state;
+                        customer.Addresses.GetAddressByType(AddressTypes.Business).PostalCode = myAddress.zip;
+                        customer.Addresses.GetAddressByType(AddressTypes.Business).Country = myAddress.country;
                 }
-                catch (DataPortalException ex)
+                else if (myAddress.addressTypeCode == "Billing")
                 {
-                    // Get the object back from the data tier
-                    customer = ex.BusinessObject as BusinessPartner;
+                        customer.Addresses.GetAddressByType(AddressTypes.Billing).Street = myAddress.address1;
+                        customer.Addresses.GetAddressByType(AddressTypes.Billing).Street1 = myAddress.address2;
+                        customer.Addresses.GetAddressByType(AddressTypes.Billing).City = myAddress.city;
+                        customer.Addresses.GetAddressByType(AddressTypes.Billing).StateName = myAddress.state;
+                        customer.Addresses.GetAddressByType(AddressTypes.Billing).PostalCode = myAddress.zip;
+                        customer.Addresses.GetAddressByType(AddressTypes.Billing).Country = myAddress.country;
+                }
+                else if (myAddress.addressTypeCode == "Shipping")
+                {
+                        customer.Addresses.GetAddressByType(AddressTypes.Shipping).Street = myAddress.address1;
+                        customer.Addresses.GetAddressByType(AddressTypes.Shipping).Street1 = myAddress.address2;
+                        customer.Addresses.GetAddressByType(AddressTypes.Shipping).City = myAddress.city;
+                        customer.Addresses.GetAddressByType(AddressTypes.Shipping).StateName = myAddress.state;
+                        customer.Addresses.GetAddressByType(AddressTypes.Shipping).PostalCode = myAddress.zip;
+                        customer.Addresses.GetAddressByType(AddressTypes.Shipping).Country = myAddress.country; 
+                }
 
-                    // We can check to see if the name is unique
-                    if (!customer.IsUnique)
-                    {
-                        // Fix the name
-                    }
-                    else
-                    {
-                        // Check the rules
-                    }
-                }
+                // Validate and save the Customer record
+                customerValidateAndSave(customer);
             }
-
-            else
-            {
-                foreach (Avontus.Core.Validation.BrokenRule rule in customer.BrokenRulesCollection)
-                {
-                    if (rule.Property == "Name")
-                    {
-                        // Fix the name here 
-                    }
-                }
-            }
+            
             return "S";
         }
 
@@ -177,5 +189,82 @@ namespace QuantifyWebAPI.Controllers
         public void Delete(int id)
         {
         }
+
+        // Validates address record. If it validates, it saves and commits the changes. It if has errors, logs those to be passed back to Boomi.
+        public void addressValidateAndSave(Avontus.Rental.Library.Address parmAddress)
+        {
+            if (parmAddress.IsSavable)
+            {
+                try
+                {
+                    // Attempt to save
+                    parmAddress.Save();
+                }
+                catch (DataPortalException ex)
+                {
+                    // Get the object back from the data tier
+                    parmAddress = ex.BusinessObject as Avontus.Rental.Library.Address;
+
+                    // We can check to see if the address is valid
+                    if (!parmAddress.IsValid)
+                    {
+                        // Fix the name
+                    }
+                    else
+                    {
+                        // Check the rules
+                    }
+                }
+            }
+            else
+            {
+                foreach (Avontus.Core.Validation.BrokenRule rule in parmAddress.BrokenRulesCollection)
+                {
+                    if (rule.Property == "Name")
+                    {
+                        // Fix the name here 
+                    }
+                }
+            }
+        }
+
+        // Validates customer record. If it validates, it saves and commits the changes. It if has errors, logs those to be passed back to Boomi.
+        public void customerValidateAndSave(BusinessPartner parmCustomer)
+        {
+            if (parmCustomer.IsSavable)
+            {
+                try
+                {
+                    // Attempt to save
+                    parmCustomer.Save();
+                }
+                catch (DataPortalException ex)
+                {
+                    // Get the object back from the data tier
+                    parmCustomer = ex.BusinessObject as BusinessPartner;
+
+                    // We can check to see if the name is unique
+                    if (!parmCustomer.IsUnique)
+                    {
+                        // Fix the name
+                    }
+                    else
+                    {
+                        // Check the rules
+                    }
+                }
+            }
+            else
+            {
+                foreach (Avontus.Core.Validation.BrokenRule rule in parmCustomer.BrokenRulesCollection)
+                {
+                    if (rule.Property == "Name")
+                    {
+                        // Fix the name here 
+                    }
+                }
+            }
+        }
+
     }
 }
