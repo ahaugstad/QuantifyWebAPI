@@ -56,8 +56,26 @@ namespace QuantifyWebAPI.Controllers
         /// <param name="postData">Post data parameter</param>  
         /// <param name="request">Request parameter</param>  
         /// <returns>Return - Response</returns>  
+        //[HttpPost]
+        //public HttpResponseMessage UpsertCustomerData([FromBody] string JSonIn)
+        //{
+        //    // Initialization  
+        //    HttpResponseMessage response = null;
+
+        //    // Deserialize Json object to create class we can work with
+        //    //CustomerRootClass myDeserializedClass = JsonConvert.DeserializeObject<CustomerRootClass>(JSonIn);
+
+        //    //string mySerializedObject = JsonConvert.SerializeObject(myDeserializedClass);
+
+        //    response = Request.CreateResponse(HttpStatusCode.OK);
+        //    //response.Content = new StringContent("Test", Encoding.UTF8, "application/json");
+        //    response.Content = new StringContent(JSonIn);
+
+        //    return response;
+        //}
+
         [HttpPost]
-        public HttpResponseMessage UpsertCustomerData([FromBody] string JSonIn)
+        public HttpResponseMessage UpsertCustomerData(string JSonIn)
         {
             // Initialization  
             HttpResponseMessage response = null;
