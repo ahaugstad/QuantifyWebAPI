@@ -46,6 +46,7 @@ namespace QuantifyWebAPI.Controllers
                          select job.Number, 
                          job.Description, job.Name, job.Street, job.City, job.State, job.PostalCode, job.CustomerNumber, job.ConsumablesEnabled, job.CycleBeginDateTime, job.CycleEndDateTime
             */
+
             return "value";
         }
 
