@@ -63,12 +63,12 @@ namespace QuantifyWebAPI.Controllers
             HttpResponseMessage response = null;
 
             // Deserialize Json object to create class we can work with
-            CustomerRootClass myDeserializedClass = JsonConvert.DeserializeObject<CustomerRootClass>(JSonIn);
+            //CustomerRootClass myDeserializedClass = JsonConvert.DeserializeObject<CustomerRootClass>(JSonIn);
 
-            string mySerializedObject = JsonConvert.SerializeObject(myDeserializedClass);
+            //string mySerializedObject = JsonConvert.SerializeObject(myDeserializedClass);
 
             response = Request.CreateResponse(HttpStatusCode.OK);
-            response.Content = new StringContent(mySerializedObject, Encoding.UTF8, "application/json");
+            response.Content = new StringContent(JSonIn, Encoding.UTF8, "application/json");
 
   
             return response;
