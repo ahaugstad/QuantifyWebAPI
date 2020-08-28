@@ -84,17 +84,25 @@ namespace QuantifyWebAPI.Controllers
             //CustomerRootClass myDeserializedClass = JsonConvert.DeserializeObject<CustomerRootClass>(JSonIn);
 
             //string mySerializedObject = JsonConvert.SerializeObject(myDeserializedClass);
-
             string myResponse = "";
-            if (JSonIn.IndexOf("Test") > 0)
+
+            try
             {
 
-                myResponse = "Success";
+                if (JSonIn.IndexOf("Test") > 0)
+                {
+
+                    myResponse = "Success";
+                }
+                else
+                {
+                    myResponse = "Fail";
+
+                }
             }
-            else
+            catch
             {
-                myResponse = "Fail";
-
+                myResponse = "We dont have Shit!";
             }
 
             response = Request.CreateResponse(HttpStatusCode.OK);
