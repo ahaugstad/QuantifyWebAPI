@@ -17,7 +17,7 @@ namespace QuantifyWebAPI.Controllers
     public class ProtoTypeController : ApiController
     {
         // GET: api/ProtoType
-        public IEnumerable<string> Get()
+        public IEnumerable<string> GetArrayTest()
         {
             return new string[] { "value1", "value2" };
         }
