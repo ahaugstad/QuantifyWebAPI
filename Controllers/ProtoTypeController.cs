@@ -54,6 +54,7 @@ namespace QuantifyWebAPI.Controllers
         /// <param name="postData">Post data parameter</param>  
         /// <param name="request">Request parameter</param>  
         /// <returns>Return - Response</returns>  
+        [HttpPost]
         public HttpResponseMessage UpsertCustomerData([FromBody] string JSonIn)
         {
             // Initialization  
