@@ -75,7 +75,7 @@ namespace QuantifyWebAPI.Controllers
         //}
 
         [HttpPost]
-        public HttpResponseMessage UpsertCustomerData([FromBody] string JSonIn)
+        public HttpResponseMessage UpsertCustomerData([FromBody] string id)
         {
             // Initialization  
             HttpResponseMessage response = null;
@@ -89,7 +89,7 @@ namespace QuantifyWebAPI.Controllers
             try
             {
 
-                if (JSonIn.IndexOf("Test") > 0)
+                if (id.IndexOf("Test") > 0)
                 {
 
                     myResponse = "Success";
