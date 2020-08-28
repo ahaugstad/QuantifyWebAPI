@@ -43,13 +43,13 @@ namespace QuantifyWebAPI.Controllers
             string MyJSonResponse = @"{
                                         'entity': 'Customer',
                                         'CustomerData': {
-                                        'customer_id': 'Test789',
-                                        'customer_name': 'TestCust789',
+                                        'customer_id': 'Test111',
+                                        'customer_name': 'TestCust111',
                                         'customer_phone': '612-867-5309',
                                         'customer_email': 'John@Smith.com',
                                         'customer_fax': '612-867-5309',
 
-                                        'Addresses': [
+                                        'Address': [
                                         {
                                         'addressTypeCode': 'Business',
                                         'address1': 'One Main St',
@@ -69,7 +69,7 @@ namespace QuantifyWebAPI.Controllers
                                         'country': 'USA'
                                         }
                                         ],
-                                        'Contacts': [
+                                        'Contact': [
                                         {
                                         'contact_name': 'Primary',
                                         'contact_phone': 'One Main St',
@@ -123,13 +123,12 @@ namespace QuantifyWebAPI.Controllers
             // Validate and save the Customer record
             customerValidateAndSave(customer);
 
-            
 
             // Update appropriate address information for Customer based on address type provided
             foreach (QuantifyWebAPI.Classes.Address myAddress in myDeserializedClass.CustomerData.Addresses)
             {
                 // Re-fetch customer record each time we update address data
-                customer = BusinessPartner.GetBusinessPartnerByNumber("Test789");
+                customer = BusinessPartner.GetBusinessPartnerByNumber(myDeserializedClass.CustomerData.customer_id);
                 if (myAddress.addressTypeCode == "Business")
                 {
                         customer.Addresses.GetAddressByType(AddressTypes.Business).Street = myAddress.address1;
@@ -190,43 +189,6 @@ namespace QuantifyWebAPI.Controllers
         {
         }
 
-        // Validates address record. If it validates, it saves and commits the changes. It if has errors, logs those to be passed back to Boomi.
-        public void addressValidateAndSave(Avontus.Rental.Library.Address parmAddress)
-        {
-            if (parmAddress.IsSavable)
-            {
-                try
-                {
-                    // Attempt to save
-                    parmAddress.Save();
-                }
-                catch (DataPortalException ex)
-                {
-                    // Get the object back from the data tier
-                    parmAddress = ex.BusinessObject as Avontus.Rental.Library.Address;
-
-                    // We can check to see if the address is valid
-                    if (!parmAddress.IsValid)
-                    {
-                        // Fix the name
-                    }
-                    else
-                    {
-                        // Check the rules
-                    }
-                }
-            }
-            else
-            {
-                foreach (Avontus.Core.Validation.BrokenRule rule in parmAddress.BrokenRulesCollection)
-                {
-                    if (rule.Property == "Name")
-                    {
-                        // Fix the name here 
-                    }
-                }
-            }
-        }
 
         // Validates customer record. If it validates, it saves and commits the changes. It if has errors, logs those to be passed back to Boomi.
         public void customerValidateAndSave(BusinessPartner parmCustomer)
