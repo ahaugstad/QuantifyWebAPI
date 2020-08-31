@@ -112,7 +112,6 @@ namespace QuantifyWebAPI.Controllers
                 customer = BusinessPartner.GetBusinessPartnerByNumber(CustomerNumber);
             }
 
-
             // Set general customer fields
             customer.AccountingID = CustomerNumber;
             customer.Name = CustomerName;

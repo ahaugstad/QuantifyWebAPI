@@ -31,21 +31,24 @@ namespace QuantifyWebAPI.Controllers
         }
 
         // GET: api/Jobs/5
-        public string Get(int id)
+        public string Get(byte parmVersionStamp)
         {
             QuantifyHelper QuantHelper = new QuantifyHelper();
 
             QuantHelper.QuantifyLogin();
 
             // Get list of all jobsites
-            StockingLocationList jobs = StockingLocationList.GetJobsites(false, JobTreeNodeDisplayType.Name, Guid.Empty);
+            StockingLocationList jobsites = StockingLocationList.GetJobsites(false, JobTreeNodeDisplayType.Name, Guid.Empty);
+
             // Filter down to only active jobs that have been updated since the last run date
-            /*
-              StockingLocationList activejobs = from job in jobs
-                         where job.IsActive
-                         select job.Number, 
-                         job.Description, job.Name, job.Street, job.City, job.State, job.PostalCode, job.CustomerNumber, job.ConsumablesEnabled, job.CycleBeginDateTime, job.CycleEndDateTime
-            */
+            foreach (StockingLocationListItem jobsiteItem in jobsites)
+            {
+                StockingLocation jobsite = StockingLocation.GetStockingLocation(jobsiteItem.StockingLocationID, false);
+                if(jobsite.VersionStamp[jobsite.VersionStamp.Length] != parmVersionStamp)
+                {
+
+                }
+            }
 
             return "value";
         }
