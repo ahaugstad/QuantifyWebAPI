@@ -75,35 +75,26 @@ namespace QuantifyWebAPI.Controllers
         //}
 
         [HttpPost]
-        public HttpResponseMessage UpsertCustomerData([FromBody] string JSonIn)
+        public HttpResponseMessage UpsertCustomerData(JObject jsonResult)
         {
             // Initialization  
             HttpResponseMessage response = null;
-
-            // Deserialize Json object to create class we can work with
-            //CustomerRootClass myDeserializedClass = JsonConvert.DeserializeObject<CustomerRootClass>(JSonIn);
-
-            //string mySerializedObject = JsonConvert.SerializeObject(myDeserializedClass);
             string myResponse = "";
-
+            string JSonIn = "";
             try
             {
+                //***** Deserialize JObject to create class we can work with ******
+                CustomerRootClass myDeserializedClass =  jsonResult.ToObject<CustomerRootClass>();
 
-                if (JSonIn.IndexOf("Test") > 0)
-                {
 
-                    myResponse = "Success";
-                }
-                else
-                {
-                    myResponse = "Fail";
-
-                }
+                myResponse = JsonConvert.SerializeObject(myDeserializedClass);
             }
             catch
             {
-                myResponse = "We dont have Shit!";
+                myResponse = "JSON received Can not be converted to associated .net Class.";
             }
+
+            
 
             response = Request.CreateResponse(HttpStatusCode.OK);
             //response.Content = new StringContent("Test", Encoding.UTF8, "application/json");
