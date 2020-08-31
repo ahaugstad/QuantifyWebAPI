@@ -120,8 +120,11 @@ namespace QuantifyWebAPI.Controllers
             customer.EmailAddress = CustomerEmail;
             customer.FaxNumber = CustomerFax;
 
+            // Instantiate response class for logging successes/errors if fail
+            CustomerResponseObj customerResponse = new CustomerResponseObj();
+
             // Validate and save the Customer record
-            customerValidateAndSave(customer);
+            customerResponse = customerValidateAndSave(customer);
 
 
             // Update appropriate address information for Customer based on address type provided
@@ -158,10 +161,11 @@ namespace QuantifyWebAPI.Controllers
                 }
 
                 // Validate and save the Customer record
-                customerValidateAndSave(customer);
+                customerResponse = customerValidateAndSave(customer);
             }
-            
-            return "S";
+            // Serialize response class to Json to be passed back
+            string customerResponseMessage = JsonConvert.SerializeObject(customerResponse);
+            return customerResponseMessage;
         }
 
         // POST: api/Customer
@@ -191,8 +195,14 @@ namespace QuantifyWebAPI.Controllers
 
 
         // Validates customer record. If it validates, it saves and commits the changes. It if has errors, logs those to be passed back to Boomi.
-        public void customerValidateAndSave(BusinessPartner parmCustomer)
+        public CustomerResponseObj customerValidateAndSave(BusinessPartner parmCustomer)
         {
+            // Create response object
+            CustomerResponseObj customerResponse = new CustomerResponseObj();
+
+            // Create string list for errors
+            List<string> errorList = new List<string>();
+
             if (parmCustomer.IsSavable)
             {
                 try
@@ -202,6 +212,9 @@ namespace QuantifyWebAPI.Controllers
                 }
                 catch (DataPortalException ex)
                 {
+                    // Pass back "F" for fail
+                    customerResponse.status = "F";
+
                     // Get the object back from the data tier
                     parmCustomer = ex.BusinessObject as BusinessPartner;
 
@@ -213,19 +226,40 @@ namespace QuantifyWebAPI.Controllers
                     else
                     {
                         // Check the rules
+                        foreach (Avontus.Core.Validation.BrokenRule rule in parmCustomer.BrokenRulesCollection)
+                        {
+                            // Fix rules here, if you'd like
+                            //if (rule.Property == "Name")
+                            //{
+                                // Fix the name here 
+                            //}
+
+                            // Log errors and pass back response 
+                            errorList.Add(rule.Severity.ToString() + ": " + rule.Description);
+                        }
                     }
                 }
             }
             else
             {
+                // Pass back "F" for fail
+                customerResponse.status = "F";
+
                 foreach (Avontus.Core.Validation.BrokenRule rule in parmCustomer.BrokenRulesCollection)
                 {
-                    if (rule.Property == "Name")
-                    {
+                    // Fix rules here, if you'd like
+                    //if (rule.Property == "Name")
+                    //{
                         // Fix the name here 
-                    }
+                    //}
+
+                    // Log errors and pass back response 
+                    errorList.Add(rule.Severity.ToString() + ": " + rule.Description);
                 }
+
+                customerResponse.errorList = errorList;
             }
+            return customerResponse;
         }
 
     }
