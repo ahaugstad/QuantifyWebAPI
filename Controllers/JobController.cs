@@ -50,19 +50,5 @@ namespace QuantifyWebAPI.Controllers
             return "value";
         }
 
-        // POST: api/Jobs
-        public void Post([FromBody]string value)
-        {
-        }
-
-        // PUT: api/Jobs/5
-        public void Put(int id, [FromBody]string value)
-        {
-        }
-
-        // DELETE: api/Jobs/5
-        public void Delete(int id)
-        {
-        }
     }
 }

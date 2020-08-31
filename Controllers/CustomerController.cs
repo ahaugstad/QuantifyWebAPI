@@ -61,6 +61,7 @@ namespace QuantifyWebAPI.Controllers
                 BusinessPartner customer;
 
                 //if(IsNull(BusinessPartner.GetBusinessPartnerByNumber(CustomerNumber)))
+                //****** check to See if Create or Update *****
                 if (CustomerName != "TestCust123")
                 {
                     //***** Create new customer ***** 
