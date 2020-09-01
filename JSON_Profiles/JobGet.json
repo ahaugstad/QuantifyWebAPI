@@ -1,0 +1,20 @@
+{
+  "entity": "Job",
+  "JobData": {
+    "job_id": "TestJob111",
+    "job_name": "ADH Test Job",
+    "site_name": "The Job Site",
+    "site_address1": "600 Robert St. N",
+    "site_city": "St. Paul",
+    "site_state": "MN",
+    "site_zip": "55101",
+    "customer_id": "TestCust111",
+    "sales_taxable": "N",
+    "sales_tax_code": "123",
+    "job_start_date": "12/31/2019",
+    "job_estimated_end_date": "12/31/2020",
+    "department": "20",
+    "job_type": "S",
+    "retainage_percent": "15"
+  }
+}

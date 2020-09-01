@@ -1,0 +1,43 @@
+{
+  "entity": "Customer",
+  "CustomerData": {
+    "customer_id": "Test111",
+    "customer_name": "TestCust111",
+    "customer_phone": "612-867-5309",
+    "customer_email": "John@Smith.com",
+    "customer_fax": "612-867-5309",
+
+    "Address": [
+      {
+        "addressTypeCode": "Business",
+        "address1": "One Main St",
+        "address2": "",
+        "city": "Minneapolis",
+        "state": "MN",
+        "zip": "55417",
+        "country": "USA"
+      },
+      {
+        "addressTypeCode": "Billing",
+        "address1": "Two Main St",
+        "address2": "",
+        "city": "Minneapolis",
+        "state": "MN",
+        "zip": "55417",
+        "country": "USA"
+      }
+    ],
+    "Contact": [
+      {
+        "contact_name": "Primary",
+        "contact_phone": "One Main St",
+        "contact_email": ""
+      },
+      {
+        "contact_name": "Primary",
+        "contact_phone": "One Main St",
+        "contact_email": ""
+      }
+    ]
+  }
+}

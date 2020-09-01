@@ -28,7 +28,7 @@ namespace QuantifyWebAPI.Classes
          */
         {
             AvontusPrincipal.Logout();
-            Boolean success = AvontusPrincipal.Login("admin", "password");
+            Boolean success = AvontusPrincipal.Login("Alex.Haugstad", "Scaffold");
             if (success)
             {
                 Console.WriteLine("Login successful");

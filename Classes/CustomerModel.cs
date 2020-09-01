@@ -20,13 +20,17 @@ namespace QuantifyWebAPI.Classes
         public string customer_phone { get; set; }
         public string customer_email { get; set; }
         public string customer_fax { get; set; }
-        public List<Address> Addresses { get; set; }
-        public List<Contact> Contacts { get; set; }
+        public List<Address> Address { get; set; }
+        public List<Contact> Contact { get; set; }
     }
 
     public class CustomerResponseObj
     {
         public string status { get; set; }
         public List<string> errorList { get; set; }
+        public CustomerResponseObj()
+        {
+            errorList = new List<string>();
+        }
     }
 }

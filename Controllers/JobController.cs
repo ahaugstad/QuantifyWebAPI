@@ -1,12 +1,16 @@
-﻿using System;
+﻿// System References
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.NetworkInformation;
+using System.Net.Mail;
 using System.Web.Http;
-
-// Other References
-using Newtonsoft.Json;
+using System.Data.SqlClient;
+using System.Text;
+using System.Web.Management;
+using System.Drawing;
 
 // Quantify API References
 using Avontus.Core;
@@ -15,10 +19,13 @@ using Avontus.Rental.Library.Accounting;
 using Avontus.Rental.Library.Accounting.XeroAccounting;
 using Avontus.Rental.Library.Security;
 using Avontus.Rental.Library.ToolWatchImport;
+
+// Internal Class references
 using QuantifyWebAPI.Classes;
 
-// Internal Class referances
-using QuantifyWebAPI.Classes;
+// Other References
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace QuantifyWebAPI.Controllers
 {
@@ -38,15 +45,16 @@ namespace QuantifyWebAPI.Controllers
             QuantHelper.QuantifyLogin();
 
             // Get list of all jobsites
-            StockingLocationList jobsites = StockingLocationList.GetJobsites(false, JobTreeNodeDisplayType.Name, Guid.Empty);
+            StockingLocationList all_jobsites = StockingLocationList.GetJobsites(false, JobTreeNodeDisplayType.Name, Guid.Empty);
 
-            // Filter down to only active jobs that have been updated since the last run date
-            foreach (StockingLocationListItem jobsiteItem in jobsites)
+            // Filter down to only jobs that have been updated since the last run date
+            StockingLocationList jobsites = StockingLocationList.NewStockingLocationList();
+            foreach (StockingLocationListItem jobsiteItem in all_jobsites)
             {
                 StockingLocation jobsite = StockingLocation.GetStockingLocation(jobsiteItem.StockingLocationID, false);
-                if(jobsite.VersionStamp[jobsite.VersionStamp.Length] != parmVersionStamp)
+                if(jobsite.VersionStamp[jobsite.VersionStamp.Length] != parmVersionStamp) 
                 {
-
+                    jobsites.Add(jobsiteItem);
                 }
             }
 
