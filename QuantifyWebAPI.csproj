@@ -192,6 +192,7 @@
     <Compile Include="Classes\CustomerModel.cs" />
     <Compile Include="Classes\QuantifyHelper.cs" />
     <Compile Include="Controllers\CustomerController.cs" />
+    <Compile Include="Controllers\DataRouterPostController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\JobController.cs" />
     <Compile Include="Controllers\ProtoTypeController.cs" />
