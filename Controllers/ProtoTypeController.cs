@@ -59,6 +59,14 @@ namespace QuantifyWebAPI.Controllers
         [HttpPost]
         public HttpResponseMessage UpsertCustomerData(JObject jsonResult)
         {
+          
+
+            string RequestType = jsonResult["entity"].ToString();
+
+         
+
+            
+            //PackageDataType junkTest = Junkin.ToObject<PackageDataType>();
             // Initialization  
             HttpResponseMessage response = null;
             string myResponse = "";
