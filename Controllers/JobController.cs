@@ -32,65 +32,94 @@ namespace QuantifyWebAPI.Controllers
     public class JobController : ApiController
     {
         // GET: api/Jobs
-        public IEnumerable<string> Get()
+        public IEnumerable<string> GetTest()
         {
             return new string[] { "value1", "value2" };
         }
 
-        // GET: api/Jobs/5
-        public string Get(byte parmVersionStamp)
+        // GET: api/Jobs/3
+        public string Initialize()
+        {
+            //TODO: ADH 9/2/2020 - Implement Initial Load
+            // Need to implement this - pass initial load of jobsite versionstamps to Boomi
+            StockingLocationList all_jobsites = StockingLocationList.GetJobsites(false, JobTreeNodeDisplayType.Name, Guid.Empty);
+            
+
+
+            //***** Loop through all jobsites and create list of jobsite ids and version stamps *****
+            StockingLocationList jobsites = StockingLocationList.NewStockingLocationList();
+            foreach (StockingLocationListItem jobsiteItem in all_jobsites)
+            {
+                StockingLocation jobsite = StockingLocation.GetStockingLocation(jobsiteItem.StockingLocationID, false);
+                
+            }
+            return "value";
+        }
+
+        [HttpPost]
+        public HttpResponseMessage Post(JObject jsonResult)
         {
             QuantifyHelper QuantHelper = new QuantifyHelper();
 
             QuantHelper.QuantifyLogin();
 
-            //***** Get list of all jobsites *****
+            //***** Get all jobsites - will loop through this and compare VersionStamp against appropriate record in our JobVersions dictionary *****
             StockingLocationList all_jobsites = StockingLocationList.GetJobsites(false, JobTreeNodeDisplayType.Name, Guid.Empty);
+
+            //***** Initialize deserialized classes to be used *****
+            ObjectGetRequest myObjectVersions = jsonResult.ToObject<ObjectGetRequest>();
+            JobRootClass myJobs = new JobRootClass();
 
             //***** Loop through only jobs that have been updated since the last run date, sending each through as own call *****
             StockingLocationList jobsites = StockingLocationList.NewStockingLocationList();
             foreach (StockingLocationListItem jobsiteItem in all_jobsites)
             {
                 StockingLocation jobsite = StockingLocation.GetStockingLocation(jobsiteItem.StockingLocationID, false);
-                if(jobsite.VersionStamp[jobsite.VersionStamp.Length] != parmVersionStamp) 
-                {
+                //string JobID = 
+                //if(jobsite.VersionStamp[jobsite.VersionStamp.Length]) 
+                //{
                     //***** Populate Fields *****
-                    JobRootClass myDeserializedClass = new JobRootClass();
-                    myDeserializedClass.JobData.job_id = jobsite.Number;
-                    myDeserializedClass.JobData.job_name = jobsite.Description;
-                    myDeserializedClass.JobData.site_name = jobsite.Name;
+                    JobData myJobData = new JobData();
+
+                    myJobData.job_id = jobsite.Number;
+                    myJobData.job_name = jobsite.Description;
+                    myJobData.site_name = jobsite.Name;
                     //***** Look up address to get individual address fields *****
-                    // TO DO: how to do this? or is job address info accessible another way?
+
+                    //TODO: ADH 9/1/2020 - Dev/Avontus Question 
+                    // How to do this? or is job address info accessible another way?
                     //Avontus.Rental.Library.Address jobAddress = Avontus.Rental.Library.Address.GetAddress(jobsite.ShippingAddress)
-                    myDeserializedClass.JobData.site_address1 = jobsite.ShippingAddress;
+                    myJobData.site_address1 = jobsite.ShippingAddress;
+
                     //***** Look up customer to get customer ID *****
                     BusinessPartner jobCustomer = BusinessPartner.GetBusinessPartnerByName(jobsite.CustomerName);
-                    myDeserializedClass.JobData.customer_id = jobCustomer.Name;
+                    myJobData.customer_id = jobCustomer.Name;
                     //***** Identify if job is sales taxable, and if so, assign a use tax code *****
                     if (jobsite.ConsumablesTaxable) 
-                    { 
-                        myDeserializedClass.JobData.sales_taxable = "Y";
+                    {
+                        myJobData.sales_taxable = "Y";
                         // TO DO: will need to map this in Boomi?
-                        myDeserializedClass.JobData.sales_tax_code = jobsite.JobTax1.Name; 
+                        myJobData.sales_tax_code = jobsite.JobTax1.Name; 
                     } 
-                    else 
-                    { 
-                        myDeserializedClass.JobData.sales_taxable = "N";
-                        myDeserializedClass.JobData.sales_tax_code = "";
+                    else
+                    {
+                        myJobData.sales_taxable = "N";
+                        myJobData.sales_tax_code = "";
                     }
-                    myDeserializedClass.JobData.job_start_date = jobsite.StartDate;
-                    myDeserializedClass.JobData.job_estimated_end_date = jobsite.StopDate;
-                    myDeserializedClass.JobData.department = "20";
-                    myDeserializedClass.JobData.job_type = "S";
-                    // TO DO: where is the retention percentage?
+                    myJobData.job_start_date = jobsite.StartDate;
+                    myJobData.job_estimated_end_date = jobsite.StopDate;
+                    myJobData.department = "20";
+                    myJobData.job_type = "S";
+
+                    //TODO: ADH 9/1/2020 - Dev/Avontus Question
+                    // Where is the retention percentage?
                     // myDeserializedClass.JobData.retainage_percent = ?;
-                    
-                    // TO DO: serialize class to pass back to Boomi
-                    //***** Serialize class into JObject to pass to Boomi ******
-                    //JObject myJsonObject = myDeserializedClass;
-                }
+
+                    myJobs.JobList.Add(myJobData);
+                //}
             }
-            return "value";
+            string myJsonObject = JsonConvert.SerializeObject(myJobs);
+            return myJsonObject;
         }
     }
 }

@@ -30,11 +30,10 @@ using Newtonsoft.Json.Linq;
 
 namespace QuantifyWebAPI.Controllers
 {
-    public class CustomerController : ApiController
+    public class CustomerBusinessLogic
     {
 
-        [HttpPost]
-        public HttpResponseMessage UpsertCustomerData(JObject jsonResult)
+        public string UpsertCustomerData(JObject jsonResult)
         {
             //***** Initialization *****
             HttpResponseMessage HttpResponse = null;
@@ -53,7 +52,7 @@ namespace QuantifyWebAPI.Controllers
 
                 //***** Deserialize JObject to create class we can work with ******
                 CustomerRootClass myDeserializedClass = jsonResult.ToObject<CustomerRootClass>();
-                
+
 
                 //***** Define fields *****
                 string CustomerNumber = myDeserializedClass.CustomerData.customer_id;
@@ -172,10 +171,7 @@ namespace QuantifyWebAPI.Controllers
             //***** Serialize response class to Json to be passed back *****
             myResponse = JsonConvert.SerializeObject(customerResponse);
 
-            HttpResponse = Request.CreateResponse(HttpStatusCode.OK);
-            HttpResponse.Content = new StringContent(myResponse);
-
-            return HttpResponse;
+            return myResponse;
         }
 
 

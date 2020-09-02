@@ -23,4 +23,16 @@ namespace QuantifyWebAPI.Classes
         public string contact_phone { get; set; }
         public string contact_email { get; set; }
     }
+
+    public class ObjectGetRequest
+    {
+        public string object_type { get; set; }
+        public List<ObjectVersions> object_version_list { get; set; }
+    }
+    
+    public class ObjectVersions
+    {
+        public string object_id { get; set; }
+        public byte object_version { get; set; }
+    }
 }
