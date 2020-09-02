@@ -25,6 +25,11 @@ namespace QuantifyWebAPI.Controllers
             switch (RequestType)
             {
                 case "Customer":
+                    CustomerBusinessLogic myCustomerResponse = new CustomerBusinessLogic();
+                    myResponse = myCustomerResponse.UpsertCustomerData(jsonResult);
+                    break;
+
+                case "Job":
 
                     break;
 

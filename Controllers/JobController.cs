@@ -29,7 +29,7 @@ using Newtonsoft.Json.Linq;
 
 namespace QuantifyWebAPI.Controllers
 {
-    public class JobController : ApiController
+    public class JobBusinessLogic
     {
         // GET: api/Jobs
         public IEnumerable<string> GetTest()
@@ -56,8 +56,7 @@ namespace QuantifyWebAPI.Controllers
             return "value";
         }
 
-        [HttpPost]
-        public HttpResponseMessage Post(JObject jsonResult)
+        public string Post(JObject jsonResult)
         {
             QuantifyHelper QuantHelper = new QuantifyHelper();
 

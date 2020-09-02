@@ -31,12 +31,10 @@ using Newtonsoft.Json.Linq;
 namespace QuantifyWebAPI.Controllers
 {
     public class CustomerBusinessLogic
-    {
-
+    { 
         public string UpsertCustomerData(JObject jsonResult)
         {
             //***** Initialization *****
-            HttpResponseMessage HttpResponse = null;
             string myResponse = "";
 
             //***** Instantiate response class for logging successes/errors if fail ***** 
