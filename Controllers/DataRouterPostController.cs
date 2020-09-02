@@ -25,9 +25,9 @@ namespace QuantifyWebAPI.Controllers
             switch (RequestType)
             {
                 case "Customer":
-                  
+
                     break;
-        
+
                 default:
                     Console.WriteLine("The color is unknown.");
                     break;
@@ -38,4 +38,5 @@ namespace QuantifyWebAPI.Controllers
 
             return HttpResponse;
         }
+    }
 }
