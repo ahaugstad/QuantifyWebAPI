@@ -50,8 +50,31 @@ namespace QuantifyWebAPI.Controllers
             return "value";
         }
 
-        public string GetTest2(int id)
-        {
+        public string PlayingAround(int id)
+        { 
+            //***** Invoices - have create, modify, invoice dates, no version stamp *****
+            Guid invoiceID = new Guid();
+            Invoice myInvoice = Invoice.GetInvoice(invoiceID, true);
+            string modifyDate = myInvoice.ModifyDate;
+            string createDate = myInvoice.CreateDate;
+            string invoiceDate = myInvoice.InvoiceDate;
+            InvoiceCollection myInvoiceCollection = InvoiceCollection.GetInvoiceCollection(InvoiceExportStatus.All);
+
+            //***** Material transactions (Movement, Shipment, ?) - have date of transaction and version stamp, no modify date
+            //*** Movement ***
+            Guid purchaseID = new Guid();
+            MovementGetAction getAction = new MovementGetAction();
+            Movement myMovement = Movement.GetMovement(purchaseID, getAction);
+            MovementCollection myMovementCollection = MovementCollection.GetMovementCollection(MovementType.All);
+            string movementDate = myMovement.MovementDate;
+            byte[] movementVersionStamp = myMovement.VersionStamp;
+            //*** Shipment ***
+            string shipmentID = "test";
+            Shipment myShipment = Shipment.GetShipment(shipmentID,true,true);
+            string shipCreateDate = myShipment.CreateDate;
+            string shipmentDate = myShipment.ActualShipDate;
+            byte[] shipmentVersionStamp = myShipment.VersionStamp;
+
             return "value2";
         }
 

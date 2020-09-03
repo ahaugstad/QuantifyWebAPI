@@ -30,7 +30,8 @@ namespace QuantifyWebAPI.Controllers
                     break;
 
                 case "Job":
-
+                    JobBusinessLogic myJobResponse = new JobBusinessLogic();
+                    myResponse = myJobResponse.GetJobData(jsonResult);
                     break;
 
                 default:
