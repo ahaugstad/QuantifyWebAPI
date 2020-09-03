@@ -98,6 +98,7 @@ namespace QuantifyWebAPI.Controllers
             dt.Columns.Add("Entity", typeof(string));
             dt.Columns.Add("PackageSchema", typeof(string));
             dt.Columns.Add("QuantifyDepartment", typeof(string));
+            dt.Columns.Add("ProcessStatus", typeof(string));
 
             foreach (DataRow myRow in myChangedRecords.Rows)
             {
@@ -157,6 +158,7 @@ namespace QuantifyWebAPI.Controllers
                 myNewRow["Entity"] = "Job";
                 myNewRow["PackageSchema"] = myJsonObject;
                 myNewRow["QuantifyDepartment"] = "";
+                myNewRow["ProcessStatus"] = "A";
 
                 auditLog.Rows.Add(myNewRow);
             }
