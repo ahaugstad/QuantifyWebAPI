@@ -10,7 +10,7 @@ namespace QuantifyWebAPI.Classes
     public class JobRootClass
     {
         public string entity { get; set; }
-        public List<JobData> JobList { get; set; }
+        public JobData Job { get; set; }
     }
 
     public class JobData

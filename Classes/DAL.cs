@@ -58,5 +58,49 @@ namespace QuantifyWebAPI.Classes
             return dt;
 
         }
+
+        public DataTable InsertAuditLog(DataTable ObjectsAudit, String DbConnectionStr)
+        {
+            DataTable dt = new DataTable();
+
+            try
+            {
+
+                using (SqlConnection conn = new SqlConnection(DbConnectionStr))
+                {
+                    conn.Open();
+
+                    using (SqlCommand cmd = new SqlCommand())
+                    {
+                        cmd.Connection = conn;
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.CommandText = "InsertAuditLog";
+
+                        SqlParameter tvpParam = cmd.Parameters.AddWithValue("@AuditLogTV", ObjectsAudit);
+                        tvpParam.SqlDbType = SqlDbType.Structured;
+
+                        using (SqlDataAdapter da = new SqlDataAdapter(cmd))
+                        {
+
+
+                            da.Fill(dt);
+                        }
+
+                    }
+
+                }
+            }
+            catch (Exception ex)
+
+            {
+                //log the error
+                throw new Exception(
+                    string.Format("There was an error inserting to the audit log database."), ex);
+            }
+
+            return dt;
+
+        }
+
     }
 }

@@ -63,7 +63,7 @@ namespace QuantifyWebAPI.Controllers
             string invoiceDate = myInvoice.InvoiceDate;
             InvoiceCollection myInvoiceCollection = InvoiceCollection.GetInvoiceCollection(InvoiceExportStatus.All);
 
-            //***** Material transactions (Movement, Shipment, ?) - have date of transaction and version stamp, no modify date
+            //***** Material transactions (Shipment, ?) - have date of transaction and version stamp, no modify date
             //*** Movement ***
             Guid purchaseID = new Guid();
             MovementGetAction getAction = new MovementGetAction();
@@ -77,6 +77,7 @@ namespace QuantifyWebAPI.Controllers
             string shipCreateDate = myShipment.CreateDate;
             string shipmentDate = myShipment.ActualShipDate;
             byte[] shipmentVersionStamp = myShipment.VersionStamp;
+
 
             return "value2";
         }

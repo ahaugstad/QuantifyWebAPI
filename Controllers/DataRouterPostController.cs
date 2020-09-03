@@ -1,20 +1,46 @@
-﻿using System;
+﻿// System References
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.NetworkInformation;
+using System.Net.Mail;
 using System.Web.Http;
+using System.Data.SqlClient;
+using System.Text;
+using System.Web.Management;
+using System.Drawing;
+using System.Configuration;
+
+// Quantify API References
+using Avontus.Core;
+using Avontus.Rental.Library;
+using Avontus.Rental.Library.Accounting;
+using Avontus.Rental.Library.Accounting.XeroAccounting;
+using Avontus.Rental.Library.Security;
+using Avontus.Rental.Library.ToolWatchImport;
+
+// Internal Class references
+using QuantifyWebAPI.Classes;
 
 // Other References
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Configuration;
 
 namespace QuantifyWebAPI.Controllers
 {
+
     public class DataRouterPostController : ApiController
     {
         String StrVersionDBConn = ConfigurationManager.AppSettings["QuantifyPersistanceLayerDBConn"];
+
+        [HttpGet]
+        public void PingInitialization()
+        {
+            JobBusinessLogic myJobResponse = new JobBusinessLogic();
+            myJobResponse.GetIDsToProcess(StrVersionDBConn);
+        }
 
         [HttpPost]
         public HttpResponseMessage UpsertDataObject(JObject jsonResult)
