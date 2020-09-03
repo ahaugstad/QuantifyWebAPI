@@ -26,19 +26,20 @@ using QuantifyWebAPI.Classes;
 // Other References
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
-
+using System.Configuration;
 
 namespace QuantifyWebAPI.Controllers
 {
-    public class CustomerBusinessLogic
-    { 
-        public string UpsertCustomerData(JObject jsonResult)
+    public class CustomerController : ApiController
+    {
+        String StrVersionDBConn = ConfigurationManager.AppSettings["QuantifyPersistanceLayerDBConn"];
+
+        [HttpPost]
+        public HttpResponseMessage UpsertCustomerData(JObject jsonResult)
         {
             //***** Initialization *****
+            HttpResponseMessage HttpResponse = null;
             string myResponse = "";
-
-            
 
             //***** Instantiate response class for logging successes/errors if fail ***** 
             CustomerResponseObj customerResponse = new CustomerResponseObj();
@@ -53,7 +54,7 @@ namespace QuantifyWebAPI.Controllers
 
                 //***** Deserialize JObject to create class we can work with ******
                 CustomerRootClass myDeserializedClass = jsonResult.ToObject<CustomerRootClass>();
-
+                
 
                 //***** Define fields *****
                 string CustomerNumber = myDeserializedClass.CustomerData.customer_id;
@@ -172,7 +173,10 @@ namespace QuantifyWebAPI.Controllers
             //***** Serialize response class to Json to be passed back *****
             myResponse = JsonConvert.SerializeObject(customerResponse);
 
-            return myResponse;
+            HttpResponse = Request.CreateResponse(HttpStatusCode.OK);
+            HttpResponse.Content = new StringContent(myResponse);
+
+            return HttpResponse;
         }
 
 

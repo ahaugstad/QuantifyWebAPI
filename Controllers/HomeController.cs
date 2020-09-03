@@ -9,6 +9,7 @@ using System.Web.Http.Controllers;
 
 // Other References
 using Newtonsoft.Json;
+using System.Configuration;
 
 // Quantify API References
 using Avontus.Core;
@@ -26,6 +27,8 @@ namespace QuantifyWebAPI.Controllers
 {
     public class HomeController : Controller
     {
+        String StrVersionDBConn = ConfigurationManager.AppSettings["QuantifyPersistanceLayerDBConn"];
+
         /*
          * Default Methods
          */

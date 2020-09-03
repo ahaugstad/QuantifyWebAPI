@@ -57,6 +57,12 @@
       <HintPath>packages\Microsoft.Bcl.AsyncInterfaces.1.1.0\lib\net461\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Mindscape.Raygun4Net, Version=5.11.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\Mindscape.Raygun4Net.5.11.0\lib\net40\Mindscape.Raygun4Net.dll</HintPath>
+    </Reference>
+    <Reference Include="Mindscape.Raygun4Net4, Version=5.11.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\Mindscape.Raygun4Net.5.11.0\lib\net40\Mindscape.Raygun4Net4.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
@@ -186,14 +192,17 @@
     <Compile Include="Areas\HelpPage\SampleGeneration\SampleDirection.cs" />
     <Compile Include="Areas\HelpPage\SampleGeneration\TextSample.cs" />
     <Compile Include="Areas\HelpPage\XmlDocumentationProvider.cs" />
+    <Compile Include="Classes\SQLHelper.cs" />
     <Compile Include="Classes\CustomerBusinessLogic.cs" />
-    <Compile Include="Classes\JobBusinessLogic.cs" />
+    <Compile Include="Classes\DAL.cs" />
     <Compile Include="Classes\JobModel.cs" />
     <Compile Include="Classes\SharedModels.cs" />
     <Compile Include="Classes\CustomerModel.cs" />
     <Compile Include="Classes\QuantifyHelper.cs" />
+    <Compile Include="Controllers\CustomerController.cs" />
     <Compile Include="Controllers\DataRouterPostController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\JobController.cs" />
     <Compile Include="Controllers\ProtoTypeController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>

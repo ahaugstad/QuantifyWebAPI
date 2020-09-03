@@ -22,6 +22,7 @@ using Avontus.Rental.Library.ToolWatchImport;
 
 // Internal Class references
 using QuantifyWebAPI.Classes;
+using System.Configuration;
 
 // Other References
 using Newtonsoft.Json;
@@ -32,6 +33,8 @@ namespace QuantifyWebAPI.Controllers
 {
     public class ProtoTypeController : ApiController
     {
+
+        String StrVersionDBConn = ConfigurationManager.AppSettings["QuantifyPersistanceLayerDBConn"];
 
         #region Fiddler Prototypes 
         // GET: api/ProtoType
