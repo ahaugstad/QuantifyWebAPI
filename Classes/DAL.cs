@@ -13,17 +13,17 @@ namespace QuantifyWebAPI.Classes
 
         public DAL()
         {
-            constr = "Server=tcp:apitesting.database.windows.net,1433;Initial Catalog=APi_Construction;Persist Security Info=False;User ID=API_Admin;Password=Winter20;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;";
+            
         }
 
-        public DataTable InsertMaterialList(DataTable EntityVersionTbl)
+        public DataTable InsertMaterialList(DataTable EntityVersionTbl, String DbConnectionStr)
         {
             DataTable dt = new DataTable();
 
             try
             {
 
-                using (SqlConnection conn = new SqlConnection(constr))
+                using (SqlConnection conn = new SqlConnection(DbConnectionStr))
                 {
                     conn.Open();
 
