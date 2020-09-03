@@ -16,7 +16,7 @@ namespace QuantifyWebAPI.Classes
             
         }
 
-        public DataTable InsertMaterialList(DataTable EntityVersionTbl, String DbConnectionStr)
+        public DataTable GetChangedObjects(DataTable EntityVersionTbl, String DbConnectionStr)
         {
             DataTable dt = new DataTable();
 
