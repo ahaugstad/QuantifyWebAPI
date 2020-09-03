@@ -26,12 +26,13 @@ using QuantifyWebAPI.Classes;
 // Other References
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
+using System.Configuration;
 
 namespace QuantifyWebAPI.Controllers
 {
     public class CustomerController : ApiController
     {
+        String StrVersionDBConn = ConfigurationManager.AppSettings["QuantifyPersistanceLayerDBConn"];
 
         [HttpPost]
         public HttpResponseMessage UpsertCustomerData(JObject jsonResult)

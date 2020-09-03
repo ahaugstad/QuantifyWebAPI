@@ -28,6 +28,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 
+
 namespace QuantifyWebAPI.Controllers
 {
     public class CustomerBusinessLogic
@@ -36,6 +37,8 @@ namespace QuantifyWebAPI.Controllers
         {
             //***** Initialization *****
             string myResponse = "";
+
+            
 
             //***** Instantiate response class for logging successes/errors if fail ***** 
             CustomerResponseObj customerResponse = new CustomerResponseObj();

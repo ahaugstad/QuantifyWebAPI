@@ -26,11 +26,14 @@ using QuantifyWebAPI.Classes;
 // Other References
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Configuration;
 
 namespace QuantifyWebAPI.Controllers
 {
     public class JobBusinessLogic
     {
+        String StrVersionDBConn = ConfigurationManager.AppSettings["QuantifyPersistanceLayerDBConn"];
+
         // GET: api/Jobs
         public IEnumerable<string> GetTest()
         {
