@@ -16,7 +16,7 @@ namespace QuantifyWebAPI.Classes
             constr = "Server=tcp:apitesting.database.windows.net,1433;Initial Catalog=APi_Construction;Persist Security Info=False;User ID=API_Admin;Password=Winter20;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;";
         }
 
-        public DataTable InsertMaterialList(String EntityType, DataTable EntityVersionTbl)
+        public DataTable InsertMaterialList(DataTable EntityVersionTbl)
         {
             DataTable dt = new DataTable();
 
@@ -31,11 +31,9 @@ namespace QuantifyWebAPI.Classes
                     {
                         cmd.Connection = conn;
                         cmd.CommandType = CommandType.StoredProcedure;
-                        cmd.CommandText = "usp_GetChangedObjects";
+                        cmd.CommandText = "GetChangedObjects";       
 
-                        cmd.Parameters.AddWithValue("EntityType", EntityType);
-
-                        SqlParameter tvpParam = cmd.Parameters.AddWithValue("@MaterialDataTV", EntityVersionTbl);
+                        SqlParameter tvpParam = cmd.Parameters.AddWithValue("@EntityVersionTV", EntityVersionTbl);
                         tvpParam.SqlDbType = SqlDbType.Structured;
 
                         using (SqlDataAdapter da = new SqlDataAdapter(cmd))
