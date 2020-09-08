@@ -6,22 +6,16 @@ using System.Configuration;
 using System.Data.SqlClient;
 using System.Data;
 
+using Mindscape.Raygun4Net;
+
 
 namespace QuantifyWebAPI.Classes
 {
     public class SQLHelper
     {
+        RaygunClient myRaygunClient = new RaygunClient();
+
         private string strDbConn = "";
-
-        //public SQLHelper()
-        //{
-        //    strDbConn = ConfigurationManager.ConnectionStrings["AsurioPortal"].ToString();
-        //}
-
-        //public SQLHelper(string StrDbConn)
-        //{
-        //    strDbConn = StrDbConn;
-        //}
 
         public SqlConnection GetConnection(string StrDbConn)
         {

@@ -28,12 +28,15 @@ using QuantifyWebAPI.Classes;
 // Other References
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Mindscape.Raygun4Net;
 
 
 namespace QuantifyWebAPI.Controllers
 {
     public class JobBusinessLogic
     {
+        RaygunClient myRaygunClient = new RaygunClient();
+
         // GET: api/Jobs/3
         public string Initialize()
         {

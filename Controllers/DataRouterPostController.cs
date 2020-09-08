@@ -27,6 +27,7 @@ using QuantifyWebAPI.Classes;
 // Other References
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Mindscape.Raygun4Net;
 
 namespace QuantifyWebAPI.Controllers
 {
@@ -34,7 +35,8 @@ namespace QuantifyWebAPI.Controllers
     public class DataRouterPostController : ApiController
     {
         String StrVersionDBConn = ConfigurationManager.AppSettings["QuantifyPersistanceLayerDBConn"];
-        
+        RaygunClient myRaygunClient = new RaygunClient();
+
         [HttpGet]
         public void PingInitialization()
         {
@@ -47,24 +49,41 @@ namespace QuantifyWebAPI.Controllers
         {
             //***** Initialization *****
             HttpResponseMessage HttpResponse = null;
-            string myResponse = "";
+            string myResponse = "Sucess";
 
             string RequestType = jsonResult["entity"].ToString();
-
-            switch (RequestType)
+            try
             {
-                case "Customer":
-                    CustomerBusinessLogic myCustomerResponse = new CustomerBusinessLogic();
-                    myResponse = myCustomerResponse.UpsertCustomerData(jsonResult);
-                    break;
+                switch (RequestType)
+                {
+                    case "Customer":
+                        CustomerBusinessLogic myCustomerResponse = new CustomerBusinessLogic();
+                        myResponse = myCustomerResponse.UpsertCustomerData(jsonResult);
+                        break;
 
-                default:
-                    Console.WriteLine("The color is unknown.");
-                    break;
+                    case "Job":
+                        JobBusinessLogic myJobResponse = new JobBusinessLogic();
+                        //myResponse = myJobResponse.GetJobData(jsonResult);
+                        break;
+
+                    default:
+                        throw new System.ArgumentException("Unknown 'Request Type' Submitted in UpsertDataObject", RequestType);
+                        break;
+
+                }
+
+                HttpResponse = Request.CreateResponse(HttpStatusCode.OK);
+                HttpResponse.Content = new StringContent(myResponse);
+            }
+            catch (Exception ex)
+            {
+                myRaygunClient.SendInBackground(ex);
+                HttpResponse = Request.CreateResponse(HttpStatusCode.OK);
+                //ToDo:ERC 9/7/2020 Possibly Need to make Repsonse Classs
+                HttpResponse.Content = new StringContent("Failed");
             }
 
-            HttpResponse = Request.CreateResponse(HttpStatusCode.OK);
-            HttpResponse.Content = new StringContent(myResponse);
+            
 
             return HttpResponse;
         }

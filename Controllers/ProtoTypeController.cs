@@ -27,7 +27,7 @@ using System.Configuration;
 // Other References
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
+using Mindscape.Raygun4Net;
 
 namespace QuantifyWebAPI.Controllers
 {
@@ -35,11 +35,25 @@ namespace QuantifyWebAPI.Controllers
     {
 
         String StrVersionDBConn = ConfigurationManager.AppSettings["QuantifyPersistanceLayerDBConn"];
-
+        RaygunClient myRaygunClient = new RaygunClient();
         #region Fiddler Prototypes 
         // GET: api/ProtoType
         public IEnumerable<string> GetArrayTest()
         {
+            
+
+            try
+            {
+                int myint;
+                myint = 1;
+                throw new System.ArgumentException("Parameter cannot be null", "original");
+
+            }
+            catch (Exception ex)
+            {
+                myRaygunClient.SendInBackground(ex);
+            }
+
             return new string[] { "value1", "value2" };
         }
 

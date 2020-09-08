@@ -20,7 +20,7 @@ using Avontus.Rental.Library.Security;
 using Avontus.Rental.Library.ToolWatchImport;
 using QuantifyWebAPI.Classes;
 
-
+using Mindscape.Raygun4Net;
 
 
 namespace QuantifyWebAPI.Controllers

@@ -4,12 +4,14 @@ using System.Linq;
 using System.Web;
 using System.Data;
 using System.Data.SqlClient;
+using Mindscape.Raygun4Net;
 
 namespace QuantifyWebAPI.Classes
 {
     public class DAL
     {
         private string constr;
+        RaygunClient myRaygunClient = new RaygunClient();
 
         public DAL()
         {
@@ -50,7 +52,10 @@ namespace QuantifyWebAPI.Classes
             catch (Exception ex)
 
             {
-                //log the error
+                //***** log the error ******
+                myRaygunClient.SendInBackground(ex);
+
+                //***** ReThrow Error to bubble it up to calling Classs ******
                 throw new Exception(
                     string.Format("There was an error Getting Changed Objects."), ex);
             }
@@ -93,7 +98,11 @@ namespace QuantifyWebAPI.Classes
             catch (Exception ex)
 
             {
-                //log the error
+                //***** log the error ******
+                myRaygunClient.SendInBackground(ex);
+
+                //***** ReThrow Error to bubble it up to calling Classs ******
+
                 throw new Exception(
                     string.Format("There was an error inserting to the audit log database."), ex);
             }
