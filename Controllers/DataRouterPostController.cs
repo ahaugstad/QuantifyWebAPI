@@ -34,7 +34,7 @@ namespace QuantifyWebAPI.Controllers
     public class DataRouterPostController : ApiController
     {
         String StrVersionDBConn = ConfigurationManager.AppSettings["QuantifyPersistanceLayerDBConn"];
-
+        
         [HttpGet]
         public void PingInitialization()
         {
@@ -56,11 +56,6 @@ namespace QuantifyWebAPI.Controllers
                 case "Customer":
                     CustomerBusinessLogic myCustomerResponse = new CustomerBusinessLogic();
                     myResponse = myCustomerResponse.UpsertCustomerData(jsonResult);
-                    break;
-
-                case "Job":
-                    JobBusinessLogic myJobResponse = new JobBusinessLogic();
-                    myResponse = myJobResponse.GetJobData(jsonResult);
                     break;
 
                 default:
