@@ -160,15 +160,21 @@ namespace QuantifyWebAPI.Controllers
                     }
                 }
             }
-            catch (SqlException e)
+            catch (SqlException ex)
             {
+                //***** log the error ******
+                myRaygunClient.SendInBackground(ex);
+
                 customerResponse.status = "SQL Exception Error";
-                customerResponse.errorList.Add("Quantify Login error - " + Environment.NewLine + e.Message.ToString());
+                customerResponse.errorList.Add("Quantify Login error - " + Environment.NewLine + ex.Message.ToString());
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
+                //***** log the error ******
+                myRaygunClient.SendInBackground(ex);
+
                 customerResponse.status = "Error";
-                customerResponse.errorList.Add("Generic error - " + Environment.NewLine + e.Message.ToString());
+                customerResponse.errorList.Add("Generic error - " + Environment.NewLine + ex.Message.ToString());
             }
 
             //***** Serialize response class to Json to be passed back *****
@@ -196,6 +202,9 @@ namespace QuantifyWebAPI.Controllers
                 }
                 catch (DataPortalException ex)
                 {
+                    //***** log the error ******
+                    myRaygunClient.SendInBackground(ex);
+
                     //***** Pass back "Error" for fail ***** 
                     customerResponse.status = "Error";
 

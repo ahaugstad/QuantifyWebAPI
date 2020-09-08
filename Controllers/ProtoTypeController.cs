@@ -49,9 +49,9 @@ namespace QuantifyWebAPI.Controllers
                 throw new System.ArgumentException("Parameter cannot be null", "original");
 
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                myRaygunClient.SendInBackground(e);
+                myRaygunClient.SendInBackground(ex);
             }
 
             return new string[] { "value1", "value2" };

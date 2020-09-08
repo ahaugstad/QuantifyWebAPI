@@ -52,7 +52,10 @@ namespace QuantifyWebAPI.Classes
             catch (Exception ex)
 
             {
-                //log the error
+                //***** log the error ******
+                myRaygunClient.SendInBackground(ex);
+
+                //***** ReThrow Error to bubble it up to calling Classs ******
                 throw new Exception(
                     string.Format("There was an error Getting Changed Objects."), ex);
             }
@@ -95,7 +98,11 @@ namespace QuantifyWebAPI.Classes
             catch (Exception ex)
 
             {
-                //log the error
+                //***** log the error ******
+                myRaygunClient.SendInBackground(ex);
+
+                //***** ReThrow Error to bubble it up to calling Classs ******
+
                 throw new Exception(
                     string.Format("There was an error inserting to the audit log database."), ex);
             }

@@ -17,16 +17,6 @@ namespace QuantifyWebAPI.Classes
 
         private string strDbConn = "";
 
-        //public SQLHelper()
-        //{
-        //    strDbConn = ConfigurationManager.ConnectionStrings["AsurioPortal"].ToString();
-        //}
-
-        //public SQLHelper(string StrDbConn)
-        //{
-        //    strDbConn = StrDbConn;
-        //}
-
         public SqlConnection GetConnection(string StrDbConn)
         {
             SqlConnection c = new SqlConnection(StrDbConn);
