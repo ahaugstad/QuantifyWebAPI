@@ -101,7 +101,7 @@ namespace QuantifyWebAPI.Classes
                 //***** log the error ******
                 myRaygunClient.SendInBackground(ex);
 
-                //***** ReThrow Error to bubble it up to calling Classs ******
+                //***** ReThrow Error to bubble it up to calling Class ******
 
                 throw new Exception(
                     string.Format("There was an error inserting to the audit log database."), ex);

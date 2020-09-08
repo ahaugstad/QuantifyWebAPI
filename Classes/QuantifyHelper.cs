@@ -29,17 +29,22 @@ namespace QuantifyWebAPI.Classes
          * Quantify, the API will use the same connection strings
          */
         {
-            AvontusPrincipal.Logout();
-            Boolean success = AvontusPrincipal.Login("Alex.Haugstad", "Scaffold");
-            if (success)
+            try
             {
-                Console.WriteLine("Login successful");
+                AvontusPrincipal.Logout();
+                Boolean success = AvontusPrincipal.Login("Alex.Haugstad", "Scaffold");
+                if (success)
+                {
+                    Console.WriteLine("Login successful");
+                }
+                else
+                {
+                    throw new System.ArgumentException("Login failed");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                Console.WriteLine("Login failed");
-                Console.WriteLine("Press any key to continue...");
-                Console.ReadLine();
+                myRaygunClient.SendInBackground(ex);
             }
         }
     }

@@ -40,7 +40,7 @@ namespace QuantifyWebAPI.Controllers
         // GET: api/ProtoType
         public IEnumerable<string> GetArrayTest()
         {
-            
+
 
             try
             {
@@ -68,7 +68,7 @@ namespace QuantifyWebAPI.Controllers
         }
 
         public string PlayingAround(int id)
-        { 
+        {
             //***** Invoices - have create, modify, invoice dates, no version stamp *****
             Guid invoiceID = new Guid();
             Invoice myInvoice = Invoice.GetInvoice(invoiceID, true);
@@ -87,7 +87,7 @@ namespace QuantifyWebAPI.Controllers
             byte[] movementVersionStamp = myMovement.VersionStamp;
             //*** Shipment ***
             string shipmentID = "test";
-            Shipment myShipment = Shipment.GetShipment(shipmentID,true,true);
+            Shipment myShipment = Shipment.GetShipment(shipmentID, true, true);
             string shipCreateDate = myShipment.CreateDate;
             string shipmentDate = myShipment.ActualShipDate;
             byte[] shipmentVersionStamp = myShipment.VersionStamp;
@@ -100,13 +100,13 @@ namespace QuantifyWebAPI.Controllers
         [HttpPost]
         public HttpResponseMessage UpsertCustomerData(JObject jsonResult)
         {
-          
+
 
             string RequestType = jsonResult["entity"].ToString();
 
-         
 
-            
+
+
             //PackageDataType junkTest = Junkin.ToObject<PackageDataType>();
             // Initialization  
             HttpResponseMessage response = null;
@@ -345,6 +345,22 @@ namespace QuantifyWebAPI.Controllers
             //    customerResponse.errorList = errorList;
             //}
             return customerResponse;
+        }
+        #endregion
+
+        #region APIFieldResearch
+
+        public void Test()
+        {
+            MovementList all_Movements = MovementList.GetMovementList(Guid.Empty, MovementType.TransferNewToRent, true, Guid.Empty);
+
+            foreach (MovementListItem movementItem in all_Movements)
+            {
+                Movement myMovement = Movement.GetMovement(Guid.Empty, MovementGetAction.None);
+                //StockingLocation jobsite = StockingLocation.GetStockingLocation(jobsiteItem.StockingLocationID, false);
+            }
+
+            //Movement myMovement = Movement.GetMovement()
         }
         #endregion
     }

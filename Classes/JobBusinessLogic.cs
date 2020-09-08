@@ -44,8 +44,6 @@ namespace QuantifyWebAPI.Controllers
             // Need to implement this - pass initial load of jobsite versionstamps to Boomi
             StockingLocationList all_jobsites = StockingLocationList.GetJobsites(false, JobTreeNodeDisplayType.Name, Guid.Empty);
 
-
-
             //***** Loop through all jobsites and create list of jobsite ids and version stamps *****
             //StockingLocationList jobsites = StockingLocationList.NewStockingLocationList();
             //foreach (StockingLocationListItem jobsiteItem in all_jobsites)
@@ -112,72 +110,88 @@ namespace QuantifyWebAPI.Controllers
                 {
                     string myJobID = myRow["QuantifyID"].ToString();
                     StockingLocation jobsite = myJobsDictionary[myJobID];
-                    //***** Populate Fields *****
-                    JobData myJobData = new JobData();
+                    
+                        //***** Populate Fields *****
+                        JobData myJobData = new JobData();
 
-                    myJobData.job_id = jobsite.Number;
-                    myJobData.job_name = jobsite.Description;
-                    myJobData.site_name = jobsite.Name;
-                    //***** Look up address to get individual address fields *****
+                        myJobData.job_id = jobsite.Number;
+                        myJobData.job_name = jobsite.Description;
+                        myJobData.site_name = jobsite.Name;
+                        //***** Look up shipping address to get individual address fields *****
+                        Avontus.Rental.Library.Address jobShippingAddress = jobsite.Addresses.GetAddressByType(AddressTypes.Shipping);
+                        myJobData.site_address1 = jobShippingAddress.Street;
+                        myJobData.site_city = jobShippingAddress.City;
+                        myJobData.site_state = jobShippingAddress.StateName;
+                        myJobData.site_zip = jobShippingAddress.PostalCode;
 
-                    //TODO: ADH 9/1/2020 - Dev/Avontus Question 
-                    // How to do this? or is job address info accessible another way?
-                    //Avontus.Rental.Library.Address jobAddress = Avontus.Rental.Library.Address.GetAddress(jobsite.ShippingAddress)
-                    myJobData.site_address1 = jobsite.ShippingAddress;
+                        //***** Look up customer to get customer ID *****
+                        BusinessPartner jobCustomer = BusinessPartner.GetBusinessPartner(jobsite.BusinessPartnerID);
+                        myJobData.customer_id = jobCustomer.AccountingID;
 
-                    //***** Look up customer to get customer ID *****
-                    BusinessPartner jobCustomer = BusinessPartner.GetBusinessPartnerByName(jobsite.CustomerName);
-                    myJobData.customer_id = jobCustomer.Name;
-                    //***** Identify if job is sales taxable, and if so, assign a use tax code *****
-                    if (jobsite.ConsumablesTaxable)
+                        //***** Identify if job is sales taxable, and if so, assign a use tax code (mapping to WebApps accordingly will be done in Boomi) *****
+                        if (jobsite.JobTax1ID != null && jobsite.JobTax1ID != Guid.Empty)
+                        {
+                            myJobData.sales_taxable = "Y";
+                            myJobData.sales_tax_code = jobsite.JobTax1.Name;
+                        }
+                        else
+                        {
+                            myJobData.sales_taxable = "N";
+                            myJobData.sales_tax_code = "";
+                        }
+                        myJobData.job_start_date = jobsite.StartDate;
+                        //TODO: ADH 9/8/2020 - Identify if we need a different field for this; I think this is the actual job stop date
+                        myJobData.job_estimated_end_date = jobsite.StopDate;
+
+                        //***** Branch office - may need to drill up/down more, depending *****
+                        myJobData.department = jobsite.ParentBranchOrLaydown.Number;
+
+                        //***** Job Type (will be mapped to WebApps Job Types in Boomi) *****
+                        if (jobsite.JobList1ID != null && jobsite.JobList1ID != Guid.Empty)
+                        {
+                            JobList1 myJobTypeList1 = JobList1.GetJobList1(jobsite.JobList1ID);
+                            myJobData.job_type = myJobTypeList1.Name;
+                        }
+                        else
+                        {
+                            myJobData.job_type = "Non-Scaffold";
+                        }
+
+                        //***** Retainage Amount (will be mapped appropriately to WebApps Retention field in Boomi) *****
+                        if (jobsite.JobList2ID != null && jobsite.JobList2ID != Guid.Empty)
+                        {
+                            JobList2 myJobTypeList2 = JobList2.GetJobList2(jobsite.JobList2ID);
+                            myJobData.retainage_percent = myJobTypeList2.Name;
+                        }
+                        else
+                        {
+                            myJobData.retainage_percent = "No Retainage";
+                        }
+
+                    //***** Skip all jobs of type Non-Scaffold - will not be integrating these over *****
+                    if (myJobData.job_type != "Non-Scaffold")
                     {
-                        myJobData.sales_taxable = "Y";
-                        // TO DO: will need to map this in Boomi?
-                        //myJobData.sales_tax_code = jobsite.JobTax1.Name;
-                        myJobData.sales_tax_code = "3000";
+                        //***** Package as class, serialize to JSON and write to audit log table *****
+                        myJobs.entity = "Job";
+                        myJobs.Job = myJobData;
+                        string myJsonObject = JsonConvert.SerializeObject(myJobs);
+
+                        DataRow myNewRow = auditLog.NewRow();
+
+                        myNewRow["QuantifyID"] = myJobData.job_id;
+                        myNewRow["Entity"] = "Job";
+                        myNewRow["PackageSchema"] = myJsonObject;
+                        myNewRow["QuantifyDepartment"] = "";
+                        myNewRow["ProcessStatus"] = "A";
+
+                        auditLog.Rows.Add(myNewRow);
                     }
-                    else
-                    {
-                        myJobData.sales_taxable = "N";
-                        myJobData.sales_tax_code = "";
-                    }
-                    myJobData.job_start_date = jobsite.StartDate;
-                    myJobData.job_estimated_end_date = jobsite.StopDate;
-
-                    //TODO: ADH 9/3/2020 - Identify where branch office is and how it relates to job in data
-                    myJobData.department = "3005";
-
-                    //TODO: ADH 9/3/2020 - Confirm this is accurate for grabbing Job Type from List
-                    //(mapping to WebApps codes will be done in Boomi, just need field)
-                    //JobList1 myJobTypeList = JobList1.GetJobList1(jobsite.JobList1ID);
-                    //myJobData.job_type = myJobTypeList.Name;
-                    myJobData.job_type = "S";
-
-                    //TODO: ADH 9/3/2020 - Uncomment next two lines when retention configured in Quantify
-                    //JobList2 myJobTypeList = JobList2.GetJobList2(jobsite.JobList2ID);
-                    //myJobData.retainage_percent = myJobTypeList.Name;
-                    myJobData.retainage_percent = "15";
-
-                    //***** Package as class, serialize to JSON and write to audit log table *****
-                    myJobs.entity = "Job";
-                    myJobs.Job = myJobData;
-                    string myJsonObject = JsonConvert.SerializeObject(myJobs);
-
-                    DataRow myNewRow = auditLog.NewRow();
-
-                    myNewRow["QuantifyID"] = myJobData.job_id;
-                    myNewRow["Entity"] = "Job";
-                    myNewRow["PackageSchema"] = myJsonObject;
-                    myNewRow["QuantifyDepartment"] = "";
-                    myNewRow["ProcessStatus"] = "A";
-
-                    auditLog.Rows.Add(myNewRow);
                 }
                 //***** Create audit log record for Boomi to go pick up *****
                 // REST API URL: http://apimariaasad01.apigroupinc.api:9090/ws/rest/webapps_quantify/api
                 DataTable myReturnResult = myDAL.InsertAuditLog(auditLog, connectionString);
 
-                //TODO: ADH 9 / 4 / 2020 - Figure out why following line is failing
+                //TODO: ADH 9/4/2020 - Figure out why following line is failing
                 string result = myReturnResult.Rows[0][0].ToString();
                 if (result.ToLower() == "success")
                 {
