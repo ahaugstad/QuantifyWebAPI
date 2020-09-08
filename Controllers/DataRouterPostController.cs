@@ -27,6 +27,7 @@ using QuantifyWebAPI.Classes;
 // Other References
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Mindscape.Raygun4Net;
 
 namespace QuantifyWebAPI.Controllers
 {
@@ -34,6 +35,7 @@ namespace QuantifyWebAPI.Controllers
     public class DataRouterPostController : ApiController
     {
         String StrVersionDBConn = ConfigurationManager.AppSettings["QuantifyPersistanceLayerDBConn"];
+        RaygunClient myRaygunClient = new RaygunClient();
 
         [HttpGet]
         public void PingInitialization()

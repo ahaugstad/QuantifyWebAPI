@@ -4,12 +4,14 @@ using System.Linq;
 using System.Web;
 using System.Data;
 using System.Data.SqlClient;
+using Mindscape.Raygun4Net;
 
 namespace QuantifyWebAPI.Classes
 {
     public class DAL
     {
         private string constr;
+        RaygunClient myRaygunClient = new RaygunClient();
 
         public DAL()
         {

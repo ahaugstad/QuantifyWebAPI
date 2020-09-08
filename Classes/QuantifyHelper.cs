@@ -5,6 +5,7 @@ using System.Web;
 
 // Other References
 using Newtonsoft.Json;
+using Mindscape.Raygun4Net;
 
 // Quantify API References
 using Avontus.Core;
@@ -20,6 +21,7 @@ namespace QuantifyWebAPI.Classes
 {
     public class QuantifyHelper
     {
+        RaygunClient myRaygunClient = new RaygunClient();
         public void QuantifyLogin()
         /*
          * Connection settings are controlled by the regular Quantify Client. Please

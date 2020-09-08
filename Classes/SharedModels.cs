@@ -4,6 +4,8 @@ using System.Linq;
 using System.Web;
 using Newtonsoft.Json.Linq;
 
+using Mindscape.Raygun4Net;
+
 namespace QuantifyWebAPI.Classes
 {
     public class Address

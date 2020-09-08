@@ -26,13 +26,15 @@ using QuantifyWebAPI.Classes;
 // Other References
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Mindscape.Raygun4Net;
 
 
 
 namespace QuantifyWebAPI.Controllers
 {
     public class CustomerBusinessLogic
-    { 
+    {
+        RaygunClient myRaygunClient = new RaygunClient();
         public string UpsertCustomerData(JObject jsonResult)
         {
             //***** Initialization *****
