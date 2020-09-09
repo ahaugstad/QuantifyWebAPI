@@ -357,8 +357,22 @@ namespace QuantifyWebAPI.Controllers
             foreach (MovementListItem movementItem in all_Movements)
             {
                 Movement myMovement = Movement.GetMovement(Guid.Empty, MovementGetAction.None);
-                //StockingLocation jobsite = StockingLocation.GetStockingLocation(jobsiteItem.StockingLocationID, false);
+                var moveVersionStamp = myMovement.VersionStamp;
+
+                Shipment myShipment = Shipment.GetShipment("", true, true);
+                var shipVersionStamp = myShipment.VersionStamp;
+
+                Invoice myInvoice = Invoice.GetInvoice(Guid.Empty,true);
+                var invoiceVersionStamp = myInvoice.ModifyDate;
+
+                Order myOrder = Order.GetOrder(Guid.Empty);
+                //var orderVersionStamp = myOrder.
+
+                StockingLocation myJobSite = StockingLocation.GetStockingLocation("");
+                var jobsiteVersionStamp = myJobSite.VersionStamp;
             }
+          
+            
 
             //Movement myMovement = Movement.GetMovement()
         }

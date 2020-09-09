@@ -37,28 +37,12 @@ namespace QuantifyWebAPI.Controllers
     {
         RaygunClient myRaygunClient = new RaygunClient();
 
-        // GET: api/Jobs/3
-        public string Initialize()
-        {
-            //TODO: ADH 9/2/2020 - Implement Initial Load
-            // Need to implement this - pass initial load of jobsite versionstamps to Boomi
-            StockingLocationList all_jobsites = StockingLocationList.GetJobsites(false, JobTreeNodeDisplayType.Name, Guid.Empty);
-
-            //***** Loop through all jobsites and create list of jobsite ids and version stamps *****
-            //StockingLocationList jobsites = StockingLocationList.NewStockingLocationList();
-            //foreach (StockingLocationListItem jobsiteItem in all_jobsites)
-            //{
-            //    StockingLocation jobsite = StockingLocation.GetStockingLocation(jobsiteItem.StockingLocationID, false);
-
-            //}
-            return "value";
-        }
-
         public bool GetIDsToProcess(string connectionString)
         {
             bool success = true;
 
             QuantifyHelper QuantHelper = new QuantifyHelper();
+            BoomiHelper BoomiHelper = new BoomiHelper();
 
             QuantHelper.QuantifyLogin();
 
@@ -204,32 +188,9 @@ namespace QuantifyWebAPI.Controllers
                 }
 
                 //TODO: ADH 9/3/2020 - Ping Boomi to kick off process to start running through queued events
-                PostBoomiAPI();
+                BoomiHelper.PostBoomiAPI();
             }
             return success;
-        }
-        public async Task PostBoomiAPI()
-        {
-            //***** REST API URL for Boomi web service *****
-            string uriString = "http://apimariaasad01.apigroupinc.api:9090/ws/rest/webapps_quantify/api";
-
-            //***** Create ping JSON string so that Boomi has an object to get passed - does not matter what it contains *****
-            PingRootClass myPingClass = new PingRootClass();
-            myPingClass.pingString = "Hi Boomi";
-            string myPingJson = JsonConvert.SerializeObject(myPingClass);
-
-            //***** Using HttpClient approach *****
-            HttpClient client = new HttpClient();
-            using (client)
-            {
-                client.BaseAddress = new Uri(uriString);
-                client.DefaultRequestHeaders.Accept.Clear();
-                client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
-                //GET Method
-                HttpContent httpContent = new StringContent(myPingJson);
-                HttpResponseMessage response = await client.PostAsync(uriString, httpContent);
-                return;
-            }
         }
     }
 }

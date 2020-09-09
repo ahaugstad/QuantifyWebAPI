@@ -32,14 +32,4 @@ namespace QuantifyWebAPI.Classes
         public string job_type { get; set; }
         public string retainage_percent { get; set; }
     }
-
-    public class JobResponseObj
-    {
-        public string status { get; set; }
-        public List<string> errorList { get; set; }
-        public JobResponseObj()
-        {
-            errorList = new List<string>();
-        }
-    }
 }
