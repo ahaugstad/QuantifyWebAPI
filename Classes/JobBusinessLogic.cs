@@ -78,7 +78,8 @@ namespace QuantifyWebAPI.Controllers
                 DataRow myNewRow = dt.NewRow();
                 myNewRow["Entity"] = "Job";
                 myNewRow["QuantifyID"] = myJobsiteNumber;
-                myNewRow["Version"] = jobsite.VersionStamp[jobsite.VersionStamp.Length - 1].ToString();
+                string timestampVersion = "0x" + String.Join("", jobsite.VersionStamp.Select(b => Convert.ToString(b, 16)));
+                myNewRow["Version"] = timestampVersion.ToString();
 
                 dt.Rows.Add(myNewRow);
 
