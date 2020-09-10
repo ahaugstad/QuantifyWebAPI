@@ -47,6 +47,10 @@ namespace QuantifyWebAPI.Controllers
             //***** Run Products *****
             ProductBusinessLogic myProductResponse = new ProductBusinessLogic();
             myProductResponse.GetIDsToProcess(StrVersionDBConn);
+
+            //***** Run Products *****
+            InventoryTransactionBusinessLogic myInventTranResponse = new InventoryTransactionBusinessLogic();
+            myInventTranResponse.GetIDsToProcess(StrVersionDBConn);
         }
 
         [HttpPost]

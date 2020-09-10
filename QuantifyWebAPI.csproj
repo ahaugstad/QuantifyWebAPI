@@ -195,6 +195,8 @@
     <Compile Include="Areas\HelpPage\SampleGeneration\SampleDirection.cs" />
     <Compile Include="Areas\HelpPage\SampleGeneration\TextSample.cs" />
     <Compile Include="Areas\HelpPage\XmlDocumentationProvider.cs" />
+    <Compile Include="Classes\InventoryTransactionBusinessLogic.cs" />
+    <Compile Include="Classes\InventoryTransactionModel.cs" />
     <Compile Include="Classes\ProductModel.cs" />
     <Compile Include="Classes\ProductBusinessLogic.cs" />
     <Compile Include="Classes\PingModel.cs" />
