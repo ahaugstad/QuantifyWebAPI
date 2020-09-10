@@ -66,6 +66,7 @@ namespace QuantifyWebAPI.Controllers
                 // QuantifyWebAPI.Classes.Contact myContact = myDeserializedClass.CustomerData.Contact[0];
                 // string CustomerEmail2 = myContact.contact_email;
                 string CustomerFax = myDeserializedClass.CustomerData.customer_fax;
+                string CustomerIsActive = myDeserializedClass.CustomerData.is_active;
 
 
                 //*****  Instantiate customer we are inserting/updating; check if it already exists before updating/inserting ***** 
@@ -94,6 +95,7 @@ namespace QuantifyWebAPI.Controllers
                 customer.PhoneNumber = CustomerPhone;
                 customer.EmailAddress = CustomerEmail;
                 customer.FaxNumber = CustomerFax;
+                if (CustomerIsActive == "A") { customer.IsActive = true; } else { customer.IsActive = false; }
 
                 //***** Validate and save the Customer record ***** 
                 customerResponse = customerValidateAndSave(customer);
