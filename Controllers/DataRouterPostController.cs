@@ -40,8 +40,13 @@ namespace QuantifyWebAPI.Controllers
         [HttpGet]
         public void PingInitialization()
         {
+            //***** Run Jobs *****
             JobBusinessLogic myJobResponse = new JobBusinessLogic();
             myJobResponse.GetIDsToProcess(StrVersionDBConn);
+
+            //***** Run Products *****
+            ProductBusinessLogic myProductResponse = new ProductBusinessLogic();
+            myProductResponse.GetIDsToProcess(StrVersionDBConn);
         }
 
         [HttpPost]

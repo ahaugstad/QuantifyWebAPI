@@ -55,7 +55,12 @@ namespace QuantifyWebAPI.Controllers
 
             //***** Get all jobsites - will loop through this and compare VersionStamp against appropriate record in our JobVersions dictionary *****
             //TODO: ADH 9/9/2020 - Verify that this is what we want for ProductType (ProductOrConsumable)
-            ProductCollection all_products = ProductCollection.GetProductCollection(ProductType.ProductOrConsumable);
+            ProductCollection all_products = ProductCollection.GetProductCollection(ProductType.Product);
+            ProductCollection all_consumables = ProductCollection.GetProductCollection(ProductType.Consumable);
+            //ProductHistory productHistory = ProductHistory.GetProductHistory(Guid.Empty);
+            //ProductConsumableList all_consumables = ProductConsumableList.GetProductConsumableList(Guid.Empty);
+            //ProductComponentList all_components = ProductComponentList.GetProductComponentList(Guid.Empty);
+            //StockedProductList all_stocked_products = StockedProductList.GetStockedProductList(Guid.Empty, ProductType.Product);
             DataTable dt = new DataTable();
             dt.Columns.Add("Entity", typeof(string));
             dt.Columns.Add("QuantifyID", typeof(string));
@@ -79,6 +84,35 @@ namespace QuantifyWebAPI.Controllers
                 {
                     myProductsDictionary.Add(myPartNumber, product);
                 } 
+            }
+
+            foreach (Product product in all_consumables)
+            {
+                string myPartNumber = product.PartNumber;
+                DataRow myNewRow = dt.NewRow();
+                myNewRow["Entity"] = "Product";
+                myNewRow["QuantifyID"] = myPartNumber;
+                //string timestampVersion = "0x" + String.Join("", product.VersionStamp.Select(b => Convert.ToString(b, 16)));
+                //myNewRow["Version"] = timestampVersion.ToString();
+
+                dt.Rows.Add(myNewRow);
+
+                try
+                {
+                    //***** Build Dictionary *****
+                    if (!myProductsDictionary.ContainsKey(myPartNumber))
+                    {
+                        myProductsDictionary.Add(myPartNumber, product);
+                    }
+                    else
+                    {
+                        throw new System.ArgumentException("Duplicate product number","Product Lookup");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    myRaygunClient.SendInBackground(ex);
+                }
             }
 
             //***** Call data access layer *****
@@ -113,11 +147,12 @@ namespace QuantifyWebAPI.Controllers
                     myProductData.description = myProduct.Description;
                     myProductData.catalog = myProduct.ProductType.ToDescription();
                     myProductData.category = myProduct.ProductCategoryName;
-                    //TODO: ADH 9/9/2020 - Verify if this is cost code and change accordingly
-                    myProductData.cost_code = myProduct.UPCCode;
+                    //TODO: ADH 9/10/2020 - See if workaround for getting cost code without doing a lookup in loop for Product Category
+                    ProductCategory myProductCategory = ProductCategory.GetProductCategory(myProduct.ProductCategoryID,myProduct.ProductType);
+                    myProductData.cost_code = myProductCategory.CostCode;
                     myProductData.list_price = myProduct.DefaultList.ToString();
                     myProductData.unit_cost = myProduct.DefaultCost.ToString();
-
+                    
                     //***** Package as class, serialize to JSON and write to audit log table *****
                     myProducts.entity = "Product";
                     myProducts.Product = myProductData;
