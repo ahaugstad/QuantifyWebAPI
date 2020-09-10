@@ -53,7 +53,7 @@ namespace QuantifyWebAPI.Controllers
 
             QuantHelper.QuantifyLogin();
 
-            //***** Get all jobsites - will loop through this and compare VersionStamp against appropriate record in our JobVersions dictionary *****
+            //***** Get all products - will loop through these collections and compare VersionStamp against appropriate record in our Products dictionary *****
             //TODO: ADH 9/9/2020 - Verify that this is what we want for ProductType (ProductOrConsumable)
             ProductCollection all_products = ProductCollection.GetProductCollection(ProductType.Product);
             ProductCollection all_consumables = ProductCollection.GetProductCollection(ProductType.Consumable);
@@ -68,51 +68,144 @@ namespace QuantifyWebAPI.Controllers
 
             Dictionary<string, Product> myProductsDictionary = new Dictionary<string, Product>();
 
+            //***** Loop through all products in product catalog *****
             foreach (Product product in all_products)
             {
                 string myPartNumber = product.PartNumber;
-                DataRow myNewRow = dt.NewRow();
-                myNewRow["Entity"] = "Product";
-                myNewRow["QuantifyID"] = myPartNumber;
-                //string timestampVersion = "0x" + String.Join("", product.VersionStamp.Select(b => Convert.ToString(b, 16)));
-                //myNewRow["Version"] = timestampVersion.ToString();
-
-                dt.Rows.Add(myNewRow);
-
-                //***** Build Dictionary *****
-                if(!myProductsDictionary.ContainsKey(myPartNumber))
+                //***** If Product is Serialized, will need to create one record in Version table per Serialized Part *****
+                if (product.IsSerialized)
                 {
-                    myProductsDictionary.Add(myPartNumber, product);
-                } 
+                    SerializedPartList serializedParts = SerializedPartList.GetSerializedPartList(product.ProductID, StockedStatus.Both);
+                    foreach (SerializedPartListItem serializedPart in serializedParts)
+                    {
+                        string myProductID = myPartNumber + "|" + serializedPart.SerialNumber;
+
+                        //***** Add record to data table to be written to Version table in SQL *****
+                        DataRow myNewRow = dt.NewRow();
+                        myNewRow["Entity"] = "Product";
+                        myNewRow["QuantifyID"] = myProductID;
+                        //string timestampVersion = "0x" + String.Join("", product.VersionStamp.Select(b => Convert.ToString(b, 16)));
+                        //myNewRow["Version"] = timestampVersion.ToString();
+
+                        dt.Rows.Add(myNewRow);
+
+                        //***** Build Dictionary *****
+                        try
+                        {
+                            if (!myProductsDictionary.ContainsKey(myProductID))
+                            {
+                                myProductsDictionary.Add(myProductID, product);
+                            }
+                            else
+                            {
+                                throw new System.ArgumentException("Duplicate product id", "Product Lookup");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            myRaygunClient.SendInBackground(ex);
+                        }
+                    } 
+                }
+                else
+                {
+                    string myProductID = myPartNumber;
+
+                    //***** Add record to data table to be written to Version table in SQL *****
+                    DataRow myNewRow = dt.NewRow();
+                    myNewRow["Entity"] = "Product";
+                    myNewRow["QuantifyID"] = myProductID;
+                    //string timestampVersion = "0x" + String.Join("", product.VersionStamp.Select(b => Convert.ToString(b, 16)));
+                    //myNewRow["Version"] = timestampVersion.ToString();
+
+                    dt.Rows.Add(myNewRow);
+
+                    //***** Build Dictionary *****
+                    try
+                    {
+                        if (!myProductsDictionary.ContainsKey(myProductID))
+                        {
+                            myProductsDictionary.Add(myProductID, product);
+                        }
+                        else
+                        {
+                            throw new System.ArgumentException("Duplicate product id", "Product Lookup");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        myRaygunClient.SendInBackground(ex);
+                    }
+                }   
             }
 
+            //***** Loop through all products in consumable catalog *****
             foreach (Product product in all_consumables)
             {
                 string myPartNumber = product.PartNumber;
-                DataRow myNewRow = dt.NewRow();
-                myNewRow["Entity"] = "Product";
-                myNewRow["QuantifyID"] = myPartNumber;
-                //string timestampVersion = "0x" + String.Join("", product.VersionStamp.Select(b => Convert.ToString(b, 16)));
-                //myNewRow["Version"] = timestampVersion.ToString();
-
-                dt.Rows.Add(myNewRow);
-
-                try
+                //***** If Product is Serialized, will need to create one record in Version table per Serialized Part *****
+                if (product.IsSerialized)
                 {
+                    SerializedPartList serializedParts = SerializedPartList.GetSerializedPartList(product.ProductID, StockedStatus.Both);
+                    foreach (SerializedPartListItem serializedPart in serializedParts)
+                    {
+                        string myProductID = myPartNumber + "|" + serializedPart.SerialNumber;
+                        //***** Add record to data table to be written to Version table in SQL *****
+                        DataRow myNewRow = dt.NewRow();
+                        myNewRow["Entity"] = "Product";
+                        myNewRow["QuantifyID"] = myProductID;
+                        //string timestampVersion = "0x" + String.Join("", product.VersionStamp.Select(b => Convert.ToString(b, 16)));
+                        //myNewRow["Version"] = timestampVersion.ToString();
+
+                        dt.Rows.Add(myNewRow);
+
+                        //***** Build Dictionary *****
+                        try
+                        {
+                            if (!myProductsDictionary.ContainsKey(myProductID))
+                            {
+                                myProductsDictionary.Add(myProductID, product);
+                            }
+                            else
+                            {
+                                throw new System.ArgumentException("Duplicate product id", "Product Lookup");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            myRaygunClient.SendInBackground(ex);
+                        }
+                    }
+                }
+                else
+                {
+                    string myProductID = myPartNumber;
+                    //***** Add record to data table to be written to Version table in SQL *****
+                    DataRow myNewRow = dt.NewRow();
+                    myNewRow["Entity"] = "Product";
+                    myNewRow["QuantifyID"] = myProductID;
+                    //string timestampVersion = "0x" + String.Join("", product.VersionStamp.Select(b => Convert.ToString(b, 16)));
+                    //myNewRow["Version"] = timestampVersion.ToString();
+
+                    dt.Rows.Add(myNewRow);
+
                     //***** Build Dictionary *****
-                    if (!myProductsDictionary.ContainsKey(myPartNumber))
+                    try
                     {
-                        myProductsDictionary.Add(myPartNumber, product);
+                        if (!myProductsDictionary.ContainsKey(myProductID))
+                        {
+                            myProductsDictionary.Add(myProductID, product);
+                        }
+                        else
+                        {
+                            throw new System.ArgumentException("Duplicate product id", "Product Lookup");
+                        }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        throw new System.ArgumentException("Duplicate product number","Product Lookup");
+                        myRaygunClient.SendInBackground(ex);
                     }
-                }
-                catch (Exception ex)
-                {
-                    myRaygunClient.SendInBackground(ex);
-                }
+                } 
             }
 
             //***** Call data access layer *****
@@ -122,38 +215,71 @@ namespace QuantifyWebAPI.Controllers
 
             //if (myChangedRecords.Rows.Count > 0)
             //{
-                ProductRootClass myProducts = new ProductRootClass();
+            ProductRootClass myProducts = new ProductRootClass();
 
-                //***** Create audit log table structure *****
-                DataTable auditLog = new DataTable();
-                auditLog.Columns.Add("QuantifyID", typeof(string));
-                auditLog.Columns.Add("Entity", typeof(string));
-                auditLog.Columns.Add("PackageSchema", typeof(string));
-                auditLog.Columns.Add("QuantifyDepartment", typeof(string));
-                auditLog.Columns.Add("ProcessStatus", typeof(string));
+            //***** Create Audit Log and XRef table structures *****
+            DataTable auditLog = new DataTable();
+            auditLog.Columns.Add("QuantifyID", typeof(string));
+            auditLog.Columns.Add("Entity", typeof(string));
+            auditLog.Columns.Add("PackageSchema", typeof(string));
+            auditLog.Columns.Add("QuantifyDepartment", typeof(string));
+            auditLog.Columns.Add("ProcessStatus", typeof(string));
+
+            DataTable productXRef = new DataTable();
+            productXRef.Columns.Add("QuantifyID", typeof(string));
+            productXRef.Columns.Add("PartNumber", typeof(string));
 
             //foreach (DataRow myRow in myChangedRecords.Rows)
             foreach (var myProductObj in myProductsDictionary)
-                {
-                    //string myProductID = myRow["QuantifyID"].ToString();
-                    //Product myProduct = myProductsDictionary[myProductID];
-                    Product myProduct = (Product) myProductObj.Value;  
+            {
+                //string myProductID = myRow["QuantifyID"].ToString();
+                //Product myProduct = myProductsDictionary[myProductID];
+                Product myProduct = (Product) myProductObj.Value;  
                     
-                    //***** Populate Fields *****
-                    ProductData myProductData = new ProductData();
+                //***** Populate Fields *****
+                ProductData myProductData = new ProductData();
 
-                    //TODO: ADH 9/9/2020 - Change this to go look at our XREF table for Products/Serial Numbers to determine the number to pass to Boomi
-                    myProductData.product_id = myProduct.PartNumber;
+                //TODO: ADH 9/10/2020 - See if workaround for getting cost code without doing a lookup in loop for Product Category
+                ProductCategory myProductCategory = ProductCategory.GetProductCategory(myProduct.ProductCategoryID, myProduct.ProductType);
+
+                myProductData.catalog = myProduct.ProductType.ToDescription();
+                myProductData.category = myProduct.ProductCategoryName;
+                myProductData.cost_code = myProductCategory.CostCode;
+                myProductData.list_price = myProduct.DefaultList.ToString();
+                myProductData.unit_cost = myProduct.DefaultCost.ToString();
+
+                if (myProduct.IsSerialized)
+                {
+                    char[] separator = { '|' };
+                    string[] productIDSplit = myProductObj.Key.Split(separator);
+                    string serialNumber = productIDSplit[productIDSplit.Length - 1];
+                    SerializedPart serializedPart = SerializedPart.GetSerializedPart(serialNumber);
+                    myProductData.product_id = myProductObj.Key;
+                    myProductData.description = serializedPart.Description;
+
+                    //***** Package as class, serialize to JSON and write to data tables to get mass inserted into SQL *****
+                    myProducts.entity = "Product";
+                    myProducts.Product = myProductData;
+                    string myJsonObject = JsonConvert.SerializeObject(myProducts);
+
+                    DataRow myNewRow = auditLog.NewRow();
+                    myNewRow["QuantifyID"] = myProductData.product_id;
+                    myNewRow["Entity"] = "Product";
+                    myNewRow["PackageSchema"] = myJsonObject;
+                    myNewRow["QuantifyDepartment"] = "";
+                    myNewRow["ProcessStatus"] = "A";
+
+                    auditLog.Rows.Add(myNewRow);
+
+                    DataRow myNewXRefRow = productXRef.NewRow();
+                    myNewXRefRow["QuantifyID"] = myProductData.product_id;
+                }
+                else
+                {
+                    myProductData.product_id = myProductObj.Key;
                     myProductData.description = myProduct.Description;
-                    myProductData.catalog = myProduct.ProductType.ToDescription();
-                    myProductData.category = myProduct.ProductCategoryName;
-                    //TODO: ADH 9/10/2020 - See if workaround for getting cost code without doing a lookup in loop for Product Category
-                    ProductCategory myProductCategory = ProductCategory.GetProductCategory(myProduct.ProductCategoryID,myProduct.ProductType);
-                    myProductData.cost_code = myProductCategory.CostCode;
-                    myProductData.list_price = myProduct.DefaultList.ToString();
-                    myProductData.unit_cost = myProduct.DefaultCost.ToString();
-                    
-                    //***** Package as class, serialize to JSON and write to audit log table *****
+
+                    //***** Package as class, serialize to JSON and write to data table to get mass inserted into SQL *****
                     myProducts.entity = "Product";
                     myProducts.Product = myProductData;
                     string myJsonObject = JsonConvert.SerializeObject(myProducts);
@@ -167,23 +293,24 @@ namespace QuantifyWebAPI.Controllers
                     myNewRow["ProcessStatus"] = "A";
 
                     auditLog.Rows.Add(myNewRow);
-                }
-                //***** Create audit log record for Boomi to go pick up *****
-                // REST API URL: http://apimariaasad01.apigroupinc.api:9090/ws/rest/webapps_quantify/api
-                DataTable myReturnResult = myDAL.InsertAuditLog(auditLog, connectionString);
+                }     
+            }
+            //***** Insert to Audit Log and XRef tables for Boomi to reference *****
+            DataTable myReturnResultAudit = myDAL.InsertAuditLog(auditLog, connectionString);
+            DataTable myReturnResultXRef = myDAL.InsertAuditLog(auditLog, connectionString);
 
-                //TODO: ADH 9/4/2020 - Figure out why following line is failing
-                string result = myReturnResult.Rows[0][0].ToString();
-                if (result.ToLower() == "success")
-                {
-                    success = true;
-                }
-                else
-                {
-                    success = false;
-                }
+            string resultAudit = myReturnResultAudit.Rows[0][0].ToString();
+            string resultXRef = myReturnResultXRef.Rows[0][0].ToString();
+            if (resultAudit.ToLower() == "success" && resultXRef.ToLower() == "success")
+            {
+                success = true;
+            }
+            else
+            {
+                success = false;
+            }
 
-                BoomiHelper.PostBoomiAPI();
+            BoomiHelper.PostBoomiAPI();
             //}
             return success;
         }

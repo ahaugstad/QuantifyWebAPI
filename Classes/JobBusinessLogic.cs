@@ -173,10 +173,8 @@ namespace QuantifyWebAPI.Controllers
                     }
                 }
                 //***** Create audit log record for Boomi to go pick up *****
-                // REST API URL: http://apimariaasad01.apigroupinc.api:9090/ws/rest/webapps_quantify/api
                 DataTable myReturnResult = myDAL.InsertAuditLog(auditLog, connectionString);
 
-                //TODO: ADH 9/4/2020 - Figure out why following line is failing
                 string result = myReturnResult.Rows[0][0].ToString();
                 if (result.ToLower() == "success")
                 {
@@ -187,7 +185,6 @@ namespace QuantifyWebAPI.Controllers
                     success = false;
                 }
 
-                //TODO: ADH 9/3/2020 - Ping Boomi to kick off process to start running through queued events
                 BoomiHelper.PostBoomiAPI();
             }
             return success;
