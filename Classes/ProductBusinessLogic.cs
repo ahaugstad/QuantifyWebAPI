@@ -273,6 +273,9 @@ namespace QuantifyWebAPI.Controllers
 
                     DataRow myNewXRefRow = productXRef.NewRow();
                     myNewXRefRow["QuantifyID"] = myProductData.product_id;
+                    myNewXRefRow["PartNumber"] = myProduct.PartNumber;
+
+                    productXRef.Rows.Add(myNewXRefRow);
                 }
                 else
                 {
@@ -293,11 +296,17 @@ namespace QuantifyWebAPI.Controllers
                     myNewRow["ProcessStatus"] = "A";
 
                     auditLog.Rows.Add(myNewRow);
-                }     
+
+                    DataRow myNewXRefRow = productXRef.NewRow();
+                    myNewXRefRow["QuantifyID"] = myProductData.product_id;
+                    myNewXRefRow["PartNumber"] = myProduct.PartNumber;
+
+                    productXRef.Rows.Add(myNewXRefRow);
+                }   
             }
             //***** Insert to Audit Log and XRef tables for Boomi to reference *****
             DataTable myReturnResultAudit = myDAL.InsertAuditLog(auditLog, connectionString);
-            DataTable myReturnResultXRef = myDAL.InsertAuditLog(auditLog, connectionString);
+            DataTable myReturnResultXRef = myDAL.InsertProductXRef(productXRef, connectionString);
 
             string resultAudit = myReturnResultAudit.Rows[0][0].ToString();
             string resultXRef = myReturnResultXRef.Rows[0][0].ToString();

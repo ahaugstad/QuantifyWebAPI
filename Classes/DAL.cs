@@ -125,7 +125,7 @@ namespace QuantifyWebAPI.Classes
                     {
                         cmd.Connection = conn;
                         cmd.CommandType = CommandType.StoredProcedure;
-                        cmd.CommandText = "InsertProductXRef";
+                        cmd.CommandText = "InsertQuantWebAppsProductsXRef";
 
                         SqlParameter tvpParam = cmd.Parameters.AddWithValue("@ProductXRefTV", ObjectsAudit);
                         tvpParam.SqlDbType = SqlDbType.Structured;
