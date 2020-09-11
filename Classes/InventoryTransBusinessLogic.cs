@@ -96,15 +96,31 @@ namespace QuantifyWebAPI.Controllers
                 {
                     string myMovementID = myRow["QuantifyID"].ToString();
                     Movement myMovement = myMovementsDictionary[myMovementID];
+                    Order myOrder = Order.GetOrder(myMovement.OrderID, myMovement.BusinessPartnerID);
+                    
+                    MovementProductList myMovementProducts = MovementProductList.GetMovementProductList(myMovement.MovementID);
                     
                     //***** Populate Fields *****
                     InventoryTransData myInventoryTransData = new InventoryTransData();
 
                     myInventoryTransData.transaction_type = myMovement.TypeOfMovement.ToDescription();
+
                     //TODO: ADH 9/10/2020 - Do we need adjustment type? No field in Quantify like that, and transaction type will probably do the trick
                     //myInventoryTransData.adjustment_type = myMovement.type;
-                    //TODO: ADH 9/10/2020 - Do we need a movement collection 
+
+                    //TODO: ADH 9/10/2020 - How to handle line items of a transaction? Will need child list of part_numbers, etc.
                     //myInventoryTransData.part_number = myMovement.MovementProducts;
+
+                    //***** Check Business Partner Type, set appropriate field *****
+                    if (myMovement.BusinessPartnerType == PartnerTypes.Customer)
+                    {
+                        myInventoryTransData.customer_id = myMovement.BusinessPartnerNumber;
+                    }
+                    else
+                    {
+                        myInventoryTransData.vendor_id = myMovement.BusinessPartnerNumber;
+                        myInventoryTransData.purchase_order_id = myOrder.PurchaseOrderNumber;
+                    }
 
                     //***** Package as class, serialize to JSON and write to audit log table *****
                     myInventoryTransactions.entity = "InventoryTrans";
