@@ -110,7 +110,7 @@ namespace QuantifyWebAPI.Classes
 
         }
 
-        public DataTable InsertProductXRef(DataTable ObjectsAudit, String DbConnectionStr)
+        public DataTable InsertProductXRef(DataTable QuantWebAppsProductsXref, String DbConnectionStr)
         {
             DataTable dt = new DataTable();
 
@@ -127,7 +127,7 @@ namespace QuantifyWebAPI.Classes
                         cmd.CommandType = CommandType.StoredProcedure;
                         cmd.CommandText = "InsertQuantWebAppsProductsXRef";
 
-                        SqlParameter tvpParam = cmd.Parameters.AddWithValue("@ProductXRefTV", ObjectsAudit);
+                        SqlParameter tvpParam = cmd.Parameters.AddWithValue("@ProductXRefTV", QuantWebAppsProductsXref);
                         tvpParam.SqlDbType = SqlDbType.Structured;
 
                         using (SqlDataAdapter da = new SqlDataAdapter(cmd))
