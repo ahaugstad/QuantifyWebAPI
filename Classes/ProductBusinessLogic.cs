@@ -54,13 +54,9 @@ namespace QuantifyWebAPI.Controllers
             QuantHelper.QuantifyLogin();
 
             //***** Get all products - will loop through these collections and compare VersionStamp against appropriate record in our Products dictionary *****
-            //TODO: ADH 9/9/2020 - Verify that this is what we want for ProductType (ProductOrConsumable)
+            //TODO: ADH 9/11/2020 - Concatenate these collection instead if possible, and if so remove duplicated code
             ProductCollection all_products = ProductCollection.GetProductCollection(ProductType.Product);
             ProductCollection all_consumables = ProductCollection.GetProductCollection(ProductType.Consumable);
-            //ProductHistory productHistory = ProductHistory.GetProductHistory(Guid.Empty);
-            //ProductConsumableList all_consumables = ProductConsumableList.GetProductConsumableList(Guid.Empty);
-            //ProductComponentList all_components = ProductComponentList.GetProductComponentList(Guid.Empty);
-            //StockedProductList all_stocked_products = StockedProductList.GetStockedProductList(Guid.Empty, ProductType.Product);
             DataTable dt = new DataTable();
             dt.Columns.Add("Entity", typeof(string));
             dt.Columns.Add("QuantifyID", typeof(string));
@@ -168,7 +164,7 @@ namespace QuantifyWebAPI.Controllers
                             }
                             else
                             {
-                                throw new System.ArgumentException("Duplicate product id", "Product Lookup");
+                                throw new System.ArgumentException("Duplicate product id: " + myProductID, "Product Lookup");
                             }
                         }
                         catch (Exception ex)
@@ -198,7 +194,7 @@ namespace QuantifyWebAPI.Controllers
                         }
                         else
                         {
-                            throw new System.ArgumentException("Duplicate product id", "Product Lookup");
+                            throw new System.ArgumentException("Duplicate product id: " + myProductID, "Product Lookup");
                         }
                     }
                     catch (Exception ex)
@@ -228,6 +224,7 @@ namespace QuantifyWebAPI.Controllers
             DataTable productXRef = new DataTable();
             productXRef.Columns.Add("QuantifyID", typeof(string));
             productXRef.Columns.Add("PartNumber", typeof(string));
+            //productXRef.Columns.Add("SerialNumber", typeof(string));
 
             //foreach (DataRow myRow in myChangedRecords.Rows)
             foreach (var myProductObj in myProductsDictionary)
@@ -243,7 +240,7 @@ namespace QuantifyWebAPI.Controllers
                 ProductCategory myProductCategory = ProductCategory.GetProductCategory(myProduct.ProductCategoryID, myProduct.ProductType);
 
                 myProductData.catalog = myProduct.ProductType.ToDescription();
-                myProductData.category = myProduct.ProductCategoryName;
+                myProductData.category = myProductCategory.RevenueCode;
                 myProductData.cost_code = myProductCategory.CostCode;
                 myProductData.list_price = myProduct.DefaultList.ToString();
                 myProductData.unit_cost = myProduct.DefaultCost.ToString();
@@ -273,6 +270,10 @@ namespace QuantifyWebAPI.Controllers
 
                     DataRow myNewXRefRow = productXRef.NewRow();
                     myNewXRefRow["QuantifyID"] = myProductData.product_id;
+                    myNewXRefRow["PartNumber"] = myProduct.PartNumber;
+                    //myNewXRefRow["SerialNumber"] = myProduct.SerialNumber;
+
+                    productXRef.Rows.Add(myNewXRefRow);
                 }
                 else
                 {
@@ -293,7 +294,14 @@ namespace QuantifyWebAPI.Controllers
                     myNewRow["ProcessStatus"] = "A";
 
                     auditLog.Rows.Add(myNewRow);
-                }     
+
+                    DataRow myNewXRefRow = productXRef.NewRow();
+                    myNewXRefRow["QuantifyID"] = myProductData.product_id;
+                    myNewXRefRow["PartNumber"] = myProduct.PartNumber;
+                    //myNewXRefRow["SerialNumber"] = myProduct.SerialNumber;
+
+                    productXRef.Rows.Add(myNewXRefRow);
+                }   
             }
             //***** Insert to Audit Log and XRef tables for Boomi to reference *****
             DataTable myReturnResultAudit = myDAL.InsertAuditLog(auditLog, connectionString);

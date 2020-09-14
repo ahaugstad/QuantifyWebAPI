@@ -37,6 +37,7 @@ namespace QuantifyWebAPI.Controllers
         String StrVersionDBConn = ConfigurationManager.AppSettings["QuantifyPersistanceLayerDBConn"];
         RaygunClient myRaygunClient = new RaygunClient();
 
+        //***** Boomi pings this method on schedule to kick off our processing of all Quantify-outbound integrations *****
         [HttpGet]
         public void PingInitialization()
         {
@@ -48,11 +49,12 @@ namespace QuantifyWebAPI.Controllers
             ProductBusinessLogic myProductResponse = new ProductBusinessLogic();
             myProductResponse.GetIDsToProcess(StrVersionDBConn);
 
-            //***** Run Products *****
-            InventoryTransactionBusinessLogic myInventTranResponse = new InventoryTransactionBusinessLogic();
-            myInventTranResponse.GetIDsToProcess(StrVersionDBConn);
+            //***** Run Inventory Transactions *****
+            //InventoryTransBusinessLogic myInventTranResponse = new InventoryTransBusinessLogic();
+            //myInventTranResponse.GetIDsToProcess(StrVersionDBConn);
         }
 
+        //***** This method is called anytime a Quantify-inbound request comes in from Boomi *****
         [HttpPost]
         public HttpResponseMessage UpsertDataObject(JObject jsonResult)
         {
@@ -70,15 +72,8 @@ namespace QuantifyWebAPI.Controllers
                         myResponse = myCustomerResponse.UpsertCustomerData(jsonResult);
                         break;
 
-                    case "Job":
-                        JobBusinessLogic myJobResponse = new JobBusinessLogic();
-                        //myResponse = myJobResponse.GetJobData(jsonResult);
-                        break;
-
                     default:
                         throw new System.ArgumentException("Unknown 'Request Type' Submitted in UpsertDataObject", RequestType);
-                        break;
-
                 }
 
                 HttpResponse = Request.CreateResponse(HttpStatusCode.OK);
@@ -91,9 +86,6 @@ namespace QuantifyWebAPI.Controllers
                 //ToDo:ERC 9/7/2020 Possibly Need to make Repsonse Classs
                 HttpResponse.Content = new StringContent("Failed");
             }
-
-            
-
             return HttpResponse;
         }
     }

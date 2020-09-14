@@ -92,6 +92,11 @@ namespace QuantifyWebAPI.Controllers
             string shipmentDate = myShipment.ActualShipDate;
             byte[] shipmentVersionStamp = myShipment.VersionStamp;
 
+            //***** Purchase Orders - do not have versioning as of now *****
+            Guid orderID = new Guid();
+            Order myOrder = Order.GetOrder(orderID);
+            OrderCollection myOrderCollection = OrderCollection.GetPurchaseOrderCollection(Guid.Empty, ActiveStatus.Active);
+            string myPONumber = myOrder.PurchaseOrderNumber;
 
             return "value2";
         }

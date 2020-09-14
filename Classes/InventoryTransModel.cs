@@ -29,11 +29,18 @@ namespace QuantifyWebAPI.Classes
         public string transaction_type { get; set; }
         public string adjustment_type { get; set; }
         public string vendor_id { get; set; }
+        public string customer_id { get; set; }
         public string purchase_order_id { get; set; }
-        public string warehouse { get; set; }
-        public string part_number { get; set; }
-        public int quantity { get; set; }
-        public string comment { get; set; }
-      
+        public List<InventoryTransProducts> Products { get; set; }
     }
+
+    public class InventoryTransProducts
+    {
+        public string part_number { get; set; }
+        public string serial_number { get; set; }
+        public int quantity { get; set; }
+        public string warehouse { get; set; }
+        public string comment { get; set; }
+    }
+    
 }
