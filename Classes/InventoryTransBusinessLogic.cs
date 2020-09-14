@@ -94,28 +94,21 @@ namespace QuantifyWebAPI.Controllers
 
                 foreach (DataRow myRow in myChangedRecords.Rows)
                 {
+                    //***** Initalize fields and classes to be used to build data profile *****
                     string myMovementID = myRow["QuantifyID"].ToString();
                     Movement myMovement = myMovementsDictionary[myMovementID];
-
+                    Order myOrder = Order.GetOrder(myMovement.OrderID);
                     MovementProductList myMovementProducts = MovementProductList.GetMovementProductList(myMovement.MovementID);
                     
-                    //***** Populate Fields *****
+                    //***** Build header data profile *****
                     InventoryTransData myInventoryTransData = new InventoryTransData();
-
                     myInventoryTransData.transaction_type = myMovement.TypeOfMovement.ToDescription();
-
+                    myInventoryTransData.package_type = myMovement.BusinessPartnerType.ToDescription();
                     //TODO: ADH 9/10/2020 - Do we need adjustment type? No field in Quantify like that, and transaction type will probably do the trick
                     //myInventoryTransData.adjustment_type = myMovement.type;
-
-                    //TODO: ADH 9/10/2020 - How to handle line items of a transaction? Will need child list of part_numbers, etc.
-                    foreach (MovementProductListItem movementProductListItem in myMovementProducts)
-                    {
-                        Product myProduct = Product.GetProduct(movementProductListItem.BaseProductID);
-                    }
+                    myInventoryTransData.custvend_id = myMovement.BusinessPartnerNumber;
 
                     //***** Check Business Partner Type, set appropriate field *****
-                    myInventoryTransData.custvend_id = myMovement.BusinessPartnerNumber;
-                    myInventoryTransData.package_type = myMovement.BusinessPartnerType.ToDescription();
                     if (myMovement.BusinessPartnerType == PartnerTypes.Customer)
                     {
                         //TODO: ADH 9/14/2020 - BUSINESS QUESTION: Can you associate an invoice to a movement? Is that how it works?
@@ -125,7 +118,20 @@ namespace QuantifyWebAPI.Controllers
                     else
                     {
                         myInventoryTransData.package_type = "Vendor";
-                        myInventoryTransData.order_id = myOrder.PurchaseOrderNumber;
+                        myInventoryTransData.order_id = myMovement.BackOrderNumber;
+                    }
+
+                    //***** Build line item data profile *****
+                    foreach (MovementProductListItem movementProductListItem in myMovementProducts)
+                    {
+                        Product myProduct = Product.GetProduct(movementProductListItem.BaseProductID);
+                        InventoryTransLine myTransLine = new InventoryTransLine();
+                        myTransLine.part_number = movementProductListItem.PartNumber;
+                        myTransLine.serial_number = myProduct.SerialNumber;
+                        myTransLine.quantity = movementProductListItem.Quantity.ToString();
+                        myTransLine.catalog = myProduct.ProductType.ToDescription();
+                        myTransLine.comment = movementProductListItem.Comment;
+                        myInventoryTransData.Lines.Add(myTransLine);
                     }
 
                     //***** Package as class, serialize to JSON and write to audit log table *****
