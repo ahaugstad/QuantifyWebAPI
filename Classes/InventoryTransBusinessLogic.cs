@@ -96,8 +96,7 @@ namespace QuantifyWebAPI.Controllers
                 {
                     string myMovementID = myRow["QuantifyID"].ToString();
                     Movement myMovement = myMovementsDictionary[myMovementID];
-                    Order myOrder = Order.GetOrder(myMovement.OrderID, myMovement.BusinessPartnerID);
-                    
+
                     MovementProductList myMovementProducts = MovementProductList.GetMovementProductList(myMovement.MovementID);
                     
                     //***** Populate Fields *****
@@ -109,7 +108,10 @@ namespace QuantifyWebAPI.Controllers
                     //myInventoryTransData.adjustment_type = myMovement.type;
 
                     //TODO: ADH 9/10/2020 - How to handle line items of a transaction? Will need child list of part_numbers, etc.
-                    //myInventoryTransData.part_number = myMovement.MovementProducts;
+                    foreach (MovementProductListItem movementProductListItem in myMovementProducts)
+                    {
+                        Product myProduct = Product.GetProduct(movementProductListItem.BaseProductID);
+                    }
 
                     //***** Check Business Partner Type, set appropriate field *****
                     myInventoryTransData.custvend_id = myMovement.BusinessPartnerNumber;
@@ -117,11 +119,12 @@ namespace QuantifyWebAPI.Controllers
                     if (myMovement.BusinessPartnerType == PartnerTypes.Customer)
                     {
                         //TODO: ADH 9/14/2020 - BUSINESS QUESTION: Can you associate an invoice to a movement? Is that how it works?
+                        myInventoryTransData.package_type = "Customer";
                         myInventoryTransData.order_id = myOrder.PurchaseOrderNumber;
                     }
                     else
                     {
-                        
+                        myInventoryTransData.package_type = "Vendor";
                         myInventoryTransData.order_id = myOrder.PurchaseOrderNumber;
                     }
 
