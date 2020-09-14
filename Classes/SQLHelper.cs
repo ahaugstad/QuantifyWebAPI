@@ -107,5 +107,78 @@ namespace QuantifyWebAPI.Classes
             return str;
         }
 
+        #region VersionHelper
+        public DataTable GetVersionTableStructure()
+        {
+            DataTable MyDataTable = new DataTable();
+            MyDataTable.Columns.Add("Entity", typeof(string));
+            MyDataTable.Columns.Add("QuantifyID", typeof(string));
+            MyDataTable.Columns.Add("Version", typeof(string));
+
+            return MyDataTable;
+        }
+
+        public DataTable CreateVersionDataRow(DataTable TargetDataTable, String Entity, String QuantifyID, String Version)
+        {
+            DataRow myNewRow = TargetDataTable.NewRow();
+            myNewRow["Entity"] = Entity;
+            myNewRow["QuantifyID"] = QuantifyID;     
+            myNewRow["Version"] = Version;
+            TargetDataTable.Rows.Add(myNewRow);
+
+            return TargetDataTable;
+        }
+        #endregion
+
+        #region AuditLogHelper
+        public DataTable GetAuditLogTableStructure()
+        {
+            DataTable MyDataTable = new DataTable();
+            MyDataTable.Columns.Add("QuantifyID", typeof(string));
+            MyDataTable.Columns.Add("Entity", typeof(string));
+            MyDataTable.Columns.Add("PackageSchema", typeof(string));
+            MyDataTable.Columns.Add("QuantifyDepartment", typeof(string));
+            MyDataTable.Columns.Add("ProcessStatus", typeof(string));
+
+            return MyDataTable;
+        }
+
+        public DataTable CreateAuditLogDataRow(DataTable TargetDataTable, String Entity, String QuantifyID, String PackageSchema, String QuantifyDepartment, String ProcessStatus)
+        {
+            DataRow myNewRow = TargetDataTable.NewRow();
+            myNewRow["Entity"] = Entity;
+            myNewRow["QuantifyID"] = QuantifyID;
+            myNewRow["PackageSchema"] = PackageSchema;
+            myNewRow["QuantifyDepartment"] = QuantifyDepartment;
+            myNewRow["ProcessStatus"] = ProcessStatus;
+            TargetDataTable.Rows.Add(myNewRow);
+
+            return TargetDataTable;
+        }
+        #endregion
+
+        #region XRefHelper
+        public DataTable GetXRefTableStructure()
+        {
+            DataTable MyDataTable = new DataTable();
+            MyDataTable.Columns.Add("QuantifyID", typeof(string));
+            MyDataTable.Columns.Add("PartNumber", typeof(string));
+            MyDataTable.Columns.Add("SerialNumber", typeof(string));
+
+
+            return MyDataTable;
+        }
+
+        public DataTable CreateXRefDataRow(DataTable TargetDataTable, String QuantifyID, String PartNumber, String SerialNumber)
+        {
+            DataRow myNewRow = TargetDataTable.NewRow();            
+            myNewRow["QuantifyID"] = QuantifyID;
+            myNewRow["PartNumber"] = PartNumber;
+            myNewRow["SerialNumber"] = SerialNumber;
+            TargetDataTable.Rows.Add(myNewRow);
+
+            return TargetDataTable;
+        }
+        #endregion
     }
 }

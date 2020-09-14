@@ -36,6 +36,7 @@ namespace QuantifyWebAPI.Controllers
     public class JobBusinessLogic
     {
         RaygunClient myRaygunClient = new RaygunClient();
+        SQLHelper MySqlHelper = new SQLHelper();
 
         public bool GetIDsToProcess(string connectionString)
         {
@@ -48,10 +49,10 @@ namespace QuantifyWebAPI.Controllers
 
             //***** Get all jobsites - will loop through this and compare VersionStamp against appropriate record in our JobVersions dictionary *****
             StockingLocationList all_jobsites = StockingLocationList.GetJobsites(false, JobTreeNodeDisplayType.Name, Guid.Empty);
-            DataTable dt = new DataTable();
-            dt.Columns.Add("Entity", typeof(string));
-            dt.Columns.Add("QuantifyID", typeof(string));
-            dt.Columns.Add("Version", typeof(string));
+
+
+            //***** Get DataTable Data Structure for Version Control Stored Procedure *****
+            DataTable dt = MySqlHelper.GetVersionTableStructure();
 
             Dictionary<string, StockingLocation> myJobsDictionary = new Dictionary<string, StockingLocation>();
 
@@ -59,13 +60,10 @@ namespace QuantifyWebAPI.Controllers
             {
                 StockingLocation jobsite = StockingLocation.GetStockingLocation(jobsiteItem.StockingLocationID, false);
                 string myJobsiteNumber = jobsite.Number;
-                DataRow myNewRow = dt.NewRow();
-                myNewRow["Entity"] = "Job";
-                myNewRow["QuantifyID"] = myJobsiteNumber;
                 string timestampVersion = "0x" + String.Join("", jobsite.VersionStamp.Select(b => Convert.ToString(b, 16)));
-                myNewRow["Version"] = timestampVersion.ToString();
 
-                dt.Rows.Add(myNewRow);
+                //***** Add record to data table to be written to Version table in SQL *****
+                dt = MySqlHelper.CreateVersionDataRow(dt, "Job", myJobsiteNumber, timestampVersion.ToString());           
 
                 //***** Build Dictionary *****
                 if(!myJobsDictionary.ContainsKey(myJobsiteNumber))
@@ -83,13 +81,8 @@ namespace QuantifyWebAPI.Controllers
             {
                 JobRootClass myJobs = new JobRootClass();
 
-                //***** Create audit log table structure *****
-                DataTable auditLog = new DataTable();
-                auditLog.Columns.Add("QuantifyID", typeof(string));
-                auditLog.Columns.Add("Entity", typeof(string));
-                auditLog.Columns.Add("PackageSchema", typeof(string));
-                auditLog.Columns.Add("QuantifyDepartment", typeof(string));
-                auditLog.Columns.Add("ProcessStatus", typeof(string));
+                //***** Create Audit Log and XRef table structures *****            
+                DataTable auditLog = MySqlHelper.GetAuditLogTableStructure();
 
                 foreach (DataRow myRow in myChangedRecords.Rows)
                 {
@@ -161,15 +154,9 @@ namespace QuantifyWebAPI.Controllers
                         myJobs.Job = myJobData;
                         string myJsonObject = JsonConvert.SerializeObject(myJobs);
 
-                        DataRow myNewRow = auditLog.NewRow();
-
-                        myNewRow["QuantifyID"] = myJobData.job_id;
-                        myNewRow["Entity"] = "Job";
-                        myNewRow["PackageSchema"] = myJsonObject;
-                        myNewRow["QuantifyDepartment"] = "";
-                        myNewRow["ProcessStatus"] = "A";
-
-                        auditLog.Rows.Add(myNewRow);
+                        //***** Create audit log datarow ******                 
+                        auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Job", myJobData.job_id, myJsonObject, "", "A");
+                  
                     }
                 }
                 //***** Create audit log record for Boomi to go pick up *****
