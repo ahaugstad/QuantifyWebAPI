@@ -53,10 +53,13 @@ namespace QuantifyWebAPI.Controllers
 
             QuantHelper.QuantifyLogin();
 
-            //***** Get all products - will loop through these collections and compare VersionStamp against appropriate record in our Products dictionary *****
-            //TODO: ADH 9/11/2020 - Concatenate these collection instead if possible, and if so remove duplicated code
+            //***** Get all products and all consumables - need to do this in separate calls
+            //***** Will loop through these collections and compare VersionStamp against appropriate record in our Products dictionary *****
             ProductCollection all_products = ProductCollection.GetProductCollection(ProductType.Product);
             ProductCollection all_consumables = ProductCollection.GetProductCollection(ProductType.Consumable);
+
+            //***** Concatenate product and consumable collections together so we only need to loop once *****
+            var combined_products = all_products.Concat(all_consumables);
             DataTable dt = new DataTable();
             dt.Columns.Add("Entity", typeof(string));
             dt.Columns.Add("QuantifyID", typeof(string));
@@ -64,8 +67,8 @@ namespace QuantifyWebAPI.Controllers
 
             Dictionary<string, Product> myProductsDictionary = new Dictionary<string, Product>();
 
-            //***** Loop through all products in product catalog *****
-            foreach (Product product in all_products)
+            //***** Loop through all products in both product and consumable catalogs *****
+            foreach (Product product in combined_products)
             {
                 string myPartNumber = product.PartNumber;
                 //***** If Product is Serialized, will need to create one record in Version table per Serialized Part *****
@@ -76,14 +79,15 @@ namespace QuantifyWebAPI.Controllers
                     {
                         string myProductID = myPartNumber + "|" + serializedPart.SerialNumber;
 
+                        //TODO: ADH 9/14/2020 - Create method for version datarow creation (put in SQL Helper class)
                         //***** Add record to data table to be written to Version table in SQL *****
                         DataRow myNewRow = dt.NewRow();
                         myNewRow["Entity"] = "Product";
                         myNewRow["QuantifyID"] = myProductID;
                         //string timestampVersion = "0x" + String.Join("", product.VersionStamp.Select(b => Convert.ToString(b, 16)));
                         //myNewRow["Version"] = timestampVersion.ToString();
-
                         dt.Rows.Add(myNewRow);
+                        //
 
                         //***** Build Dictionary *****
                         try
@@ -107,15 +111,17 @@ namespace QuantifyWebAPI.Controllers
                 {
                     string myProductID = myPartNumber;
 
+                    //TODO: ADH 9/14/2020 - Create method for version datarow creation (put in SQL Helper class)
                     //***** Add record to data table to be written to Version table in SQL *****
                     DataRow myNewRow = dt.NewRow();
                     myNewRow["Entity"] = "Product";
                     myNewRow["QuantifyID"] = myProductID;
                     //string timestampVersion = "0x" + String.Join("", product.VersionStamp.Select(b => Convert.ToString(b, 16)));
                     //myNewRow["Version"] = timestampVersion.ToString();
-
                     dt.Rows.Add(myNewRow);
+                    //
 
+                    //TODO: ADH 9/14/2020 - Create dictionary build method
                     //***** Build Dictionary *****
                     try
                     {
@@ -132,76 +138,7 @@ namespace QuantifyWebAPI.Controllers
                     {
                         myRaygunClient.SendInBackground(ex);
                     }
-                }   
-            }
-
-            //***** Loop through all products in consumable catalog *****
-            foreach (Product product in all_consumables)
-            {
-                string myPartNumber = product.PartNumber;
-                //***** If Product is Serialized, will need to create one record in Version table per Serialized Part *****
-                if (product.IsSerialized)
-                {
-                    SerializedPartList serializedParts = SerializedPartList.GetSerializedPartList(product.ProductID, StockedStatus.Both);
-                    foreach (SerializedPartListItem serializedPart in serializedParts)
-                    {
-                        string myProductID = myPartNumber + "|" + serializedPart.SerialNumber;
-                        //***** Add record to data table to be written to Version table in SQL *****
-                        DataRow myNewRow = dt.NewRow();
-                        myNewRow["Entity"] = "Product";
-                        myNewRow["QuantifyID"] = myProductID;
-                        //string timestampVersion = "0x" + String.Join("", product.VersionStamp.Select(b => Convert.ToString(b, 16)));
-                        //myNewRow["Version"] = timestampVersion.ToString();
-
-                        dt.Rows.Add(myNewRow);
-
-                        //***** Build Dictionary *****
-                        try
-                        {
-                            if (!myProductsDictionary.ContainsKey(myProductID))
-                            {
-                                myProductsDictionary.Add(myProductID, product);
-                            }
-                            else
-                            {
-                                throw new System.ArgumentException("Duplicate product id: " + myProductID, "Product Lookup");
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            myRaygunClient.SendInBackground(ex);
-                        }
-                    }
                 }
-                else
-                {
-                    string myProductID = myPartNumber;
-                    //***** Add record to data table to be written to Version table in SQL *****
-                    DataRow myNewRow = dt.NewRow();
-                    myNewRow["Entity"] = "Product";
-                    myNewRow["QuantifyID"] = myProductID;
-                    //string timestampVersion = "0x" + String.Join("", product.VersionStamp.Select(b => Convert.ToString(b, 16)));
-                    //myNewRow["Version"] = timestampVersion.ToString();
-
-                    dt.Rows.Add(myNewRow);
-
-                    //***** Build Dictionary *****
-                    try
-                    {
-                        if (!myProductsDictionary.ContainsKey(myProductID))
-                        {
-                            myProductsDictionary.Add(myProductID, product);
-                        }
-                        else
-                        {
-                            throw new System.ArgumentException("Duplicate product id: " + myProductID, "Product Lookup");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        myRaygunClient.SendInBackground(ex);
-                    }
-                } 
             }
 
             //***** Call data access layer *****
@@ -224,15 +161,15 @@ namespace QuantifyWebAPI.Controllers
             DataTable productXRef = new DataTable();
             productXRef.Columns.Add("QuantifyID", typeof(string));
             productXRef.Columns.Add("PartNumber", typeof(string));
-            //productXRef.Columns.Add("SerialNumber", typeof(string));
+            productXRef.Columns.Add("SerialNumber", typeof(string));
 
             //foreach (DataRow myRow in myChangedRecords.Rows)
             foreach (var myProductObj in myProductsDictionary)
             {
                 //string myProductID = myRow["QuantifyID"].ToString();
                 //Product myProduct = myProductsDictionary[myProductID];
-                Product myProduct = (Product) myProductObj.Value;  
-                    
+                Product myProduct = (Product) myProductObj.Value;
+                
                 //***** Populate Fields *****
                 ProductData myProductData = new ProductData();
 
@@ -259,21 +196,23 @@ namespace QuantifyWebAPI.Controllers
                     myProducts.Product = myProductData;
                     string myJsonObject = JsonConvert.SerializeObject(myProducts);
 
+                    //TODO: ADH 9/14/2020 - Create method for audit log datarow creation (put in SQL Helper class)
                     DataRow myNewRow = auditLog.NewRow();
                     myNewRow["QuantifyID"] = myProductData.product_id;
                     myNewRow["Entity"] = "Product";
                     myNewRow["PackageSchema"] = myJsonObject;
                     myNewRow["QuantifyDepartment"] = "";
                     myNewRow["ProcessStatus"] = "A";
-
                     auditLog.Rows.Add(myNewRow);
+                    //
 
+                    //TODO: ADH 9/14/2020 - Create method for XRef datarow creation (put in SQL Helper class)
                     DataRow myNewXRefRow = productXRef.NewRow();
                     myNewXRefRow["QuantifyID"] = myProductData.product_id;
                     myNewXRefRow["PartNumber"] = myProduct.PartNumber;
-                    //myNewXRefRow["SerialNumber"] = myProduct.SerialNumber;
-
+                    myNewXRefRow["SerialNumber"] = myProduct.SerialNumber;
                     productXRef.Rows.Add(myNewXRefRow);
+                    //
                 }
                 else
                 {
@@ -285,22 +224,23 @@ namespace QuantifyWebAPI.Controllers
                     myProducts.Product = myProductData;
                     string myJsonObject = JsonConvert.SerializeObject(myProducts);
 
+                    //TODO: ADH 9/14/2020 - Create method for audit log datarow creation (put in SQL Helper class)
                     DataRow myNewRow = auditLog.NewRow();
-
                     myNewRow["QuantifyID"] = myProductData.product_id;
                     myNewRow["Entity"] = "Product";
                     myNewRow["PackageSchema"] = myJsonObject;
                     myNewRow["QuantifyDepartment"] = "";
                     myNewRow["ProcessStatus"] = "A";
-
                     auditLog.Rows.Add(myNewRow);
+                    //
 
+                    //TODO: ADH 9/14/2020 - Create method for XRef datarow creation (put in SQL Helper class)
                     DataRow myNewXRefRow = productXRef.NewRow();
                     myNewXRefRow["QuantifyID"] = myProductData.product_id;
                     myNewXRefRow["PartNumber"] = myProduct.PartNumber;
-                    //myNewXRefRow["SerialNumber"] = myProduct.SerialNumber;
-
+                    myNewXRefRow["SerialNumber"] = myProduct.SerialNumber;
                     productXRef.Rows.Add(myNewXRefRow);
+                    //
                 }   
             }
             //***** Insert to Audit Log and XRef tables for Boomi to reference *****

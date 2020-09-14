@@ -112,14 +112,17 @@ namespace QuantifyWebAPI.Controllers
                     //myInventoryTransData.part_number = myMovement.MovementProducts;
 
                     //***** Check Business Partner Type, set appropriate field *****
+                    myInventoryTransData.custvend_id = myMovement.BusinessPartnerNumber;
+                    myInventoryTransData.package_type = myMovement.BusinessPartnerType.ToDescription();
                     if (myMovement.BusinessPartnerType == PartnerTypes.Customer)
                     {
-                        myInventoryTransData.customer_id = myMovement.BusinessPartnerNumber;
+                        //TODO: ADH 9/14/2020 - BUSINESS QUESTION: Can you associate an invoice to a movement? Is that how it works?
+                        myInventoryTransData.order_id = myOrder.PurchaseOrderNumber;
                     }
                     else
                     {
-                        myInventoryTransData.vendor_id = myMovement.BusinessPartnerNumber;
-                        myInventoryTransData.purchase_order_id = myOrder.PurchaseOrderNumber;
+                        
+                        myInventoryTransData.order_id = myOrder.PurchaseOrderNumber;
                     }
 
                     //***** Package as class, serialize to JSON and write to audit log table *****

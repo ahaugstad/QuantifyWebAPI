@@ -249,6 +249,7 @@
     <Content Include="Areas\HelpPage\Views\Help\Api.cshtml" />
     <Content Include="JSON_Profiles\CustomerPost.json" />
     <Content Include="JSON_Profiles\JobGet.json" />
+    <Content Include="JSON_Profiles\InventoryTransPost.json" />
     <None Include="Properties\PublishProfiles\IISProfile.pubxml" />
     <None Include="Scripts\jquery-3.4.1.intellisense.js" />
     <Content Include="Scripts\jquery-3.4.1.js" />
