@@ -36,6 +36,7 @@ namespace QuantifyWebAPI.Controllers
     public class ProductBusinessLogic
     {
         RaygunClient myRaygunClient = new RaygunClient();
+        SQLHelper MySqlHelper = new SQLHelper();
 
         // GET: api/Jobs/3
         public string Initialize()
@@ -60,10 +61,9 @@ namespace QuantifyWebAPI.Controllers
 
             //***** Concatenate product and consumable collections together so we only need to loop once *****
             var combined_products = all_products.Concat(all_consumables);
-            DataTable dt = new DataTable();
-            dt.Columns.Add("Entity", typeof(string));
-            dt.Columns.Add("QuantifyID", typeof(string));
-            dt.Columns.Add("Version", typeof(string));
+
+            //***** Get DataTable Data Structure for Version Control Stored Procedure *****
+            DataTable dt = MySqlHelper.GetVersionTableStructure();
 
             Dictionary<string, Product> myProductsDictionary = new Dictionary<string, Product>();
 
@@ -79,15 +79,8 @@ namespace QuantifyWebAPI.Controllers
                     {
                         string myProductID = myPartNumber + "|" + serializedPart.SerialNumber;
 
-                        //TODO: ADH 9/14/2020 - Create method for version datarow creation (put in SQL Helper class)
                         //***** Add record to data table to be written to Version table in SQL *****
-                        DataRow myNewRow = dt.NewRow();
-                        myNewRow["Entity"] = "Product";
-                        myNewRow["QuantifyID"] = myProductID;
-                        //string timestampVersion = "0x" + String.Join("", product.VersionStamp.Select(b => Convert.ToString(b, 16)));
-                        //myNewRow["Version"] = timestampVersion.ToString();
-                        dt.Rows.Add(myNewRow);
-                        //
+                        dt = MySqlHelper.CreateVersionDataRow(dt, "Product", myProductID, "");           
 
                         //***** Build Dictionary *****
                         try
@@ -110,17 +103,10 @@ namespace QuantifyWebAPI.Controllers
                 else
                 {
                     string myProductID = myPartNumber;
-
-                    //TODO: ADH 9/14/2020 - Create method for version datarow creation (put in SQL Helper class)
+                
                     //***** Add record to data table to be written to Version table in SQL *****
-                    DataRow myNewRow = dt.NewRow();
-                    myNewRow["Entity"] = "Product";
-                    myNewRow["QuantifyID"] = myProductID;
-                    //string timestampVersion = "0x" + String.Join("", product.VersionStamp.Select(b => Convert.ToString(b, 16)));
-                    //myNewRow["Version"] = timestampVersion.ToString();
-                    dt.Rows.Add(myNewRow);
-                    //
-
+                    MySqlHelper.CreateVersionDataRow(dt, "Product", myProductID, "");
+      
                     //TODO: ADH 9/14/2020 - Create dictionary build method
                     //***** Build Dictionary *****
                     try
@@ -150,18 +136,10 @@ namespace QuantifyWebAPI.Controllers
             //{
             ProductRootClass myProducts = new ProductRootClass();
 
-            //***** Create Audit Log and XRef table structures *****
-            DataTable auditLog = new DataTable();
-            auditLog.Columns.Add("QuantifyID", typeof(string));
-            auditLog.Columns.Add("Entity", typeof(string));
-            auditLog.Columns.Add("PackageSchema", typeof(string));
-            auditLog.Columns.Add("QuantifyDepartment", typeof(string));
-            auditLog.Columns.Add("ProcessStatus", typeof(string));
+            //***** Create Audit Log and XRef table structures *****            
+            DataTable auditLog = MySqlHelper.GetAuditLogTableStructure();
 
-            DataTable productXRef = new DataTable();
-            productXRef.Columns.Add("QuantifyID", typeof(string));
-            productXRef.Columns.Add("PartNumber", typeof(string));
-            productXRef.Columns.Add("SerialNumber", typeof(string));
+            DataTable productXRef =  MySqlHelper.GetXRefTableStructure();
 
             //foreach (DataRow myRow in myChangedRecords.Rows)
             foreach (var myProductObj in myProductsDictionary)
@@ -196,23 +174,13 @@ namespace QuantifyWebAPI.Controllers
                     myProducts.Product = myProductData;
                     string myJsonObject = JsonConvert.SerializeObject(myProducts);
 
-                    //TODO: ADH 9/14/2020 - Create method for audit log datarow creation (put in SQL Helper class)
-                    DataRow myNewRow = auditLog.NewRow();
-                    myNewRow["QuantifyID"] = myProductData.product_id;
-                    myNewRow["Entity"] = "Product";
-                    myNewRow["PackageSchema"] = myJsonObject;
-                    myNewRow["QuantifyDepartment"] = "";
-                    myNewRow["ProcessStatus"] = "A";
-                    auditLog.Rows.Add(myNewRow);
-                    //
+                    //***** Create audit log datarow ******                 
+                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Product", myProductData.product_id, myJsonObject, "", "A");
 
-                    //TODO: ADH 9/14/2020 - Create method for XRef datarow creation (put in SQL Helper class)
+                    //****** Create XRef datarow *****
+                    productXRef = MySqlHelper.CreateXRefDataRow(productXRef, myProductData.product_id, myProduct.PartNumber, myProduct.SerialNumber);
                     DataRow myNewXRefRow = productXRef.NewRow();
-                    myNewXRefRow["QuantifyID"] = myProductData.product_id;
-                    myNewXRefRow["PartNumber"] = myProduct.PartNumber;
-                    myNewXRefRow["SerialNumber"] = myProduct.SerialNumber;
-                    productXRef.Rows.Add(myNewXRefRow);
-                    //
+         
                 }
                 else
                 {
@@ -224,23 +192,12 @@ namespace QuantifyWebAPI.Controllers
                     myProducts.Product = myProductData;
                     string myJsonObject = JsonConvert.SerializeObject(myProducts);
 
-                    //TODO: ADH 9/14/2020 - Create method for audit log datarow creation (put in SQL Helper class)
-                    DataRow myNewRow = auditLog.NewRow();
-                    myNewRow["QuantifyID"] = myProductData.product_id;
-                    myNewRow["Entity"] = "Product";
-                    myNewRow["PackageSchema"] = myJsonObject;
-                    myNewRow["QuantifyDepartment"] = "";
-                    myNewRow["ProcessStatus"] = "A";
-                    auditLog.Rows.Add(myNewRow);
-                    //
+                    //***** Create audit log datarow ******                 
+                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Product", myProductData.product_id, myJsonObject, "", "A");
 
-                    //TODO: ADH 9/14/2020 - Create method for XRef datarow creation (put in SQL Helper class)
+                    //****** Create XRef datarow *****
+                    productXRef = MySqlHelper.CreateXRefDataRow(productXRef, myProductData.product_id, myProduct.PartNumber, myProduct.SerialNumber);
                     DataRow myNewXRefRow = productXRef.NewRow();
-                    myNewXRefRow["QuantifyID"] = myProductData.product_id;
-                    myNewXRefRow["PartNumber"] = myProduct.PartNumber;
-                    myNewXRefRow["SerialNumber"] = myProduct.SerialNumber;
-                    productXRef.Rows.Add(myNewXRefRow);
-                    //
                 }   
             }
             //***** Insert to Audit Log and XRef tables for Boomi to reference *****
