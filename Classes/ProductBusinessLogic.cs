@@ -35,8 +35,11 @@ namespace QuantifyWebAPI.Controllers
 {
     public class ProductBusinessLogic
     {
+        //***** Initialize Raygun Client and Helper classes
         RaygunClient myRaygunClient = new RaygunClient();
         SQLHelper MySqlHelper = new SQLHelper();
+        QuantifyHelper QuantHelper = new QuantifyHelper();
+        BoomiHelper BoomiHelper = new BoomiHelper();
 
         // GET: api/Jobs/3
         public string Initialize()
@@ -48,9 +51,6 @@ namespace QuantifyWebAPI.Controllers
         public bool GetIDsToProcess(string connectionString)
         {
             bool success = true;
-
-            QuantifyHelper QuantHelper = new QuantifyHelper();
-            BoomiHelper BoomiHelper = new BoomiHelper();
 
             QuantHelper.QuantifyLogin();
 
@@ -71,11 +71,12 @@ namespace QuantifyWebAPI.Controllers
             foreach (Product product in combined_products)
             {
                 string myProductID = product.PartNumber;
-                
+                //TODO: ADH 9/14/2020 - Revise this to take in product VersionStamp once Avontus implements it
+                //string timestampVersion = "0x" + String.Join("", jobsite.VersionStamp.Select(b => Convert.ToString(b, 16)));
+
                 //***** Add record to data table to be written to Version table in SQL *****
-                MySqlHelper.CreateVersionDataRow(dt, "Product", myProductID, "");
+                dt = MySqlHelper.CreateVersionDataRow(dt, "Product", myProductID, "");
       
-                //TODO: ADH 9/14/2020 - Create dictionary build method
                 //***** Build Dictionary *****
                 try
                 {

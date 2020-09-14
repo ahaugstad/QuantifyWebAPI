@@ -35,15 +35,15 @@ namespace QuantifyWebAPI.Controllers
 {
     public class JobBusinessLogic
     {
+        //***** Initialize Raygun Client and Helper classes
         RaygunClient myRaygunClient = new RaygunClient();
         SQLHelper MySqlHelper = new SQLHelper();
+        QuantifyHelper QuantHelper = new QuantifyHelper();
+        BoomiHelper BoomiHelper = new BoomiHelper();
 
         public bool GetIDsToProcess(string connectionString)
         {
             bool success = true;
-
-            QuantifyHelper QuantHelper = new QuantifyHelper();
-            BoomiHelper BoomiHelper = new BoomiHelper();
 
             QuantHelper.QuantifyLogin();
 
