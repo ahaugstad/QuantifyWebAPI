@@ -1,5 +1,6 @@
 ﻿// System References
 using System;
+using System.Data;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -50,8 +51,8 @@ namespace QuantifyWebAPI.Controllers
             myProductResponse.GetIDsToProcess(StrVersionDBConn);
 
             //***** Run Inventory Transactions *****
-            //InventoryTransBusinessLogic myInventTranResponse = new InventoryTransBusinessLogic();
-            //myInventTranResponse.GetIDsToProcess(StrVersionDBConn);
+            InventoryTransBusinessLogic myInventoryTransResponse = new InventoryTransBusinessLogic();
+            myInventoryTransResponse.GetIDsToProcess(StrVersionDBConn);
         }
 
         //***** This method is called anytime a Quantify-inbound request comes in from Boomi *****
@@ -83,7 +84,7 @@ namespace QuantifyWebAPI.Controllers
             {
                 myRaygunClient.SendInBackground(ex);
                 HttpResponse = Request.CreateResponse(HttpStatusCode.OK);
-                //ToDo:ERC 9/7/2020 Possibly Need to make Repsonse Classs
+                //ToDo:ERC 9/7/2020 Possibly Need to make Repsonse Class
                 HttpResponse.Content = new StringContent("Failed");
             }
             return HttpResponse;

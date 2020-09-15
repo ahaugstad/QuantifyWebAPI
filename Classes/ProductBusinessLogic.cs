@@ -35,8 +35,11 @@ namespace QuantifyWebAPI.Controllers
 {
     public class ProductBusinessLogic
     {
+        //***** Initialize Raygun Client and Helper classes
         RaygunClient myRaygunClient = new RaygunClient();
         SQLHelper MySqlHelper = new SQLHelper();
+        QuantifyHelper QuantHelper = new QuantifyHelper();
+        BoomiHelper BoomiHelper = new BoomiHelper();
 
         // GET: api/Jobs/3
         public string Initialize()
@@ -48,9 +51,6 @@ namespace QuantifyWebAPI.Controllers
         public bool GetIDsToProcess(string connectionString)
         {
             bool success = true;
-
-            QuantifyHelper QuantHelper = new QuantifyHelper();
-            BoomiHelper BoomiHelper = new BoomiHelper();
 
             QuantHelper.QuantifyLogin();
 
@@ -70,60 +70,28 @@ namespace QuantifyWebAPI.Controllers
             //***** Loop through all products in both product and consumable catalogs *****
             foreach (Product product in combined_products)
             {
-                string myPartNumber = product.PartNumber;
-                //***** If Product is Serialized, will need to create one record in Version table per Serialized Part *****
-                if (product.IsSerialized)
-                {
-                    SerializedPartList serializedParts = SerializedPartList.GetSerializedPartList(product.ProductID, StockedStatus.Both);
-                    foreach (SerializedPartListItem serializedPart in serializedParts)
-                    {
-                        string myProductID = myPartNumber + "|" + serializedPart.SerialNumber;
+                string myProductID = product.PartNumber;
+                //TODO: ADH 9/14/2020 - Revise this to take in product VersionStamp once Avontus implements it
+                //string timestampVersion = "0x" + String.Join("", jobsite.VersionStamp.Select(b => Convert.ToString(b, 16)));
 
-                        //***** Add record to data table to be written to Version table in SQL *****
-                        dt = MySqlHelper.CreateVersionDataRow(dt, "Product", myProductID, "");           
-
-                        //***** Build Dictionary *****
-                        try
-                        {
-                            if (!myProductsDictionary.ContainsKey(myProductID))
-                            {
-                                myProductsDictionary.Add(myProductID, product);
-                            }
-                            else
-                            {
-                                throw new System.ArgumentException("Duplicate product id", "Product Lookup");
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            myRaygunClient.SendInBackground(ex);
-                        }
-                    } 
-                }
-                else
-                {
-                    string myProductID = myPartNumber;
-                
-                    //***** Add record to data table to be written to Version table in SQL *****
-                    MySqlHelper.CreateVersionDataRow(dt, "Product", myProductID, "");
+                //***** Add record to data table to be written to Version table in SQL *****
+                dt = MySqlHelper.CreateVersionDataRow(dt, "Product", myProductID, "");
       
-                    //TODO: ADH 9/14/2020 - Create dictionary build method
-                    //***** Build Dictionary *****
-                    try
+                //***** Build Dictionary *****
+                try
+                {
+                    if (!myProductsDictionary.ContainsKey(myProductID))
                     {
-                        if (!myProductsDictionary.ContainsKey(myProductID))
-                        {
-                            myProductsDictionary.Add(myProductID, product);
-                        }
-                        else
-                        {
-                            throw new System.ArgumentException("Duplicate product id", "Product Lookup");
-                        }
+                        myProductsDictionary.Add(myProductID, product);
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        myRaygunClient.SendInBackground(ex);
+                        throw new System.ArgumentException("Duplicate product id", "Product Lookup");
                     }
+                }
+                catch (Exception ex)
+                {
+                    myRaygunClient.SendInBackground(ex);
                 }
             }
 
@@ -138,7 +106,6 @@ namespace QuantifyWebAPI.Controllers
 
             //***** Create Audit Log and XRef table structures *****            
             DataTable auditLog = MySqlHelper.GetAuditLogTableStructure();
-
             DataTable productXRef =  MySqlHelper.GetXRefTableStructure();
 
             //foreach (DataRow myRow in myChangedRecords.Rows)
@@ -146,59 +113,31 @@ namespace QuantifyWebAPI.Controllers
             {
                 //string myProductID = myRow["QuantifyID"].ToString();
                 //Product myProduct = myProductsDictionary[myProductID];
-                Product myProduct = (Product) myProductObj.Value;
-                
-                //***** Populate Fields *****
-                ProductData myProductData = new ProductData();
 
-                //TODO: ADH 9/10/2020 - See if workaround for getting cost code without doing a lookup in loop for Product Category
+                //***** Initialize classes to use in building data profile
+                Product myProduct = (Product)myProductObj.Value;
+                ProductData myProductData = new ProductData();
                 ProductCategory myProductCategory = ProductCategory.GetProductCategory(myProduct.ProductCategoryID, myProduct.ProductType);
 
+                //***** Build data profile *****
                 myProductData.catalog = myProduct.ProductType.ToDescription();
                 myProductData.category = myProductCategory.RevenueCode;
                 myProductData.cost_code = myProductCategory.CostCode;
                 myProductData.list_price = myProduct.DefaultList.ToString();
                 myProductData.unit_cost = myProduct.DefaultCost.ToString();
+                myProductData.product_id = myProductObj.Key;
+                myProductData.description = myProduct.Description;
 
-                if (myProduct.IsSerialized)
-                {
-                    char[] separator = { '|' };
-                    string[] productIDSplit = myProductObj.Key.Split(separator);
-                    string serialNumber = productIDSplit[productIDSplit.Length - 1];
-                    SerializedPart serializedPart = SerializedPart.GetSerializedPart(serialNumber);
-                    myProductData.product_id = myProductObj.Key;
-                    myProductData.description = serializedPart.Description;
+                //***** Package as class, serialize to JSON and write to data table to get mass inserted into SQL *****
+                myProducts.entity = "Product";
+                myProducts.Product = myProductData;
+                string myJsonObject = JsonConvert.SerializeObject(myProducts);
 
-                    //***** Package as class, serialize to JSON and write to data tables to get mass inserted into SQL *****
-                    myProducts.entity = "Product";
-                    myProducts.Product = myProductData;
-                    string myJsonObject = JsonConvert.SerializeObject(myProducts);
+                //***** Create audit log datarow ******                 
+                auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Product", myProductData.product_id, myJsonObject, "", "A");
 
-                    //***** Create audit log datarow ******                 
-                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Product", myProductData.product_id, myJsonObject, "", "A");
-
-                    //****** Create XRef datarow *****
-                    productXRef = MySqlHelper.CreateXRefDataRow(productXRef, myProductData.product_id, myProduct.PartNumber, myProduct.SerialNumber);
-                    DataRow myNewXRefRow = productXRef.NewRow();
-         
-                }
-                else
-                {
-                    myProductData.product_id = myProductObj.Key;
-                    myProductData.description = myProduct.Description;
-
-                    //***** Package as class, serialize to JSON and write to data table to get mass inserted into SQL *****
-                    myProducts.entity = "Product";
-                    myProducts.Product = myProductData;
-                    string myJsonObject = JsonConvert.SerializeObject(myProducts);
-
-                    //***** Create audit log datarow ******                 
-                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Product", myProductData.product_id, myJsonObject, "", "A");
-
-                    //****** Create XRef datarow *****
-                    productXRef = MySqlHelper.CreateXRefDataRow(productXRef, myProductData.product_id, myProduct.PartNumber, myProduct.SerialNumber);
-                    DataRow myNewXRefRow = productXRef.NewRow();
-                }   
+                //****** Create XRef datarow *****
+                productXRef = MySqlHelper.CreateXRefDataRow(productXRef, myProductData.product_id, myProduct.PartNumber, "");
             }
             //***** Insert to Audit Log and XRef tables for Boomi to reference *****
             DataTable myReturnResultAudit = myDAL.InsertAuditLog(auditLog, connectionString);

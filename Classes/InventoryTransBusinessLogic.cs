@@ -35,39 +35,34 @@ namespace QuantifyWebAPI.Controllers
 {
     public class InventoryTransBusinessLogic
     {
+        //***** Initialize Raygun Client and Helper classes
         RaygunClient myRaygunClient = new RaygunClient();
+        SQLHelper MySqlHelper = new SQLHelper();
+        QuantifyHelper QuantHelper = new QuantifyHelper();
+        BoomiHelper BoomiHelper = new BoomiHelper();
 
         public bool GetIDsToProcess(string connectionString)
         {
             bool success = true;
-
-            QuantifyHelper QuantHelper = new QuantifyHelper();
-            BoomiHelper BoomiHelper = new BoomiHelper();
 
             QuantHelper.QuantifyLogin();
 
             //***** Get all Transactions - will loop through this and compare VersionStamp against appropriate record in our TransactionVersions dictionary *****
             //MovementList all_Transactions = MovementList.GetMovementList((false, JobTreeNodeDisplayType.Name, Guid.Empty);
             MovementCollection all_Movements = MovementCollection.GetMovementCollection(MovementType.All);
-            
 
-            DataTable dt = new DataTable();
-            dt.Columns.Add("Entity", typeof(string));
-            dt.Columns.Add("QuantifyID", typeof(string));
-            dt.Columns.Add("Version", typeof(string));
+            //***** Get DataTable Data Structure for Version Control Stored Procedure *****
+            DataTable dt = MySqlHelper.GetVersionTableStructure();
 
             Dictionary<string, Movement> myMovementsDictionary = new Dictionary<string, Movement>();
 
             foreach (Movement myMovement in all_Movements)
             {
                 string myMovementNumber = myMovement.MovementNumber;
-                DataRow myNewRow = dt.NewRow();
-                myNewRow["Entity"] = "InventoryTrans";
-                myNewRow["QuantifyID"] = myMovementNumber;
                 string timestampVersion = "0x" + String.Join("", myMovement.VersionStamp.Select(b => Convert.ToString(b, 16)));
-                myNewRow["Version"] = timestampVersion.ToString();
 
-                dt.Rows.Add(myNewRow);
+                //***** Add record to data table to be written to Version table in SQL *****
+                dt = MySqlHelper.CreateVersionDataRow(dt, "Job", myMovementNumber, timestampVersion.ToString());
 
                 //***** Build Dictionary *****
                 if(!myMovementsDictionary.ContainsKey(myMovementNumber))
@@ -85,45 +80,50 @@ namespace QuantifyWebAPI.Controllers
             {
                 InventoryTransRootClass myInventoryTransactions = new InventoryTransRootClass();
 
-                //***** Create audit log table structure *****
-                DataTable auditLog = new DataTable();
-                auditLog.Columns.Add("QuantifyID", typeof(string));
-                auditLog.Columns.Add("Entity", typeof(string));
-                auditLog.Columns.Add("PackageSchema", typeof(string));
-                auditLog.Columns.Add("QuantifyDepartment", typeof(string));
-                auditLog.Columns.Add("ProcessStatus", typeof(string));
+                //***** Create Audit Log and XRef table structures *****            
+                DataTable auditLog = MySqlHelper.GetAuditLogTableStructure();
 
                 foreach (DataRow myRow in myChangedRecords.Rows)
                 {
+                    //***** Initalize fields and classes to be used to build data profile *****
                     string myMovementID = myRow["QuantifyID"].ToString();
                     Movement myMovement = myMovementsDictionary[myMovementID];
-                    Order myOrder = Order.GetOrder(myMovement.OrderID, myMovement.BusinessPartnerID);
-                    
+                    Order myOrder = Order.GetOrder(myMovement.OrderID);
                     MovementProductList myMovementProducts = MovementProductList.GetMovementProductList(myMovement.MovementID);
                     
-                    //***** Populate Fields *****
+                    //***** Build header data profile *****
                     InventoryTransData myInventoryTransData = new InventoryTransData();
-
+                    myInventoryTransData.inventory_trans_id = myMovementID;
                     myInventoryTransData.transaction_type = myMovement.TypeOfMovement.ToDescription();
-
+                    myInventoryTransData.package_type = myMovement.BusinessPartnerType.ToDescription();
                     //TODO: ADH 9/10/2020 - Do we need adjustment type? No field in Quantify like that, and transaction type will probably do the trick
                     //myInventoryTransData.adjustment_type = myMovement.type;
-
-                    //TODO: ADH 9/10/2020 - How to handle line items of a transaction? Will need child list of part_numbers, etc.
-                    //myInventoryTransData.part_number = myMovement.MovementProducts;
+                    myInventoryTransData.custvend_id = myMovement.BusinessPartnerNumber;
 
                     //***** Check Business Partner Type, set appropriate field *****
-                    myInventoryTransData.custvend_id = myMovement.BusinessPartnerNumber;
-                    myInventoryTransData.package_type = myMovement.BusinessPartnerType.ToDescription();
                     if (myMovement.BusinessPartnerType == PartnerTypes.Customer)
                     {
                         //TODO: ADH 9/14/2020 - BUSINESS QUESTION: Can you associate an invoice to a movement? Is that how it works?
+                        myInventoryTransData.package_type = "Customer";
                         myInventoryTransData.order_id = myOrder.PurchaseOrderNumber;
                     }
                     else
                     {
-                        
-                        myInventoryTransData.order_id = myOrder.PurchaseOrderNumber;
+                        myInventoryTransData.package_type = "Vendor";
+                        myInventoryTransData.order_id = myMovement.BackOrderNumber;
+                    }
+
+                    //***** Build line item data profile *****
+                    foreach (MovementProductListItem movementProductListItem in myMovementProducts)
+                    {
+                        Product myProduct = Product.GetProduct(movementProductListItem.BaseProductID);
+                        InventoryTransLine myTransLine = new InventoryTransLine();
+                        myTransLine.part_number = movementProductListItem.PartNumber;
+                        myTransLine.serial_number = myProduct.SerialNumber;
+                        myTransLine.quantity = movementProductListItem.Quantity.ToString();
+                        myTransLine.catalog = myProduct.ProductType.ToDescription();
+                        myTransLine.comment = movementProductListItem.Comment;
+                        myInventoryTransData.Lines.Add(myTransLine);
                     }
 
                     //***** Package as class, serialize to JSON and write to audit log table *****
@@ -131,15 +131,8 @@ namespace QuantifyWebAPI.Controllers
                     myInventoryTransactions.InventoryTrans = myInventoryTransData;
                     string myJsonObject = JsonConvert.SerializeObject(myInventoryTransactions);
 
-                    DataRow myNewRow = auditLog.NewRow();
-
-                    myNewRow["QuantifyID"] = myInventoryTransData.inventory_trans_id;
-                    myNewRow["Entity"] = "InventoryTrans";
-                    myNewRow["PackageSchema"] = myJsonObject;
-                    myNewRow["QuantifyDepartment"] = "";
-                    myNewRow["ProcessStatus"] = "A";
-
-                    auditLog.Rows.Add(myNewRow);
+                    //***** Create audit log datarow ******                 
+                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Job", myInventoryTransData.inventory_trans_id, myJsonObject, "", "A");
                 }
                 //***** Create audit log record for Boomi to go pick up *****
                 // REST API URL: http://apimariaasad01.apigroupinc.api:9090/ws/rest/webapps_quantify/api

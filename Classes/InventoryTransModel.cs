@@ -31,14 +31,14 @@ namespace QuantifyWebAPI.Classes
         public string adjustment_type { get; set; }
         public string custvend_id { get; set; }
         public string order_id { get; set; }
-        public List<InventoryTransLines> Lines { get; set; }
+        public List<InventoryTransLine> Lines { get; set; }
     }
 
-    public class InventoryTransLines
+    public class InventoryTransLine
     {
         public string part_number { get; set; }
         public string serial_number { get; set; }
-        public int quantity { get; set; }
+        public string quantity { get; set; }
         public string catalog { get; set; }
         public string comment { get; set; }
     }
