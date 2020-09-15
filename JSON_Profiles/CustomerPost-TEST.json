@@ -1,0 +1,24 @@
+// Use this file to feed test data into CustomerBusinessLogic - will also need to uncomment proper line to overwrite JSON parameter with this data.
+
+{
+  "entity": "Customer",
+  "CustomerData": {
+    "customer_id": "100317",
+    "customer_name": "BECHTEL NATIONAL, INC",
+    "is_active": "A",
+    "Address": [
+      {
+        "address1": "100 UNION VALLEY RD",
+        "city": "OAK RIDGE",
+        "state": "TN",
+        "zip": "37830-8044",
+        "country": "USA"
+      }
+    ],
+    "Contact": [
+      {
+        "contact_email": "testemail@apigroupinc.us"
+      }
+    ]
+  }
+}

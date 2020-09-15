@@ -61,7 +61,7 @@ namespace QuantifyWebAPI.Controllers
         {
             //***** Initialization *****
             HttpResponseMessage HttpResponse = null;
-            string myResponse = "Sucess";
+            string myResponse = "Success";
 
             string RequestType = jsonResult["entity"].ToString();
             try

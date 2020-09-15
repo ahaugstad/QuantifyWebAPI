@@ -1,5 +1,7 @@
 ﻿// System References
 using System;
+using System.Reflection;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -35,13 +37,12 @@ namespace QuantifyWebAPI.Controllers
     public class CustomerBusinessLogic
     {
         RaygunClient myRaygunClient = new RaygunClient();
-        public string UpsertCustomerData(JObject jsonResult)
+        
+    public string UpsertCustomerData(JObject jsonResult)
         {
             //***** Initialization *****
             string myResponse = "";
-
             
-
             //***** Instantiate response class for logging successes/errors if fail ***** 
             CustomerResponseObj customerResponse = new CustomerResponseObj();
 
