@@ -55,6 +55,45 @@ namespace QuantifyWebAPI.Controllers
             myInventoryTransResponse.GetIDsToProcess(StrVersionDBConn);
         }
 
+        [HttpGet]
+        public string ReprocessAuditLogErrorByEntityAndQuantifyID(string Entity, string QuantifyID)
+        {
+            //***** Use the following Link to Test Passing Parameters via Get to Execute Controller.    *****
+            //*****         Change parameters to match your test.                                       *****                                                                      
+            //***** https://localhost:44387/api/DataRouterPost/ReprocessAuditLogErrorByEntityAndQuantifyID?Entity=test&QuantifyID=Junk *****
+            DataTable myDalResponse = new DataTable();
+            DAL myDAL = new DAL();
+            myDalResponse = myDAL.ReprocessAuditLogErrorByEntityAndQuantifyID(Entity, QuantifyID, StrVersionDBConn);
+
+            return myDalResponse.Rows[0]["Status"].ToString();
+        }
+
+        [HttpGet]
+        public string ReprocessAuditLogErrorByEntity(string Entity)
+        {
+            //***** Use the following Link to Test Passing the Entity Parameter via Get to Execute Controller.  *****
+            //*****         Change parameters to match your test.                                               *****  
+            //***** https://localhost:44387/api/DataRouterPost/ReprocessAuditLogErrorByEntity?Entity=Jobs       *****
+            DataTable myDalResponse = new DataTable();
+            DAL myDAL = new DAL();
+            myDalResponse = myDAL.ReprocessAuditLogErrorByEntity(Entity,  StrVersionDBConn);
+
+            return myDalResponse.Rows[0]["Status"].ToString();
+        }
+
+        [HttpGet]
+        public string RemoveOldQuantifyLogRecords(string ProcessStatus)
+        {
+            //***** Use the following Link to Test Passing the ProcessStatus Parameter via Get to Execute       *****
+            //*****         Controller. Change parameters to match your test.                                               *****
+            //***** https://localhost:44387/api/DataRouterPost/ReprocessAuditLogErrorByEntity?ProcessStatus=P   *****
+            DataTable myDalResponse = new DataTable();
+            DAL myDAL = new DAL();
+            myDalResponse = myDAL.RemoveOldQuantifyLogRecords(ProcessStatus,  StrVersionDBConn);
+
+            return myDalResponse.Rows[0]["Status"].ToString();
+        }
+
         //***** This method is called anytime a Quantify-inbound request comes in from Boomi *****
         [HttpPost]
         public HttpResponseMessage UpsertDataObject(JObject jsonResult)
