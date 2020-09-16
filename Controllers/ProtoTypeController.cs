@@ -33,6 +33,7 @@ namespace QuantifyWebAPI.Controllers
 {
     public class ProtoTypeController : ApiController
     {
+        //***** https://localhost:44387/api/DataRouterPost/PingInitialization *****
 
         String StrVersionDBConn = ConfigurationManager.AppSettings["QuantifyPersistanceLayerDBConn"];
         RaygunClient myRaygunClient = new RaygunClient();
