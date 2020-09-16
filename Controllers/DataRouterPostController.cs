@@ -47,12 +47,16 @@ namespace QuantifyWebAPI.Controllers
             myJobResponse.GetIDsToProcess(StrVersionDBConn);
 
             //***** Run Products *****
-            ProductBusinessLogic myProductResponse = new ProductBusinessLogic();
-            myProductResponse.GetIDsToProcess(StrVersionDBConn);
+            //ProductBusinessLogic myProductResponse = new ProductBusinessLogic();
+            //myProductResponse.GetIDsToProcess(StrVersionDBConn);
 
             //***** Run Inventory Transactions *****
             InventoryTransBusinessLogic myInventoryTransResponse = new InventoryTransBusinessLogic();
             myInventoryTransResponse.GetIDsToProcess(StrVersionDBConn);
+
+            //***** Run Purchase Order Transactions *****
+            PurchaseOrderBusinessLogic myPurchaseOrderResponse = new PurchaseOrderBusinessLogic();
+            myPurchaseOrderResponse.GetIDsToProcess(StrVersionDBConn);
         }
 
         //***** This method is called anytime a Quantify-inbound request comes in from Boomi *****
