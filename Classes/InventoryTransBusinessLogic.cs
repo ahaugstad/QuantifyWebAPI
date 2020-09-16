@@ -92,8 +92,7 @@ namespace QuantifyWebAPI.Controllers
                     MovementProductList myMovementProducts = MovementProductList.GetMovementProductList(myMovement.MovementID);
                     
                     //***** Build header data profile *****
-                    InventoryTransData myInventoryTransData = new InventoryTransData();
-                    myInventoryTransData.Lines = new List<InventoryTransLine>();
+                    InventoryTransData myInventoryTransData = new InventoryTransData();                    
                     myInventoryTransData.inventory_trans_id = myMovementID;
                     myInventoryTransData.transaction_type = myMovement.TypeOfMovement.ToDescription();
                     myInventoryTransData.package_type = myMovement.BusinessPartnerType.ToDescription();

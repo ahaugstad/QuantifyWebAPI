@@ -92,8 +92,7 @@ namespace QuantifyWebAPI.Controllers
                     MovementProductList myMovementProducts = MovementProductList.GetMovementProductList(myMovement.MovementID);
                     
                     //***** Build header data profile *****
-                    PurchaseOrderData myPurchaseOrderData = new PurchaseOrderData();
-                    myPurchaseOrderData.Lines = new List<PurchaseOrderLine>();
+                    PurchaseOrderData myPurchaseOrderData = new PurchaseOrderData();                    
                     myPurchaseOrderData.myPurchaseOrderData = "";
                     myPurchaseOrderData.transaction_type = "";
                     myPurchaseOrderData.ReferanceNumber = "";

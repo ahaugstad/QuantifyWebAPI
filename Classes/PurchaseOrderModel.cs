@@ -25,6 +25,11 @@ namespace QuantifyWebAPI.Classes
 
     public class PurchaseOrderData
     {
+        public PurchaseOrderData()
+        {
+            Lines = new List<PurchaseOrderLine>();
+        }
+
         public string myPurchaseOrderData { get; set; }
         public string transaction_type { get; set; }
         public string ReferanceNumber { get; set; }

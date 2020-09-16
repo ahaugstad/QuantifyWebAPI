@@ -26,6 +26,11 @@ namespace QuantifyWebAPI.Classes
 
     public class InventoryTransData
     {
+        public InventoryTransData()
+        {
+            Lines = new List<InventoryTransLine>();
+        }
+
         public string inventory_trans_id { get; set; }
         public string transaction_type { get; set; }
         public string package_type { get; set; }
