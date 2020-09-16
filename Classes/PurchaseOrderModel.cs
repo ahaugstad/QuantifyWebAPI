@@ -30,14 +30,14 @@ namespace QuantifyWebAPI.Classes
             Lines = new List<PurchaseOrderLine>();
         }
 
-        public string myPurchaseOrderData { get; set; }
+        public string transaction_number { get; set; }
         public string transaction_type { get; set; }
-        public string ReferanceNumber { get; set; }
-        public string BranchOffice { get; set; }
-        public string Vendor { get; set; }
-        public string Notes { get; set; }
-        public string Order { get; set; }
-        public DateTime Date { get; set; }
+        public string reference_number { get; set; }
+        public string branch_office { get; set; }
+        public string vendor { get; set; }
+        public string notes { get; set; }
+        public string order { get; set; }
+        public DateTime date { get; set; }
         public List<PurchaseOrderLine> Lines { get; set; }
     }
 
@@ -45,8 +45,7 @@ namespace QuantifyWebAPI.Classes
     {
         public string part_number { get; set; }
         public int quantity { get; set; }
-        public double Cost { get; set; }
-        public string UnitOfMeasure { get; set; }
+        public double cost { get; set; }
+        public string unit_of_measure { get; set; }
     }
-    
 }

@@ -33,7 +33,7 @@ using Mindscape.Raygun4Net;
 
 namespace QuantifyWebAPI.Controllers
 {
-    public class IPurchaseOrderBusinessLogic
+    public class PurchaseOrderBusinessLogic
     {
         //***** Initialize Raygun Client and Helper classes
         RaygunClient myRaygunClient = new RaygunClient();
@@ -93,13 +93,13 @@ namespace QuantifyWebAPI.Controllers
                     
                     //***** Build header data profile *****
                     PurchaseOrderData myPurchaseOrderData = new PurchaseOrderData();                    
-                    myPurchaseOrderData.myPurchaseOrderData = "";
+                    myPurchaseOrderData.transaction_number = "";
                     myPurchaseOrderData.transaction_type = "";
-                    myPurchaseOrderData.ReferanceNumber = "";
-                    myPurchaseOrderData.Vendor = "";
-                    myPurchaseOrderData.Notes = "";
-                    myPurchaseOrderData.Order = "";
-                    myPurchaseOrderData.Date = DateTime.Now;
+                    myPurchaseOrderData.reference_number = "";
+                    myPurchaseOrderData.vendor = "";
+                    myPurchaseOrderData.notes = "";
+                    myPurchaseOrderData.order = "";
+                    myPurchaseOrderData.date = DateTime.Now;
 
 
                     ////***** Check Business Partner Type, set appropriate field *****
@@ -122,8 +122,8 @@ namespace QuantifyWebAPI.Controllers
                         PurchaseOrderLine myPurchaseOrderLine = new PurchaseOrderLine();
                         myPurchaseOrderLine.part_number = "";            
                         myPurchaseOrderLine.quantity = 1;
-                        myPurchaseOrderLine.Cost = 1.1;
-                        myPurchaseOrderLine.UnitOfMeasure = "";
+                        myPurchaseOrderLine.cost = 1.1;
+                        myPurchaseOrderLine.unit_of_measure = "";
                         myPurchaseOrderData.Lines.Add(myPurchaseOrderLine);
                     }
 
@@ -133,7 +133,7 @@ namespace QuantifyWebAPI.Controllers
                     string myJsonObject = JsonConvert.SerializeObject(myPurchaseOrders);
 
                     //***** Create audit log datarow ******                 
-                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "PurchaseOrder", myPurchaseOrderData.ReferanceNumber, myJsonObject, "", "A");
+                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "PurchaseOrder", myPurchaseOrderData.reference_number, myJsonObject, "", "A");
                 }
                 //***** Create audit log record for Boomi to go pick up *****
                 // REST API URL: http://apimariaasad01.apigroupinc.api:9090/ws/rest/webapps_quantify/api

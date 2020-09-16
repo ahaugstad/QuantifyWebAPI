@@ -105,7 +105,7 @@ namespace QuantifyWebAPI.Controllers
                 if (customerResponse.status != "Error")
                 {
                     //***** Update appropriate address information for Customer based on address type provided ***** 
-                    foreach (QuantifyWebAPI.Classes.Address myAddress in myDeserializedClass.CustomerData.Address)
+                    foreach (QuantifyWebAPI.Classes.Address myAddress in myDeserializedClass.CustomerData.Addresses)
                     {
                         //***** Get state object for updating State ID below *****
                         State state = State.GetState(myAddress.state);
