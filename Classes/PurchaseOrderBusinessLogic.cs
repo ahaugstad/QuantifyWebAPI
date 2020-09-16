@@ -33,7 +33,7 @@ using Mindscape.Raygun4Net;
 
 namespace QuantifyWebAPI.Controllers
 {
-    public class InventoryTransBusinessLogic
+    public class IPurchaseOrderBusinessLogic
     {
         //***** Initialize Raygun Client and Helper classes
         RaygunClient myRaygunClient = new RaygunClient();
@@ -62,7 +62,7 @@ namespace QuantifyWebAPI.Controllers
                 string timestampVersion = "0x" + String.Join("", myMovement.VersionStamp.Select(b => Convert.ToString(b, 16)));
 
                 //***** Add record to data table to be written to Version table in SQL *****
-                dt = MySqlHelper.CreateVersionDataRow(dt, "InventoryTrans", myMovementNumber, timestampVersion.ToString());
+                dt = MySqlHelper.CreateVersionDataRow(dt, "PurchaseOrder", myMovementNumber, timestampVersion.ToString());
 
                 //***** Build Dictionary *****
                 if(!myMovementsDictionary.ContainsKey(myMovementNumber))
@@ -78,7 +78,7 @@ namespace QuantifyWebAPI.Controllers
 
             if (myChangedRecords.Rows.Count > 0)
             {
-                InventoryTransRootClass myInventoryTransactions = new InventoryTransRootClass();
+                PurchaseOrderRootClass myPurchaseOrders = new PurchaseOrderRootClass();
 
                 //***** Create Audit Log and XRef table structures *****            
                 DataTable auditLog = MySqlHelper.GetAuditLogTableStructure();
@@ -92,48 +92,49 @@ namespace QuantifyWebAPI.Controllers
                     MovementProductList myMovementProducts = MovementProductList.GetMovementProductList(myMovement.MovementID);
                     
                     //***** Build header data profile *****
-                    InventoryTransData myInventoryTransData = new InventoryTransData();
-                    myInventoryTransData.Lines = new List<InventoryTransLine>();
-                    myInventoryTransData.inventory_trans_id = myMovementID;
-                    myInventoryTransData.transaction_type = myMovement.TypeOfMovement.ToDescription();
-                    myInventoryTransData.package_type = myMovement.BusinessPartnerType.ToDescription();
-                    //TODO: ADH 9/10/2020 - Do we need adjustment type? No field in Quantify like that, and transaction type will probably do the trick
-                    //myInventoryTransData.adjustment_type = myMovement.type;
-                    myInventoryTransData.custvend_id = myMovement.BusinessPartnerNumber;
+                    PurchaseOrderData myPurchaseOrderData = new PurchaseOrderData();
+                    myPurchaseOrderData.Lines = new List<PurchaseOrderLine>();
+                    myPurchaseOrderData.myPurchaseOrderData = "";
+                    myPurchaseOrderData.transaction_type = "";
+                    myPurchaseOrderData.ReferanceNumber = "";
+                    myPurchaseOrderData.Vendor = "";
+                    myPurchaseOrderData.Notes = "";
+                    myPurchaseOrderData.Order = "";
+                    myPurchaseOrderData.Date = DateTime.Now;
 
-                    //***** Check Business Partner Type, set appropriate field *****
-                    if (myMovement.BusinessPartnerType == PartnerTypes.Customer)
-                    {
-                        //TODO: ADH 9/14/2020 - BUSINESS QUESTION: Can you associate an invoice to a movement? Is that how it works?
-                        myInventoryTransData.package_type = "Customer";
-                        myInventoryTransData.order_id = myOrder.PurchaseOrderNumber;
-                    }
-                    else
-                    {
-                        myInventoryTransData.package_type = "Vendor";
-                        myInventoryTransData.order_id = myMovement.BackOrderNumber;
-                    }
+
+                    ////***** Check Business Partner Type, set appropriate field *****
+                    //if (myMovement.BusinessPartnerType == PartnerTypes.Customer)
+                    //{
+                    //    //TODO: ADH 9/14/2020 - BUSINESS QUESTION: Can you associate an invoice to a movement? Is that how it works?
+                    //    myInventoryTransData.package_type = "Customer";
+                    //    myInventoryTransData.order_id = myOrder.PurchaseOrderNumber;
+                    //}
+                    //else
+                    //{
+                    //    myInventoryTransData.package_type = "Vendor";
+                    //    myInventoryTransData.order_id = myMovement.BackOrderNumber;
+                    //}
 
                     //***** Build line item data profile *****
                     foreach (MovementProductListItem movementProductListItem in myMovementProducts)
                     {
                         Product myProduct = Product.GetProduct(movementProductListItem.BaseProductID);
-                        InventoryTransLine myTransLine = new InventoryTransLine();
-                        myTransLine.part_number = movementProductListItem.PartNumber;
-                        myTransLine.serial_number = myProduct.SerialNumber;
-                        myTransLine.quantity = movementProductListItem.Quantity.ToString();
-                        myTransLine.catalog = myProduct.ProductType.ToDescription();
-                        myTransLine.comment = movementProductListItem.Comment;
-                        myInventoryTransData.Lines.Add(myTransLine);
+                        PurchaseOrderLine myPurchaseOrderLine = new PurchaseOrderLine();
+                        myPurchaseOrderLine.part_number = "";            
+                        myPurchaseOrderLine.quantity = 1;
+                        myPurchaseOrderLine.Cost = 1.1;
+                        myPurchaseOrderLine.UnitOfMeasure = "";
+                        myPurchaseOrderData.Lines.Add(myPurchaseOrderLine);
                     }
 
                     //***** Package as class, serialize to JSON and write to audit log table *****
-                    myInventoryTransactions.entity = "InventoryTrans";
-                    myInventoryTransactions.InventoryTrans = myInventoryTransData;
-                    string myJsonObject = JsonConvert.SerializeObject(myInventoryTransactions);
+                    myPurchaseOrders.entity = "PurchaseOrder";
+                    myPurchaseOrders.PurchaseOrder = myPurchaseOrderData;
+                    string myJsonObject = JsonConvert.SerializeObject(myPurchaseOrders);
 
                     //***** Create audit log datarow ******                 
-                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "InventoryTrans", myInventoryTransData.inventory_trans_id, myJsonObject, "", "A");
+                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "PurchaseOrder", myPurchaseOrderData.ReferanceNumber, myJsonObject, "", "A");
                 }
                 //***** Create audit log record for Boomi to go pick up *****
                 // REST API URL: http://apimariaasad01.apigroupinc.api:9090/ws/rest/webapps_quantify/api
