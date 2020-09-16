@@ -47,27 +47,30 @@ namespace QuantifyWebAPI.Controllers
 
             QuantHelper.QuantifyLogin();
 
-            //***** Get all Transactions - will loop through this and compare VersionStamp against appropriate record in our TransactionVersions dictionary *****
-            //MovementList all_Transactions = MovementList.GetMovementList((false, JobTreeNodeDisplayType.Name, Guid.Empty);
-            MovementCollection all_Movements = MovementCollection.GetMovementCollection(MovementType.All);
+            //***** Get all transfers and adjustments (will call 'InventoryTrans')- will loop through this and compare VersionStamp against appropriate record in our TransactionVersions dictionary *****
+            MovementCollection all_transfers = MovementCollection.GetMovementCollection(MovementType.TransferNewToRent);
+            //TODO: ADH 9/16/2020 - Identify where inventory adjustments are housed in API/database, then merge with transfers for all movements
+            //MovementCollection all_adjustments = MovementCollection.GetMovementCollection(MovementType.?);
+            //var all_movements = all_transfers.Concat(all_adjustments);
+            var all_inventory_trans = all_transfers;
 
             //***** Get DataTable Data Structure for Version Control Stored Procedure *****
             DataTable dt = MySqlHelper.GetVersionTableStructure();
 
-            Dictionary<string, Movement> myMovementsDictionary = new Dictionary<string, Movement>();
+            Dictionary<string, Movement> myInventoryTransDictionary = new Dictionary<string, Movement>();
 
-            foreach (Movement myMovement in all_Movements)
+            foreach (Movement myInventoryTrans in all_inventory_trans)
             {
-                string myMovementNumber = myMovement.MovementNumber;
-                string timestampVersion = "0x" + String.Join("", myMovement.VersionStamp.Select(b => Convert.ToString(b, 16)));
+                string myInventoryTransNumber = myInventoryTrans.MovementNumber;
+                string timestampVersion = "0x" + String.Join("", myInventoryTrans.VersionStamp.Select(b => Convert.ToString(b, 16)));
 
                 //***** Add record to data table to be written to Version table in SQL *****
-                dt = MySqlHelper.CreateVersionDataRow(dt, "InventoryTrans", myMovementNumber, timestampVersion.ToString());
+                dt = MySqlHelper.CreateVersionDataRow(dt, "InventoryTrans", myInventoryTransNumber, timestampVersion.ToString());
 
                 //***** Build Dictionary *****
-                if(!myMovementsDictionary.ContainsKey(myMovementNumber))
+                if(!myInventoryTransDictionary.ContainsKey(myInventoryTransNumber))
                 {
-                    myMovementsDictionary.Add(myMovementNumber, myMovement);
+                    myInventoryTransDictionary.Add(myInventoryTransNumber, myInventoryTrans);
                 } 
             }
 
@@ -86,43 +89,27 @@ namespace QuantifyWebAPI.Controllers
                 foreach (DataRow myRow in myChangedRecords.Rows)
                 {
                     //***** Initalize fields and classes to be used to build data profile *****
-                    string myMovementID = myRow["QuantifyID"].ToString();
-                    Movement myMovement = myMovementsDictionary[myMovementID];
-                    Order myOrder = Order.GetOrder(myMovement.OrderID);
-                    MovementProductList myMovementProducts = MovementProductList.GetMovementProductList(myMovement.MovementID);
+                    string myInventoryTransID = myRow["QuantifyID"].ToString();
+                    Movement myInventoryTrans = myInventoryTransDictionary[myInventoryTransID];
+                    Order myOrder = Order.GetOrder(myInventoryTrans.OrderID);
+                    MovementProductList myInventoryTransProducts = MovementProductList.GetMovementProductList(myInventoryTrans.MovementID);
                     
                     //***** Build header data profile *****
                     InventoryTransData myInventoryTransData = new InventoryTransData();                    
-                    myInventoryTransData.inventory_trans_id = myMovementID;
-                    myInventoryTransData.transaction_type = myMovement.TypeOfMovement.ToDescription();
-                    myInventoryTransData.package_type = myMovement.BusinessPartnerType.ToDescription();
-                    //TODO: ADH 9/10/2020 - Do we need adjustment type? No field in Quantify like that, and transaction type will probably do the trick
-                    //myInventoryTransData.adjustment_type = myMovement.type;
-                    myInventoryTransData.custvend_id = myMovement.BusinessPartnerNumber;
-
-                    //***** Check Business Partner Type, set appropriate field *****
-                    if (myMovement.BusinessPartnerType == PartnerTypes.Customer)
-                    {
-                        //TODO: ADH 9/14/2020 - BUSINESS QUESTION: Can you associate an invoice to a movement? Is that how it works?
-                        myInventoryTransData.package_type = "Customer";
-                        myInventoryTransData.order_id = myOrder.PurchaseOrderNumber;
-                    }
-                    else
-                    {
-                        myInventoryTransData.package_type = "Vendor";
-                        myInventoryTransData.order_id = myMovement.BackOrderNumber;
-                    }
+                    myInventoryTransData.inventory_trans_id = myInventoryTransID;
+                    myInventoryTransData.transaction_type = myInventoryTrans.TypeOfMovement.ToDescription();
+                    myInventoryTransData.package_type = myInventoryTrans.BusinessPartnerType.ToDescription();
 
                     //***** Build line item data profile *****
-                    foreach (MovementProductListItem movementProductListItem in myMovementProducts)
+                    foreach (MovementProductListItem inventoryTransProductListItem in myInventoryTransProducts)
                     {
-                        Product myProduct = Product.GetProduct(movementProductListItem.BaseProductID);
+                        Product myProduct = Product.GetProduct(inventoryTransProductListItem.BaseProductID);
                         InventoryTransLine myTransLine = new InventoryTransLine();
-                        myTransLine.part_number = movementProductListItem.PartNumber;
+                        myTransLine.part_number = inventoryTransProductListItem.PartNumber;
                         myTransLine.serial_number = myProduct.SerialNumber;
-                        myTransLine.quantity = movementProductListItem.Quantity.ToString();
+                        myTransLine.quantity = inventoryTransProductListItem.Quantity.ToString();
                         myTransLine.catalog = myProduct.ProductType.ToDescription();
-                        myTransLine.comment = movementProductListItem.Comment;
+                        myTransLine.comment = inventoryTransProductListItem.Comment;
                         myInventoryTransData.Lines.Add(myTransLine);
                     }
 

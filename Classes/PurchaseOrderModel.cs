@@ -33,19 +33,19 @@ namespace QuantifyWebAPI.Classes
         public string transaction_number { get; set; }
         public string transaction_type { get; set; }
         public string reference_number { get; set; }
+        public string order_number { get; set; }
+        public string vendor_number { get; set; }
         public string branch_office { get; set; }
-        public string vendor { get; set; }
         public string notes { get; set; }
-        public string order { get; set; }
-        public DateTime date { get; set; }
+        public string date { get; set; }
         public List<PurchaseOrderLine> Lines { get; set; }
     }
 
     public class PurchaseOrderLine
     {
         public string part_number { get; set; }
-        public int quantity { get; set; }
-        public double cost { get; set; }
+        public string quantity { get; set; }
+        public string cost { get; set; }
         public string unit_of_measure { get; set; }
     }
 }
