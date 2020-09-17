@@ -47,27 +47,29 @@ namespace QuantifyWebAPI.Controllers
 
             QuantHelper.QuantifyLogin();
 
-            //***** Get all Transactions - will loop through this and compare VersionStamp against appropriate record in our TransactionVersions dictionary *****
-            //MovementList all_Transactions = MovementList.GetMovementList((false, JobTreeNodeDisplayType.Name, Guid.Empty);
-            MovementCollection all_Movements = MovementCollection.GetMovementCollection(MovementType.All);
+            //***** Get all purchases - will loop through this and compare VersionStamp against appropriate record in our TransactionVersions dictionary *****
+            MovementCollection consumable_purchases = MovementCollection.GetMovementCollection(MovementType.PurchaseConsumables);
+            MovementCollection available_purchases = MovementCollection.GetMovementCollection(MovementType.PurchaseForRent);
+            MovementCollection new_purchases = MovementCollection.GetMovementCollection(MovementType.PurchaseNew);
+            var all_purchases = consumable_purchases.Concat(available_purchases.Concat(new_purchases));
 
             //***** Get DataTable Data Structure for Version Control Stored Procedure *****
             DataTable dt = MySqlHelper.GetVersionTableStructure();
 
-            Dictionary<string, Movement> myMovementsDictionary = new Dictionary<string, Movement>();
+            Dictionary<string, Movement> myPurchasesDictionary = new Dictionary<string, Movement>();
 
-            foreach (Movement myMovement in all_Movements)
+            foreach (Movement myPurchase in all_purchases)
             {
-                string myMovementNumber = myMovement.MovementNumber;
-                string timestampVersion = "0x" + String.Join("", myMovement.VersionStamp.Select(b => Convert.ToString(b, 16)));
+                string myPurchaseNumber = myPurchase.MovementNumber;
+                string timestampVersion = "0x" + String.Join("", myPurchase.VersionStamp.Select(b => Convert.ToString(b, 16)));
 
                 //***** Add record to data table to be written to Version table in SQL *****
-                dt = MySqlHelper.CreateVersionDataRow(dt, "PurchaseOrder", myMovementNumber, timestampVersion.ToString());
+                dt = MySqlHelper.CreateVersionDataRow(dt, "PurchaseOrder", myPurchaseNumber, timestampVersion.ToString());
 
                 //***** Build Dictionary *****
-                if(!myMovementsDictionary.ContainsKey(myMovementNumber))
+                if(!myPurchasesDictionary.ContainsKey(myPurchaseNumber))
                 {
-                    myMovementsDictionary.Add(myMovementNumber, myMovement);
+                    myPurchasesDictionary.Add(myPurchaseNumber, myPurchase);
                 } 
             }
 
@@ -86,44 +88,31 @@ namespace QuantifyWebAPI.Controllers
                 foreach (DataRow myRow in myChangedRecords.Rows)
                 {
                     //***** Initalize fields and classes to be used to build data profile *****
-                    string myMovementID = myRow["QuantifyID"].ToString();
-                    Movement myMovement = myMovementsDictionary[myMovementID];
-                    Order myOrder = Order.GetOrder(myMovement.OrderID);
-                    MovementProductList myMovementProducts = MovementProductList.GetMovementProductList(myMovement.MovementID);
+                    string myPurchaseID = myRow["QuantifyID"].ToString();
+                    Movement myPurchase = myPurchasesDictionary[myPurchaseID];
+                    Order myOrder = Order.GetOrder(myPurchase.OrderID);
+                    MovementProductList myPurchaseProducts = MovementProductList.GetMovementProductList(myPurchase.MovementID);
                     
                     //***** Build header data profile *****
                     PurchaseOrderData myPurchaseOrderData = new PurchaseOrderData();                    
-                    myPurchaseOrderData.transaction_number = "";
-                    myPurchaseOrderData.transaction_type = "";
+                    myPurchaseOrderData.transaction_number = myPurchase.MovementNumber;
+                    myPurchaseOrderData.transaction_type = myPurchase.TypeOfMovementText;
+                    //TODO: ADH 9/16/2020 - BUSINESS QUESTION: Where is the reference number field? Might it have a different name?
                     myPurchaseOrderData.reference_number = "";
-                    myPurchaseOrderData.vendor = "";
-                    myPurchaseOrderData.notes = "";
-                    myPurchaseOrderData.order = "";
-                    myPurchaseOrderData.date = DateTime.Now;
-
-
-                    ////***** Check Business Partner Type, set appropriate field *****
-                    //if (myMovement.BusinessPartnerType == PartnerTypes.Customer)
-                    //{
-                    //    //TODO: ADH 9/14/2020 - BUSINESS QUESTION: Can you associate an invoice to a movement? Is that how it works?
-                    //    myInventoryTransData.package_type = "Customer";
-                    //    myInventoryTransData.order_id = myOrder.PurchaseOrderNumber;
-                    //}
-                    //else
-                    //{
-                    //    myInventoryTransData.package_type = "Vendor";
-                    //    myInventoryTransData.order_id = myMovement.BackOrderNumber;
-                    //}
+                    myPurchaseOrderData.order_number = myPurchase.BackOrderNumber;
+                    myPurchaseOrderData.vendor_number = myPurchase.BusinessPartnerNumber;
+                    myPurchaseOrderData.notes = myPurchase.Notes;
+                    myPurchaseOrderData.date = myPurchase.MovementDate;
 
                     //***** Build line item data profile *****
-                    foreach (MovementProductListItem movementProductListItem in myMovementProducts)
+                    foreach (MovementProductListItem purchaseProductListItem in myPurchaseProducts)
                     {
-                        Product myProduct = Product.GetProduct(movementProductListItem.BaseProductID);
+                        Product myProduct = Product.GetProduct(purchaseProductListItem.BaseProductID);
                         PurchaseOrderLine myPurchaseOrderLine = new PurchaseOrderLine();
-                        myPurchaseOrderLine.part_number = "";            
-                        myPurchaseOrderLine.quantity = 1;
-                        myPurchaseOrderLine.cost = 1.1;
-                        myPurchaseOrderLine.unit_of_measure = "";
+                        myPurchaseOrderLine.part_number = purchaseProductListItem.PartNumber;            
+                        myPurchaseOrderLine.quantity = purchaseProductListItem.Quantity.ToString();
+                        myPurchaseOrderLine.cost = purchaseProductListItem.PurchasePrice.ToString();
+                        myPurchaseOrderLine.unit_of_measure = myProduct.UnitOfMeasureName;
                         myPurchaseOrderData.Lines.Add(myPurchaseOrderLine);
                     }
 
@@ -133,7 +122,7 @@ namespace QuantifyWebAPI.Controllers
                     string myJsonObject = JsonConvert.SerializeObject(myPurchaseOrders);
 
                     //***** Create audit log datarow ******                 
-                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "PurchaseOrder", myPurchaseOrderData.reference_number, myJsonObject, "", "A");
+                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "PurchaseOrder", myPurchaseOrderData.transaction_number, myJsonObject, "", "A");
                 }
                 //***** Create audit log record for Boomi to go pick up *****
                 // REST API URL: http://apimariaasad01.apigroupinc.api:9090/ws/rest/webapps_quantify/api

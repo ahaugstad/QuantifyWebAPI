@@ -35,9 +35,6 @@ namespace QuantifyWebAPI.Classes
         public string inventory_trans_id { get; set; }
         public string transaction_type { get; set; }
         public string package_type { get; set; }
-        public string adjustment_type { get; set; }
-        public string custvend_id { get; set; }
-        public string order_id { get; set; }
         public List<InventoryTransLine> Lines { get; set; }
     }
 
