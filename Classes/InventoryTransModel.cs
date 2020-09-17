@@ -20,6 +20,7 @@ namespace QuantifyWebAPI.Classes
     public class InventoryTransRootClass
     {
 
+
         public string entity { get; set; }
         public InventoryTransData InventoryTrans { get; set; }
     }

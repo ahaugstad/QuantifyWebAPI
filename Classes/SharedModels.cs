@@ -8,6 +8,7 @@ using Mindscape.Raygun4Net;
 
 namespace QuantifyWebAPI.Classes
 {
+
     public class Address
     {
         public string addressTypeCode { get; set; }
