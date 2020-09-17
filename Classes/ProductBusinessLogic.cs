@@ -38,8 +38,13 @@ namespace QuantifyWebAPI.Controllers
         //***** Initialize Raygun Client and Helper classes
         RaygunClient myRaygunClient = new RaygunClient();
         SQLHelper MySqlHelper = new SQLHelper();
-        QuantifyHelper QuantHelper = new QuantifyHelper();
+        QuantifyHelper QuantHelper;
         BoomiHelper BoomiHelper = new BoomiHelper();
+
+        public ProductBusinessLogic(QuantifyCredentials QuantCreds)
+        {
+            QuantHelper = new QuantifyHelper(QuantCreds);
+        }
 
         // GET: api/Jobs/3
         public string Initialize()

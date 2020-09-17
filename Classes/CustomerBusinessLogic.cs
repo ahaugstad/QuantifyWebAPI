@@ -37,8 +37,13 @@ namespace QuantifyWebAPI.Controllers
     public class CustomerBusinessLogic
     {
         RaygunClient myRaygunClient = new RaygunClient();
-        
-    public string UpsertCustomerData(JObject jsonResult)
+        QuantifyHelper QuantHelper;
+        public CustomerBusinessLogic(QuantifyCredentials QuantCreds)
+        {
+            QuantHelper = new QuantifyHelper(QuantCreds);
+        }
+
+        public string UpsertCustomerData(JObject jsonResult)
         {
             //***** Initialization *****
             string myResponse = "";
@@ -50,8 +55,6 @@ namespace QuantifyWebAPI.Controllers
             try
             {
                 //***** Log on to Quantify *****
-                QuantifyHelper QuantHelper = new QuantifyHelper();
-
                 QuantHelper.QuantifyLogin();
 
                 //***** Deserialize JObject to create class we can work with ******

@@ -37,6 +37,15 @@ namespace QuantifyWebAPI.Controllers
 
         String StrVersionDBConn = ConfigurationManager.AppSettings["QuantifyPersistanceLayerDBConn"];
         RaygunClient myRaygunClient = new RaygunClient();
+        String StrQuantifyUser = ConfigurationManager.AppSettings["QuantifyCredentials"];
+        QuantifyCredentials myQuantifyCredentials;
+
+        public ProtoTypeController()
+        {
+            string[] MyQuantCredArray = StrQuantifyUser.Split('|');
+            myQuantifyCredentials = new QuantifyCredentials(MyQuantCredArray[0], MyQuantCredArray[1]);
+        }
+
         #region Fiddler Prototypes 
         // GET: api/ProtoType
         public IEnumerable<string> GetArrayTest()
@@ -62,7 +71,7 @@ namespace QuantifyWebAPI.Controllers
         public string GetTest()
         {
             //***** Log on to Quantify *****
-            QuantifyHelper QuantHelper = new QuantifyHelper();
+            QuantifyHelper QuantHelper = new QuantifyHelper(myQuantifyCredentials);
 
 
             QuantHelper.QuantifyLogin();
@@ -158,7 +167,7 @@ namespace QuantifyWebAPI.Controllers
             try
             {
                 //***** Log on to Quantify *****
-                QuantifyHelper QuantHelper = new QuantifyHelper();
+                QuantifyHelper QuantHelper = new QuantifyHelper(myQuantifyCredentials);
 
                 QuantHelper.QuantifyLogin();
 
