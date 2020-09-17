@@ -12,6 +12,7 @@ namespace QuantifyWebAPI.Classes
     {
         RaygunClient myRaygunClient = new RaygunClient();
 
+
         public DAL()
         {
             

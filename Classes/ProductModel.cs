@@ -10,6 +10,7 @@ namespace QuantifyWebAPI.Classes
     // Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(myJsonResponse); 
     public class ProductRootClass
     {
+
         public string entity { get; set; }
         public ProductData Product { get; set; }
     }

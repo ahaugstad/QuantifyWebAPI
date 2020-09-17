@@ -64,6 +64,7 @@ namespace QuantifyWebAPI.Controllers
             //***** Log on to Quantify *****
             QuantifyHelper QuantHelper = new QuantifyHelper();
 
+
             QuantHelper.QuantifyLogin();
             return "value";
         }

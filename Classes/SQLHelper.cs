@@ -17,6 +17,7 @@ namespace QuantifyWebAPI.Classes
 
         private string strDbConn = "";
 
+
         public SqlConnection GetConnection(string StrDbConn)
         {
             SqlConnection c = new SqlConnection(StrDbConn);
