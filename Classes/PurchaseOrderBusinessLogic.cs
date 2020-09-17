@@ -51,6 +51,7 @@ namespace QuantifyWebAPI.Controllers
             MovementCollection consumable_purchases = MovementCollection.GetMovementCollection(MovementType.PurchaseConsumables);
             MovementCollection available_purchases = MovementCollection.GetMovementCollection(MovementType.PurchaseForRent);
             MovementCollection new_purchases = MovementCollection.GetMovementCollection(MovementType.PurchaseNew);
+
             var all_purchases = consumable_purchases.Concat(available_purchases.Concat(new_purchases));
 
             //***** Get DataTable Data Structure for Version Control Stored Procedure *****

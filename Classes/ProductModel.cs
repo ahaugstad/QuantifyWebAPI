@@ -19,7 +19,6 @@ namespace QuantifyWebAPI.Classes
         public string product_id { get; set; }
         public string description { get; set; }
         public string category { get; set; }
-        public string cost_code { get; set; }
         public string list_price { get; set; }
         public string unit_cost { get; set; }
         public string catalog { get; set; }

@@ -122,7 +122,6 @@ namespace QuantifyWebAPI.Controllers
                 //***** Build data profile *****
                 myProductData.catalog = myProduct.ProductType.ToDescription();
                 myProductData.category = myProductCategory.RevenueCode;
-                myProductData.cost_code = myProductCategory.CostCode;
                 myProductData.list_price = myProduct.DefaultList.ToString();
                 myProductData.unit_cost = myProduct.DefaultCost.ToString();
                 myProductData.product_id = myProductObj.Key;
