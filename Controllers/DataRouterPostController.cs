@@ -54,8 +54,8 @@ namespace QuantifyWebAPI.Controllers
         public void PingInitialization()
         {
             //***** Run Jobs *****
-            JobBusinessLogic myJobResponse = new JobBusinessLogic(myQuantifyCredentials);
-            myJobResponse.GetIDsToProcess(StrVersionDBConn);
+            //JobBusinessLogic myJobResponse = new JobBusinessLogic();
+            //myJobResponse.GetIDsToProcess(StrVersionDBConn);
 
             //***** Run Products *****
             ProductBusinessLogic myProductResponse = new ProductBusinessLogic();
