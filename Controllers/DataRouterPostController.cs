@@ -38,6 +38,17 @@ namespace QuantifyWebAPI.Controllers
         String StrVersionDBConn = ConfigurationManager.AppSettings["QuantifyPersistanceLayerDBConn"];
         RaygunClient myRaygunClient = new RaygunClient();
 
+        String StrQuantifyUser = ConfigurationManager.AppSettings["QuantifyCredentials"];        
+        QuantifyCredentials myQuantifyCredentials;
+
+       
+        public DataRouterPostController()
+        {
+            string[] MyQuantCredArray = StrQuantifyUser.Split('|');
+            myQuantifyCredentials = new QuantifyCredentials(MyQuantCredArray[0], MyQuantCredArray[1]);
+
+        }
+
         //***** Boomi pings this method on schedule to kick off our processing of all Quantify-outbound integrations *****
         [HttpGet]
         public void PingInitialization()
@@ -50,13 +61,13 @@ namespace QuantifyWebAPI.Controllers
             //ProductBusinessLogic myProductResponse = new ProductBusinessLogic();
             //myProductResponse.GetIDsToProcess(StrVersionDBConn);
 
-            ////***** Run Inventory Transactions *****
-            //InventoryTransBusinessLogic myInventoryTransResponse = new InventoryTransBusinessLogic();
-            //myInventoryTransResponse.GetIDsToProcess(StrVersionDBConn);
+            //***** Run Inventory Transactions *****
+            InventoryTransBusinessLogic myInventoryTransResponse = new InventoryTransBusinessLogic(myQuantifyCredentials);
+            myInventoryTransResponse.GetIDsToProcess(StrVersionDBConn);
 
-            ////***** Run Purchase Order Transactions *****
-            //PurchaseOrderBusinessLogic myPurchaseOrderResponse = new PurchaseOrderBusinessLogic();
-            //myPurchaseOrderResponse.GetIDsToProcess(StrVersionDBConn);
+            //***** Run Purchase Order Transactions *****
+            PurchaseOrderBusinessLogic myPurchaseOrderResponse = new PurchaseOrderBusinessLogic(myQuantifyCredentials);
+            myPurchaseOrderResponse.GetIDsToProcess(StrVersionDBConn);
         }
 
         [HttpGet]
@@ -112,7 +123,7 @@ namespace QuantifyWebAPI.Controllers
                 switch (RequestType)
                 {
                     case "Customer":
-                        CustomerBusinessLogic myCustomerResponse = new CustomerBusinessLogic();
+                        CustomerBusinessLogic myCustomerResponse = new CustomerBusinessLogic(myQuantifyCredentials);
                         myResponse = myCustomerResponse.UpsertCustomerData(jsonResult);
                         break;
 

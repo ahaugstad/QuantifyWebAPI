@@ -22,6 +22,13 @@ namespace QuantifyWebAPI.Classes
     public class QuantifyHelper
     {
         RaygunClient myRaygunClient = new RaygunClient();
+        QuantifyCredentials myQuantifyCredentials;
+        public QuantifyHelper(QuantifyCredentials QuantifyConnCreds)
+        {
+            this.myRaygunClient = myRaygunClient;
+            myQuantifyCredentials = QuantifyConnCreds;
+        }
+
         public void QuantifyLogin()
         /*
          * Connection settings are controlled by the regular Quantify Client. Please
@@ -32,7 +39,9 @@ namespace QuantifyWebAPI.Classes
             try
             {
                 AvontusPrincipal.Logout();
-                Boolean success = AvontusPrincipal.Login("IT.Admin", "Scaffold");
+                //Boolean success = AvontusPrincipal.Login("Alex.Haugstad", "Scaffold");
+                Boolean success = AvontusPrincipal.Login(myQuantifyCredentials.UserName, myQuantifyCredentials.Password);
+
                 if (success)
                 {
                     Console.WriteLine("Login successful");
@@ -47,5 +56,17 @@ namespace QuantifyWebAPI.Classes
                 myRaygunClient.SendInBackground(ex);
             }
         }
+    }
+
+    public class QuantifyCredentials
+    {
+        public QuantifyCredentials(string userName, string password)
+        {
+            UserName = userName;
+            Password = password;
+        }
+
+        public string UserName { get; set; }
+        public string Password { get; set; }
     }
 }
