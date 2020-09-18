@@ -244,7 +244,7 @@ namespace QuantifyWebAPI.Classes
                 //***** ReThrow Error to bubble it up to calling Class ******
 
                 throw new Exception(
-                    string.Format("There was an error attemting to set up Reprocessing the Quantify Log and/or Setting the QuantifyVersion table version to 'Reprocess' by Entity."), ex);
+                    string.Format("There was an error attempting to set up Reprocessing the Quantify Log and/or Setting the QuantifyVersion table version to 'Reprocess' by Entity."), ex);
             }
 
             return dt;
@@ -292,7 +292,7 @@ namespace QuantifyWebAPI.Classes
                 //***** ReThrow Error to bubble it up to calling Class ******
 
                 throw new Exception(
-                    string.Format("There was an error attemting to set up Reprocessing the Quantify Log and/or Setting the QuantifyVersion table version to 'Reprocess' by Entity and QuantifyID ."), ex);
+                    string.Format("There was an error attempting to set up Reprocessing the Quantify Log and/or Setting the QuantifyVersion table version to 'Reprocess' by Entity and QuantifyID ."), ex);
             }
 
             return dt;
