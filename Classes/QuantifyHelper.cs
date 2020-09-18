@@ -32,7 +32,7 @@ namespace QuantifyWebAPI.Classes
             try
             {
                 AvontusPrincipal.Logout();
-                Boolean success = AvontusPrincipal.Login("Alex.Haugstad", "Scaffold");
+                Boolean success = AvontusPrincipal.Login("IT.Admin", "Scaffold");
                 if (success)
                 {
                     Console.WriteLine("Login successful");

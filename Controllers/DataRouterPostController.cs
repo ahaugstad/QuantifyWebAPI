@@ -43,20 +43,20 @@ namespace QuantifyWebAPI.Controllers
         public void PingInitialization()
         {
             //***** Run Jobs *****
-            //JobBusinessLogic myJobResponse = new JobBusinessLogic();
-            //myJobResponse.GetIDsToProcess(StrVersionDBConn);
+            JobBusinessLogic myJobResponse = new JobBusinessLogic();
+            myJobResponse.GetIDsToProcess(StrVersionDBConn);
 
-            //***** Run Products *****
-            ProductBusinessLogic myProductResponse = new ProductBusinessLogic();
-            myProductResponse.GetIDsToProcess(StrVersionDBConn);
+            ////***** Run Products *****
+            //ProductBusinessLogic myProductResponse = new ProductBusinessLogic();
+            //myProductResponse.GetIDsToProcess(StrVersionDBConn);
 
-            //***** Run Inventory Transactions *****
-            InventoryTransBusinessLogic myInventoryTransResponse = new InventoryTransBusinessLogic();
-            myInventoryTransResponse.GetIDsToProcess(StrVersionDBConn);
+            ////***** Run Inventory Transactions *****
+            //InventoryTransBusinessLogic myInventoryTransResponse = new InventoryTransBusinessLogic();
+            //myInventoryTransResponse.GetIDsToProcess(StrVersionDBConn);
 
-            //***** Run Purchase Order Transactions *****
-            PurchaseOrderBusinessLogic myPurchaseOrderResponse = new PurchaseOrderBusinessLogic();
-            myPurchaseOrderResponse.GetIDsToProcess(StrVersionDBConn);
+            ////***** Run Purchase Order Transactions *****
+            //PurchaseOrderBusinessLogic myPurchaseOrderResponse = new PurchaseOrderBusinessLogic();
+            //myPurchaseOrderResponse.GetIDsToProcess(StrVersionDBConn);
         }
 
         [HttpGet]
