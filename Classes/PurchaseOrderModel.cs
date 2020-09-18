@@ -36,6 +36,7 @@ namespace QuantifyWebAPI.Classes
         public string order_number { get; set; }
         public string vendor_number { get; set; }
         public string branch_office { get; set; }
+        public string to_warehouse { get; set; }
         public string notes { get; set; }
         public string date { get; set; }
         public List<PurchaseOrderLine> Lines { get; set; }

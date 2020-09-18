@@ -53,14 +53,6 @@ namespace QuantifyWebAPI.Controllers
             QuantHelper.QuantifyLogin();
 
             //***** Get all purchases - will loop through this and compare VersionStamp against appropriate record in our TransactionVersions dictionary *****
-            //MovementCollection consumable_purchases = MovementCollection.GetMovementCollection(MovementType.PurchaseConsumables);
-            //MovementCollection new_purchases = MovementCollection.GetMovementCollection(MovementType.NewOrdered);
-            //MovementCollection available_purchases = MovementCollection.GetMovementCollection(MovementType.Ordered);
-
-            //var all_purchases = consumable_purchases.Concat(available_purchases.Concat(new_purchases));
-            //var all_purchases = new_purchases;
-
-            //TODO: ADH 9/18/2020 - if we can't merge collections, just grab all movements and filter later (and delete all commented lines above)
             MovementCollection all_purchases = MovementCollection.GetMovementCollection(MovementType.All);
 
             //***** Get DataTable Data Structure for Version Control Stored Procedure *****
@@ -117,6 +109,7 @@ namespace QuantifyWebAPI.Controllers
                     PurchaseOrderData myPurchaseOrderData = new PurchaseOrderData();                    
                     myPurchaseOrderData.transaction_number = myPurchase.MovementNumber;
                     myPurchaseOrderData.transaction_type = myPurchase.TypeOfMovementText;
+
                     //***** Use ReferenceNumber instead of BackOrderNumber for PO Number if we are doing direct purchase of consumables *****
                     if (myPurchase.TypeOfMovement == MovementType.PurchaseConsumables)
                     {
@@ -126,10 +119,25 @@ namespace QuantifyWebAPI.Controllers
                     {
                         myPurchaseOrderData.order_number = myPurchase.BackOrderNumber;
                     }     
+
                     myPurchaseOrderData.vendor_number = myVendor.AccountingID;
                     //TODO: ADH 9/17/2020 - Is there another way to get branch office number without going out to the jobsite? (likely Avontus question)
                     //myPurchaseOrderData.branch_office = myPurchase.JobSite.ParentBranchOrLaydown.Number;
                     myPurchaseOrderData.branch_office = "3005";
+
+                    //***** Assign warehouse based on type of movement *****
+                    switch (myPurchase.TypeOfMovement)
+                    {
+                        case MovementType.NewOrdered:
+                            myPurchaseOrderData.to_warehouse = "2";
+                            break;
+                        case MovementType.Ordered:
+                            myPurchaseOrderData.to_warehouse = "3";
+                            break;
+                        case MovementType.PurchaseConsumables:
+                            myPurchaseOrderData.to_warehouse = "4";
+                            break;
+                    }
                     myPurchaseOrderData.notes = myPurchase.Notes;
                     myPurchaseOrderData.date = myPurchase.MovementDate;
                     

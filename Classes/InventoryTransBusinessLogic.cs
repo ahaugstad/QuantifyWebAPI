@@ -53,21 +53,6 @@ namespace QuantifyWebAPI.Controllers
             QuantHelper.QuantifyLogin();
 
             //***** Get all transfers and adjustments (will call 'InventoryTrans')- will loop through this and compare VersionStamp against appropriate record in our TransactionVersions dictionary *****
-            //TODO: ADH 9/16/2020 - Identify where inventory adjustments are housed in API/database, then merge with transfers for all movements
-            //MovementCollection all_adjustments = MovementCollection.GetMovementCollection(MovementType.?);
-            //MovementCollection all_transfers = MovementCollection.GetMovementCollection(MovementType.TransferNewToRent);
-            //MovementCollection new_completed_backorder = MovementCollection.GetMovementCollection(MovementType.NewOrderCompletedWithBackOrder);
-            //MovementCollection new_completed = MovementCollection.GetMovementCollection(MovementType.NewOrderCompleted);
-            //MovementCollection available_completed_backorder = MovementCollection.GetMovementCollection(MovementType.OrderCompletedWithBackOrder);
-            //MovementCollection available_completed = MovementCollection.GetMovementCollection(MovementType.OrderCompleted);
-
-            //***** Consolidate movements (transfers and adjustments) and receipts separately, then merge all together *****
-            //var all_movements = all_transfers.Concat(all_adjustments);
-            //var all_movements = all_transfers;
-            //var all_receipts = new_completed_backorder.Concat(new_completed.Concat(available_completed_backorder.Concat(available_completed)));
-            //var all_inventory_trans = all_movements.Concat(all_receipts);
-
-            //TODO: ADH 9/18/2020 - if we can't merge collections, just grab all movements and filter later (and delete all commented lines above)
             MovementCollection all_inventory_trans = MovementCollection.GetMovementCollection(MovementType.All);
 
             //***** Get DataTable Data Structure for Version Control Stored Procedure *****
@@ -79,6 +64,7 @@ namespace QuantifyWebAPI.Controllers
             {
                 //***** Need to include all types of transactions that result in inventory being received, either partially or fully *****
                 //      (i.e. green arrow at left of transaction in list in Quantify turns gray)
+                //TODO: ADH 9/16/2020 - Identify where inventory adjustments are housed in API/database, then merge with below
                 if (
                     myInventoryTrans.TypeOfMovement == MovementType.BackOrderCancelled ||
                     myInventoryTrans.TypeOfMovement == MovementType.BackOrderCompleted ||
@@ -89,7 +75,8 @@ namespace QuantifyWebAPI.Controllers
                     myInventoryTrans.TypeOfMovement == MovementType.NewOrderCompleted ||
                     myInventoryTrans.TypeOfMovement == MovementType.NewOrderCompletedWithBackOrder ||
                     myInventoryTrans.TypeOfMovement == MovementType.OrderCompleted ||
-                    myInventoryTrans.TypeOfMovement == MovementType.OrderCompletedWithBackOrder
+                    myInventoryTrans.TypeOfMovement == MovementType.OrderCompletedWithBackOrder ||
+                    myInventoryTrans.TypeOfMovement == MovementType.TransferNewToRent
                     )
                 {
                     string myInventoryTransNumber = myInventoryTrans.MovementNumber;
@@ -133,6 +120,24 @@ namespace QuantifyWebAPI.Controllers
                     myInventoryTransData.package_type = myInventoryTrans.BusinessPartnerType.ToDescription();
                     switch (myInventoryTrans.TypeOfMovement)
                     {
+                        case MovementType.BackOrderCancelled:
+                            myInventoryTransData.to_warehouse = "3";
+                            break;
+                        case MovementType.BackOrderCompleted:
+                            myInventoryTransData.to_warehouse = "3";
+                            break;
+                        case MovementType.BackOrderCompletedWithBackOrder:
+                            myInventoryTransData.to_warehouse = "3";
+                            break;
+                        case MovementType.NewBackOrderCancelled:
+                            myInventoryTransData.to_warehouse = "2";
+                            break;
+                        case MovementType.NewBackOrderCompleted:
+                            myInventoryTransData.to_warehouse = "2";
+                            break;
+                        case MovementType.NewBackOrderCompletedWithBackOrder:
+                            myInventoryTransData.to_warehouse = "2";
+                            break;
                         case MovementType.NewOrderCompletedWithBackOrder:
                             myInventoryTransData.to_warehouse = "2";
                             break;
@@ -145,13 +150,10 @@ namespace QuantifyWebAPI.Controllers
                         case MovementType.OrderCompleted:
                             myInventoryTransData.to_warehouse = "3";
                             break;
-                        case MovementType.PurchaseConsumables:
-                            myInventoryTransData.to_warehouse = "4";
-                            break;
                         case MovementType.TransferNewToRent:
                             myInventoryTransData.to_warehouse = "3";
                             break;
-                        //TODO: ADH - Include adjustments handling when applicable
+                            //TODO: ADH - Include adjustments handling when applicable
                     }
 
                     //***** Build line item data profile *****
