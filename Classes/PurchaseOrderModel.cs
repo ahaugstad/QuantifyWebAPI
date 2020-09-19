@@ -24,6 +24,15 @@ namespace QuantifyWebAPI.Classes
         public PurchaseOrderData PurchaseOrder { get; set; }
     }
 
+    enum TransactionType
+    {
+        None,
+        Trivial,
+        Regular,
+        Important,
+        Critical
+    }
+
     public class PurchaseOrderData
     {
         public PurchaseOrderData()

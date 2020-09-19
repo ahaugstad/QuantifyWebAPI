@@ -58,7 +58,7 @@ namespace QuantifyWebAPI.Controllers
             //myJobResponse.GetIDsToProcess(StrVersionDBConn);
 
             //***** Run Products *****
-            ProductBusinessLogic myProductResponse = new ProductBusinessLogic();
+            ProductBusinessLogic myProductResponse = new ProductBusinessLogic(myQuantifyCredentials);
             myProductResponse.GetIDsToProcess(StrVersionDBConn);
 
             //***** Run Inventory Transactions *****
