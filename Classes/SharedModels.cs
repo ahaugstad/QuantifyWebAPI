@@ -16,6 +16,7 @@ namespace QuantifyWebAPI.Classes
         Consumable = 4
     }
 
+
     public class Address
     {
         public string addressTypeCode { get; set; }
