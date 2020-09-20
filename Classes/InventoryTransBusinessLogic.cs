@@ -121,37 +121,37 @@ namespace QuantifyWebAPI.Controllers
                     switch (myInventoryTrans.TypeOfMovement)
                     {
                         case MovementType.BackOrderCancelled:
-                            myInventoryTransData.to_warehouse = "3";
+                            myInventoryTransData.to_warehouse = ((int)Warehouse.Available).ToString(); 
                             break;
                         case MovementType.BackOrderCompleted:
-                            myInventoryTransData.to_warehouse = "3";
+                            myInventoryTransData.to_warehouse = ((int)Warehouse.Available).ToString();
                             break;
                         case MovementType.BackOrderCompletedWithBackOrder:
-                            myInventoryTransData.to_warehouse = "3";
+                            myInventoryTransData.to_warehouse = ((int)Warehouse.Available).ToString();
                             break;
                         case MovementType.NewBackOrderCancelled:
-                            myInventoryTransData.to_warehouse = "2";
+                            myInventoryTransData.to_warehouse = ((int)Warehouse.New).ToString();
                             break;
                         case MovementType.NewBackOrderCompleted:
-                            myInventoryTransData.to_warehouse = "2";
+                            myInventoryTransData.to_warehouse = ((int)Warehouse.New).ToString();
                             break;
                         case MovementType.NewBackOrderCompletedWithBackOrder:
-                            myInventoryTransData.to_warehouse = "2";
+                            myInventoryTransData.to_warehouse = ((int)Warehouse.New).ToString();
                             break;
                         case MovementType.NewOrderCompletedWithBackOrder:
-                            myInventoryTransData.to_warehouse = "2";
+                            myInventoryTransData.to_warehouse = ((int)Warehouse.New).ToString();
                             break;
                         case MovementType.NewOrderCompleted:
-                            myInventoryTransData.to_warehouse = "2";
+                            myInventoryTransData.to_warehouse = ((int)Warehouse.New).ToString();
                             break;
                         case MovementType.OrderCompletedWithBackOrder:
-                            myInventoryTransData.to_warehouse = "3";
+                            myInventoryTransData.to_warehouse = ((int)Warehouse.Available).ToString();
                             break;
                         case MovementType.OrderCompleted:
-                            myInventoryTransData.to_warehouse = "3";
+                            myInventoryTransData.to_warehouse = ((int)Warehouse.Available).ToString();
                             break;
                         case MovementType.TransferNewToRent:
-                            myInventoryTransData.to_warehouse = "3";
+                            myInventoryTransData.to_warehouse = ((int)Warehouse.Available).ToString();
                             break;
                             //TODO: ADH - Include adjustments handling when applicable
                     }

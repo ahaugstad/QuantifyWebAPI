@@ -9,6 +9,13 @@ using Mindscape.Raygun4Net;
 namespace QuantifyWebAPI.Classes
 {
 
+    enum Warehouse
+    {
+        New = 2,
+        Available = 3,
+        Consumable = 4
+    }
+
     public class Address
     {
         public string addressTypeCode { get; set; }
