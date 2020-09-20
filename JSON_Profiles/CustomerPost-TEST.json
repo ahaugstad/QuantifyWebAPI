@@ -5,6 +5,7 @@
   "CustomerData": {
     "customer_id": "100317",
     "customer_name": "BECHTEL NATIONAL, INC",
+    "customer_email": "testemail@apigroupinc.us",
     "is_active": "A",
     "Address": [
       {
@@ -17,7 +18,7 @@
     ],
     "Contact": [
       {
-        "contact_email": "testemail@apigroupinc.us"
+
       }
     ]
   }

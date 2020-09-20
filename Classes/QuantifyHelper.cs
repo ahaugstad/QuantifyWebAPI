@@ -16,7 +16,6 @@ using Avontus.Rental.Library.Security;
 using Avontus.Rental.Library.ToolWatchImport;
 
 
-
 namespace QuantifyWebAPI.Classes
 {
     public class QuantifyHelper
@@ -25,7 +24,6 @@ namespace QuantifyWebAPI.Classes
         QuantifyCredentials myQuantifyCredentials;
         public QuantifyHelper(QuantifyCredentials QuantifyConnCreds)
         {
-            this.myRaygunClient = myRaygunClient;
             myQuantifyCredentials = QuantifyConnCreds;
         }
 

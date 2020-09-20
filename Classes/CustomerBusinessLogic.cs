@@ -46,7 +46,7 @@ namespace QuantifyWebAPI.Controllers
         public string UpsertCustomerData(JObject jsonResult)
         {
             //***** Initialization *****
-            string myResponse = "";
+            string myResponse = "Success";
             
             //***** Instantiate response class for logging successes/errors if fail ***** 
             CustomerResponseObj customerResponse = new CustomerResponseObj();
@@ -162,7 +162,7 @@ namespace QuantifyWebAPI.Controllers
 
                         //***** Validate and save the Customer record ***** 
                         customerResponse = customerValidateAndSave(customer);
-                        if (customerResponse.status != "Error") { customerResponse.status = "Success"; } else { break; }
+                        if (customerResponse.status == "Error") { break; }
                     }
                 }
             }
@@ -199,64 +199,43 @@ namespace QuantifyWebAPI.Controllers
             //***** Create string list for errors ***** 
             List<string> errorList = new List<string>();
 
-            if (parmCustomer.IsSavable)
+            try
             {
-                try
-                {
-                    //***** Attempt to save ***** 
-                    parmCustomer.Save();
-                }
-                catch (DataPortalException ex)
-                {
-                    //***** log the error ******
-                    myRaygunClient.SendInBackground(ex);
-
-                    //***** Pass back "Error" for fail ***** 
-                    customerResponse.status = "Error";
-
-                    //***** Get the object back from the data tier ***** 
-                    parmCustomer = ex.BusinessObject as BusinessPartner;
-
-                    //***** We can check to see if the name is unique ***** 
-                    if (!parmCustomer.IsUnique)
-                    {
-                        //***** Fix the name ***** 
-                    }
-                    else
-                    {
-                        //***** Check the rules ***** 
-                        foreach (Avontus.Core.Validation.BrokenRule rule in parmCustomer.BrokenRulesCollection)
-                        {
-                            //***** Fix rules here, if you'd like ***** 
-                            //if (rule.Property == "Name")
-                            //{
-                            //***** Fix the name here  ***** 
-                            //}
-
-                            //***** Log errors and pass back response  ***** 
-                            errorList.Add(rule.Severity.ToString() + ": " + rule.Description);
-                        }
-                    }
-                }
+                //***** Attempt to save ***** 
+                parmCustomer.Save();
             }
-            else
+            catch (DataPortalException ex)
             {
+                //***** log the error ******
+                myRaygunClient.SendInBackground(ex);
+
                 //***** Pass back "Error" for fail ***** 
                 customerResponse.status = "Error";
 
-                foreach (Avontus.Core.Validation.BrokenRule rule in parmCustomer.BrokenRulesCollection)
+                //***** Get the object back from the data tier ***** 
+                parmCustomer = ex.BusinessObject as BusinessPartner;
+
+                //***** We can check to see if the name is unique ***** 
+                if (!parmCustomer.IsUnique)
                 {
-                    //***** Fix rules here, if you'd like ***** 
-                    //if (rule.Property == "Name")
-                    //{
-                    //***** Fix the name here  ***** 
-                    //}
-
-                    //***** Log errors and pass back response  ***** 
-                    errorList.Add(rule.Severity.ToString() + ": " + rule.Description);
+                    //***** Fix the name ***** 
                 }
+                else
+                {
+                    //***** Check the rules ***** 
+                    foreach (Avontus.Core.Validation.BrokenRule rule in parmCustomer.BrokenRulesCollection)
+                    {
+                        //***** Fix rules here, if you'd like ***** 
+                        //if (rule.Property == "Name")
+                        //{
+                        //***** Fix the name here  ***** 
+                        //}
 
-                customerResponse.errorList = errorList;
+                        //***** Log errors and pass back response  ***** 
+                        errorList.Add(rule.Severity.ToString() + ": " + rule.Description);
+                    }
+                    customerResponse.errorList = errorList;
+                }
             }
             return customerResponse;
         }

@@ -19,8 +19,6 @@ namespace QuantifyWebAPI.Classes
     // Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(myJsonResponse); 
     public class InventoryTransRootClass
     {
-
-
         public string entity { get; set; }
         public InventoryTransData InventoryTrans { get; set; }
     }
@@ -35,6 +33,7 @@ namespace QuantifyWebAPI.Classes
         public string inventory_trans_id { get; set; }
         public string transaction_type { get; set; }
         public string package_type { get; set; }
+        public string to_warehouse { get; set; }
         public List<InventoryTransLine> Lines { get; set; }
     }
 
@@ -43,7 +42,7 @@ namespace QuantifyWebAPI.Classes
         public string part_number { get; set; }
         public string serial_number { get; set; }
         public string quantity { get; set; }
-        public string catalog { get; set; }
+        public string received_quantity { get; set; }
         public string comment { get; set; }
     }
     

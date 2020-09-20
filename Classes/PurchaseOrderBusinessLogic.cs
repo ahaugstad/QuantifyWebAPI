@@ -53,11 +53,7 @@ namespace QuantifyWebAPI.Controllers
             QuantHelper.QuantifyLogin();
 
             //***** Get all purchases - will loop through this and compare VersionStamp against appropriate record in our TransactionVersions dictionary *****
-            MovementCollection consumable_purchases = MovementCollection.GetMovementCollection(MovementType.PurchaseConsumables);
-            MovementCollection available_purchases = MovementCollection.GetMovementCollection(MovementType.PurchaseForRent);
-            MovementCollection new_purchases = MovementCollection.GetMovementCollection(MovementType.PurchaseNew);
-
-            var all_purchases = consumable_purchases.Concat(available_purchases.Concat(new_purchases));
+            MovementCollection all_purchases = MovementCollection.GetMovementCollection(MovementType.All);
 
             //***** Get DataTable Data Structure for Version Control Stored Procedure *****
             DataTable dt = MySqlHelper.GetVersionTableStructure();
@@ -66,17 +62,26 @@ namespace QuantifyWebAPI.Controllers
 
             foreach (Movement myPurchase in all_purchases)
             {
-                string myPurchaseNumber = myPurchase.MovementNumber;
-                string timestampVersion = "0x" + String.Join("", myPurchase.VersionStamp.Select(b => Convert.ToString(b, 16)));
-
-                //***** Add record to data table to be written to Version table in SQL *****
-                dt = MySqlHelper.CreateVersionDataRow(dt, "PurchaseOrder", myPurchaseNumber, timestampVersion.ToString());
-
-                //***** Build Dictionary *****
-                if(!myPurchasesDictionary.ContainsKey(myPurchaseNumber))
+                //***** Need to include all types of transactions that result in inventory being received, either partially or fully *****
+                //      (i.e. green arrow at left of transaction in list in Quantify turns gray)
+                if (
+                    myPurchase.TypeOfMovement == MovementType.PurchaseConsumables ||
+                    myPurchase.TypeOfMovement == MovementType.NewOrdered ||
+                    myPurchase.TypeOfMovement == MovementType.Ordered
+                    )
                 {
-                    myPurchasesDictionary.Add(myPurchaseNumber, myPurchase);
-                } 
+                    string myPurchaseNumber = myPurchase.MovementNumber;
+                    string timestampVersion = "0x" + String.Join("", myPurchase.VersionStamp.Select(b => Convert.ToString(b, 16)));
+
+                    //***** Add record to data table to be written to Version table in SQL *****
+                    dt = MySqlHelper.CreateVersionDataRow(dt, "PurchaseOrder", myPurchaseNumber, timestampVersion.ToString());
+
+                    //***** Build Dictionary *****
+                    if (!myPurchasesDictionary.ContainsKey(myPurchaseNumber))
+                    {
+                        myPurchasesDictionary.Add(myPurchaseNumber, myPurchase);
+                    }
+                }
             }
 
             //***** Call data access layer *****
@@ -97,19 +102,45 @@ namespace QuantifyWebAPI.Controllers
                     string myPurchaseID = myRow["QuantifyID"].ToString();
                     Movement myPurchase = myPurchasesDictionary[myPurchaseID];
                     Order myOrder = Order.GetOrder(myPurchase.OrderID);
+                    BusinessPartner myVendor = BusinessPartner.GetBusinessPartnerByNumber(myPurchase.MovementBusinessPartnerNumber);
                     MovementProductList myPurchaseProducts = MovementProductList.GetMovementProductList(myPurchase.MovementID);
                     
                     //***** Build header data profile *****
                     PurchaseOrderData myPurchaseOrderData = new PurchaseOrderData();                    
                     myPurchaseOrderData.transaction_number = myPurchase.MovementNumber;
                     myPurchaseOrderData.transaction_type = myPurchase.TypeOfMovementText;
-                    //TODO: ADH 9/16/2020 - BUSINESS QUESTION: Where is the reference number field? Might it have a different name?
-                    myPurchaseOrderData.reference_number = "";
-                    myPurchaseOrderData.order_number = myPurchase.BackOrderNumber;
-                    myPurchaseOrderData.vendor_number = myPurchase.BusinessPartnerNumber;
+
+                    //***** Use ReferenceNumber instead of BackOrderNumber for PO Number if we are doing direct purchase of consumables *****
+                    if (myPurchase.TypeOfMovement == MovementType.PurchaseConsumables)
+                    {
+                        myPurchaseOrderData.order_number = myPurchase.BusinessPartnerNumber;
+                    }
+                    else
+                    {
+                        myPurchaseOrderData.order_number = myPurchase.BackOrderNumber;
+                    }     
+
+                    myPurchaseOrderData.vendor_number = myVendor.AccountingID;
+                    //TODO: ADH 9/17/2020 - Is there another way to get branch office number without going out to the jobsite? (likely Avontus question)
+                    //myPurchaseOrderData.branch_office = myPurchase.JobSite.ParentBranchOrLaydown.Number;
+                    myPurchaseOrderData.branch_office = "3005";
+
+                    //***** Assign warehouse based on type of movement *****
+                    switch (myPurchase.TypeOfMovement)
+                    {
+                        case MovementType.NewOrdered:
+                            myPurchaseOrderData.to_warehouse = "2";
+                            break;
+                        case MovementType.Ordered:
+                            myPurchaseOrderData.to_warehouse = "3";
+                            break;
+                        case MovementType.PurchaseConsumables:
+                            myPurchaseOrderData.to_warehouse = "4";
+                            break;
+                    }
                     myPurchaseOrderData.notes = myPurchase.Notes;
                     myPurchaseOrderData.date = myPurchase.MovementDate;
-
+                    
                     //***** Build line item data profile *****
                     foreach (MovementProductListItem purchaseProductListItem in myPurchaseProducts)
                     {
@@ -117,6 +148,11 @@ namespace QuantifyWebAPI.Controllers
                         PurchaseOrderLine myPurchaseOrderLine = new PurchaseOrderLine();
                         myPurchaseOrderLine.part_number = purchaseProductListItem.PartNumber;            
                         myPurchaseOrderLine.quantity = purchaseProductListItem.Quantity.ToString();
+                        //***** Only set received quantity if we are doing direct purchase of consumables *****
+                        if (myPurchase.TypeOfMovement == MovementType.PurchaseConsumables)
+                        {
+                            myPurchaseOrderLine.received_quantity = purchaseProductListItem.ReceivedQuantity.ToString();
+                        }
                         myPurchaseOrderLine.cost = purchaseProductListItem.PurchasePrice.ToString();
                         myPurchaseOrderLine.unit_of_measure = myProduct.UnitOfMeasureName;
                         myPurchaseOrderData.Lines.Add(myPurchaseOrderLine);
