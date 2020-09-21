@@ -176,8 +176,6 @@ namespace QuantifyWebAPI.Controllers
                 {
                     success = false;
                 }
-
-                BoomiHelper.PostBoomiAPI();
             }
             return success;
         }

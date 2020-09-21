@@ -253,6 +253,7 @@
     <Content Include="JSON_Profiles\JobGet.json" />
     <Content Include="JSON_Profiles\InventoryTransPost.json" />
     <Content Include="JSON_Profiles\CustomerPost-TEST.json" />
+    <Content Include="JSON_Profiles\PurchaseOrderPost.json" />
     <None Include="Properties\PublishProfiles\IISProfile.pubxml" />
     <None Include="Scripts\jquery-3.4.1.intellisense.js" />
     <Content Include="Scripts\jquery-3.4.1.js" />

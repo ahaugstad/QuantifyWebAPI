@@ -180,9 +180,6 @@ namespace QuantifyWebAPI.Controllers
                 {
                     success = false;
                 }
-
-                //TODO: ADH 9/3/2020 - Ping Boomi to kick off process to start running through queued events
-                BoomiHelper.PostBoomiAPI();
             }
             return success;
         }
