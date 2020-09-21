@@ -129,13 +129,13 @@ namespace QuantifyWebAPI.Controllers
                     switch (myPurchase.TypeOfMovement)
                     {
                         case MovementType.NewOrdered:
-                            myPurchaseOrderData.to_warehouse = "2";
+                            myPurchaseOrderData.to_warehouse = ((int)Warehouse.New).ToString();
                             break;
                         case MovementType.Ordered:
-                            myPurchaseOrderData.to_warehouse = "3";
+                            myPurchaseOrderData.to_warehouse = ((int)Warehouse.Available).ToString();
                             break;
                         case MovementType.PurchaseConsumables:
-                            myPurchaseOrderData.to_warehouse = "4";
+                            myPurchaseOrderData.to_warehouse = ((int)Warehouse.Consumable).ToString(); 
                             break;
                     }
                     myPurchaseOrderData.notes = myPurchase.Notes;

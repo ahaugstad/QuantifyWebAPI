@@ -24,6 +24,8 @@ namespace QuantifyWebAPI.Classes
         public PurchaseOrderData PurchaseOrder { get; set; }
     }
 
+
+
     public class PurchaseOrderData
     {
         public PurchaseOrderData()
