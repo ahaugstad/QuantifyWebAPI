@@ -39,7 +39,6 @@ namespace QuantifyWebAPI.Controllers
         RaygunClient myRaygunClient = new RaygunClient();
         SQLHelper MySqlHelper = new SQLHelper();
         QuantifyHelper QuantHelper;
-        BoomiHelper BoomiHelper = new BoomiHelper();
 
         public JobBusinessLogic(QuantifyCredentials QuantCreds)
         {

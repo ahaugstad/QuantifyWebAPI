@@ -386,6 +386,7 @@ namespace QuantifyWebAPI.Controllers
 
                 StockingLocation myJobSite = StockingLocation.GetStockingLocation("");
                 var jobsiteVersionStamp = myJobSite.VersionStamp;
+
             }
           
             

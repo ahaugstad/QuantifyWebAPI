@@ -39,7 +39,6 @@ namespace QuantifyWebAPI.Controllers
         RaygunClient myRaygunClient = new RaygunClient();
         SQLHelper MySqlHelper = new SQLHelper();
         QuantifyHelper QuantHelper;
-        BoomiHelper BoomiHelper = new BoomiHelper();
 
         public PurchaseOrderBusinessLogic(QuantifyCredentials QuantCreds)
         {
@@ -108,7 +107,7 @@ namespace QuantifyWebAPI.Controllers
                     //***** Build header data profile *****
                     PurchaseOrderData myPurchaseOrderData = new PurchaseOrderData();                    
                     myPurchaseOrderData.transaction_number = myPurchase.MovementNumber;
-                    myPurchaseOrderData.transaction_type = myPurchase.TypeOfMovementText;
+                    myPurchaseOrderData.vendor_number = myVendor.AccountingID;
 
                     //***** Use ReferenceNumber instead of BackOrderNumber for PO Number if we are doing direct purchase of consumables *****
                     if (myPurchase.TypeOfMovement == MovementType.PurchaseConsumables)
@@ -119,11 +118,6 @@ namespace QuantifyWebAPI.Controllers
                     {
                         myPurchaseOrderData.order_number = myPurchase.BackOrderNumber;
                     }     
-
-                    myPurchaseOrderData.vendor_number = myVendor.AccountingID;
-                    //TODO: ADH 9/17/2020 - Is there another way to get branch office number without going out to the jobsite? (likely Avontus question)
-                    //myPurchaseOrderData.branch_office = myPurchase.JobSite.ParentBranchOrLaydown.Number;
-                    myPurchaseOrderData.branch_office = "3005";
 
                     //***** Assign warehouse based on type of movement *****
                     switch (myPurchase.TypeOfMovement)
@@ -139,7 +133,7 @@ namespace QuantifyWebAPI.Controllers
                             break;
                     }
                     myPurchaseOrderData.notes = myPurchase.Notes;
-                    myPurchaseOrderData.date = myPurchase.MovementDate;
+                    myPurchaseOrderData.transaction_date = myPurchase.MovementDate;
                     
                     //***** Build line item data profile *****
                     foreach (MovementProductListItem purchaseProductListItem in myPurchaseProducts)

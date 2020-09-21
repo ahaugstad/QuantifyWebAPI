@@ -17,32 +17,37 @@ using Avontus.Rental.Library.ToolWatchImport;
 namespace QuantifyWebAPI.Classes
 {
     // Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(myJsonResponse); 
-    public class InventoryTransRootClass
+    public class SalesOrderRootClass
     {
         public string entity { get; set; }
-        public InventoryTransData InventoryTrans { get; set; }
+        public SalesOrderData SalesOrder { get; set; }
     }
 
-    public class InventoryTransData
+
+
+    public class SalesOrderData
     {
-        public InventoryTransData()
+        public SalesOrderData()
         {
-            Lines = new List<InventoryTransLine>();
+            Lines = new List<SalesOrderLine>();
         }
 
-        public string inventory_trans_id { get; set; }
-        public string transaction_type { get; set; }
+        public string transaction_number { get; set; }
+        public string job_number { get; set; }
+        public string customer_number { get; set; }
+        public string reference_number { get; set; }
+        public string branch_office { get; set; }
         public string from_warehouse { get; set; }
-        public string to_warehouse { get; set; }
-        public List<InventoryTransLine> Lines { get; set; }
+        public string notes { get; set; }
+        public string transaction_date { get; set; }
+        public List<SalesOrderLine> Lines { get; set; }
     }
 
-    public class InventoryTransLine
+    public class SalesOrderLine
     {
         public string part_number { get; set; }
         public string quantity { get; set; }
-        public string received_quantity { get; set; }
-        public string comment { get; set; }
+        public string price_ea { get; set; }
+        public string unit_of_measure { get; set; }
     }
-    
 }

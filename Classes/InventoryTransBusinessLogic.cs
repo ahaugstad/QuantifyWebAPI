@@ -116,43 +116,58 @@ namespace QuantifyWebAPI.Controllers
                     InventoryTransData myInventoryTransData = new InventoryTransData();                    
                     myInventoryTransData.inventory_trans_id = myInventoryTransID;
                     myInventoryTransData.transaction_type = myInventoryTrans.TypeOfMovement.ToDescription();
-                    myInventoryTransData.package_type = myInventoryTrans.BusinessPartnerType.ToDescription();
+                    //myInventoryTransData.package_type = myInventoryTrans.BusinessPartnerType.ToDescription();
                     switch (myInventoryTrans.TypeOfMovement)
                     {
                         case MovementType.BackOrderCancelled:
-                            myInventoryTransData.to_warehouse = ((int)Warehouse.Available).ToString(); 
+                            myInventoryTransData.to_warehouse = ((int)Warehouse.Available).ToString();
+                            //TODO: ADH 9/21/2020 - Identify if this should be R type in WebApps or something else
+                            myInventoryTransData.transaction_type = "R";
                             break;
                         case MovementType.BackOrderCompleted:
                             myInventoryTransData.to_warehouse = ((int)Warehouse.Available).ToString();
+                            myInventoryTransData.transaction_type = "R";
                             break;
                         case MovementType.BackOrderCompletedWithBackOrder:
                             myInventoryTransData.to_warehouse = ((int)Warehouse.Available).ToString();
+                            myInventoryTransData.transaction_type = "R";
                             break;
                         case MovementType.NewBackOrderCancelled:
                             myInventoryTransData.to_warehouse = ((int)Warehouse.New).ToString();
+                            //TODO: ADH 9/21/2020 - Identify if this should be R type in WebApps or something else
+                            myInventoryTransData.transaction_type = "R";
                             break;
                         case MovementType.NewBackOrderCompleted:
                             myInventoryTransData.to_warehouse = ((int)Warehouse.New).ToString();
+                            myInventoryTransData.transaction_type = "R";
                             break;
                         case MovementType.NewBackOrderCompletedWithBackOrder:
                             myInventoryTransData.to_warehouse = ((int)Warehouse.New).ToString();
+                            myInventoryTransData.transaction_type = "R";
                             break;
                         case MovementType.NewOrderCompletedWithBackOrder:
                             myInventoryTransData.to_warehouse = ((int)Warehouse.New).ToString();
+                            myInventoryTransData.transaction_type = "R";
                             break;
                         case MovementType.NewOrderCompleted:
                             myInventoryTransData.to_warehouse = ((int)Warehouse.New).ToString();
+                            myInventoryTransData.transaction_type = "R";
                             break;
                         case MovementType.OrderCompletedWithBackOrder:
                             myInventoryTransData.to_warehouse = ((int)Warehouse.Available).ToString();
+                            myInventoryTransData.transaction_type = "R";
                             break;
                         case MovementType.OrderCompleted:
                             myInventoryTransData.to_warehouse = ((int)Warehouse.Available).ToString();
+                            myInventoryTransData.transaction_type = "R";
                             break;
                         case MovementType.TransferNewToRent:
+                            myInventoryTransData.from_warehouse = ((int)Warehouse.New).ToString();
                             myInventoryTransData.to_warehouse = ((int)Warehouse.Available).ToString();
+                            myInventoryTransData.transaction_type = "M";
                             break;
                             //TODO: ADH - Include adjustments handling when applicable
+                            //myInventoryTransData.transaction_type = "A";
                     }
 
                     //***** Build line item data profile *****
@@ -161,7 +176,7 @@ namespace QuantifyWebAPI.Controllers
                         Product myProduct = Product.GetProduct(inventoryTransProductListItem.BaseProductID);
                         InventoryTransLine myTransLine = new InventoryTransLine();
                         myTransLine.part_number = inventoryTransProductListItem.PartNumber;
-                        myTransLine.serial_number = myProduct.SerialNumber;
+                        //myTransLine.serial_number = myProduct.SerialNumber;
                         myTransLine.quantity = inventoryTransProductListItem.Quantity.ToString();
                         myTransLine.received_quantity = inventoryTransProductListItem.ReceivedQuantity.ToString();
                         myTransLine.comment = inventoryTransProductListItem.Comment;
