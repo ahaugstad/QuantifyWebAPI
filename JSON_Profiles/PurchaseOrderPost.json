@@ -1,15 +1,13 @@
 {
   "entity": "PurchaseOrder",
-  "PurchaseOrderData": {
+  "PurchaseOrder": {
     "transaction_number": "MOV-11111",
-    "transaction_type": "Sell",
-    "order_number": "Vendor",
-    "vendor_number": "Adjust",
-    "branch_office": "V1234",
-    "to_warehouse": "12345",
-    "notes": "12345",
-    "date": "12345",
-    "PurchaseOrderLines": [
+    "order_number": "Sell",
+    "vendor_number": "Vendor",
+    "to_warehouse": "Adjust",
+    "notes": "V1234",
+    "transaction_date": "12345",
+    "Lines": [
       {
         "part_number": "12345",
         "quantity": "3",
