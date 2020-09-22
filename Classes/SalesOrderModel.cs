@@ -20,7 +20,7 @@ namespace QuantifyWebAPI.Classes
     public class SalesOrderRootClass
     {
         public string entity { get; set; }
-        public SalesOrderData SalesOrder { get; set; }
+        public SalesOrderData SalesOrder{ get; set; }
     }
 
 

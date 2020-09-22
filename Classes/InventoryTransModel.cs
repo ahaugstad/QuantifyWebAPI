@@ -29,7 +29,6 @@ namespace QuantifyWebAPI.Classes
         {
             Lines = new List<InventoryTransLine>();
         }
-
         public string inventory_trans_id { get; set; }
         public string transaction_type { get; set; }
         public string from_warehouse { get; set; }

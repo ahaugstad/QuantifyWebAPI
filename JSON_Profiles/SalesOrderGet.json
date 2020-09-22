@@ -1,0 +1,27 @@
+{
+  "entity": "SalesOrder",
+  "SalesOrder": {
+    "transaction_number": "TestJob111",
+    "job_number": "ADH Test Job",
+    "customer_number": "The Job Site",
+    "reference_number": "600 Robert St. N",
+    "branch_office": "St. Paul",
+    "from_warehouse": "MN",
+    "notes": "55101",
+    "transaction_date": "TestCust111",
+    "Lines": [
+      {
+        "part_number": "12345",
+        "quantity": "3",
+        "price_ea": "3",
+        "unit_of_measure": "10.00"
+      },
+      {
+        "part_number": "12345",
+        "quantity": "3",
+        "price_ea": "3",
+        "unit_of_measure": "10.00"
+      }
+    ]
+  }
+}

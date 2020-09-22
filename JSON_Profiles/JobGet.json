@@ -1,6 +1,6 @@
 {
   "entity": "Job",
-  "JobData": {
+  "Job": {
     "job_id": "TestJob111",
     "job_name": "ADH Test Job",
     "site_name": "The Job Site",

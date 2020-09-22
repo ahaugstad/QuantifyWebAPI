@@ -1,26 +1,22 @@
 {
   "entity": "InventoryTrans",
-  "CustomerData": {
+  "InventoryTrans": {
     "inventory_trans_id": "MOV-11111",
     "transaction_type": "Sell",
-    "package_type": "Vendor",
-    "adjustment_type": "Adjust",
-    "custvend_id": "V1234",
-    "order_id": "12345",
-    "InventoryTransLines": [
+    "from_warehouse": "Vendor",
+    "to_warehouse": "Adjust",
+    "Lines": [
       {
         "part_number": "12345",
-        "serial_number": "0016",
-        "quantity": "3",
-        "catalog": "Product",
-        "comment": "testing 1"
+        "quantity": "0016",
+        "received_quantity": "3",
+        "comment": "Product"
       },
       {
-        "part_number": "67890",
-        "serial_number": "0011",
-        "quantity": "5",
-        "catalog": "Consumable",
-        "comment": "testing 2"
+        "part_number": "12345",
+        "quantity": "0016",
+        "received_quantity": "3",
+        "comment": "Product"
       }
     ]
   }
