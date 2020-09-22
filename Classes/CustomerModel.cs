@@ -20,7 +20,6 @@ namespace QuantifyWebAPI.Classes
         public CustomerData()
         {
             Addresses = new List<Address>();
-            Contacts = new List<Contact>();
         }
 
         public string customer_id { get; set; }
@@ -30,7 +29,6 @@ namespace QuantifyWebAPI.Classes
         public string customer_fax { get; set; }
         public string is_active { get; set; }
         public List<Address> Addresses { get; set; }
-        public List<Contact> Contacts { get; set; }
     }
 
     public class CustomerResponseObj

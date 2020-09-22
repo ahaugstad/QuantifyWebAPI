@@ -112,7 +112,8 @@ namespace QuantifyWebAPI.Controllers
                     SalesOrderData mySalesOrderData = new SalesOrderData();
                     mySalesOrderData.transaction_number = mySale.MovementNumber;
                     mySalesOrderData.customer_number = myCustomer.AccountingID;
-                    mySalesOrderData.job_number = mySale.JobSite.Number;
+                    //TODO: ADH 9/22/2020 - Figure out why jobsite not coming through for every record: dirty data?
+                    //mySalesOrderData.job_number = mySale.JobSite.Number;
                     mySalesOrderData.reference_number = mySale.BusinessPartnerNumber;
                     mySalesOrderData.branch_office = mySale.JobSite.ParentBranchOrLaydown.Number;
 

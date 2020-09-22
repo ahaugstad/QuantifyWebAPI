@@ -372,26 +372,56 @@ namespace QuantifyWebAPI.Controllers
 
             foreach (MovementListItem movementItem in all_Movements)
             {
+                //***** Movements (VersionStamp on both Collection and List) *****
                 Movement myMovement = Movement.GetMovement(Guid.Empty, MovementGetAction.None);
                 var moveVersionStamp = myMovement.VersionStamp;
 
+                MovementList myMovementList = MovementList.GetMovementList(Guid.Empty, MovementType.All, false, Guid.Empty);
+                foreach (MovementListItem movementListItem in myMovementList)
+                {
+                    var moveVersionStampList = movementListItem.VersionStamp;
+                }
+
+                //***** Products (VersionStamp on List but not Collection) *****
+                Product myProduct = Product.GetProduct(Guid.Empty);
+                //var prodVersionStamp = myProduct.VersionStamp;
+
+                ProductList myProductList = ProductList.GetProductList(ProductType.All);
+                foreach (ProductListItem productListItem in myProductList)
+                {
+                    var prodVersionStampList = productListItem.VersionStamp;
+                }
+
+                //***** Shipments *****
                 Shipment myShipment = Shipment.GetShipment("", true, true);
                 var shipVersionStamp = myShipment.VersionStamp;
 
+                //***** Invoices *****
                 Invoice myInvoice = Invoice.GetInvoice(Guid.Empty,true);
                 var invoiceVersionStamp = myInvoice.ModifyDate;
 
+                //***** Orders (VersionStamp on List but not Collection) *****
                 Order myOrder = Order.GetOrder(Guid.Empty);
-                //var orderVersionStamp = myOrder.
+                //var orderVersionStamp = myOrder.VersionStamp;
 
+                OrderList myOrderList = OrderList.GetOrderList(Guid.Empty, OrderTypeEnum.Both, ActiveStatus.Both);
+                foreach (OrderListItem orderListItem in myOrderList)
+                {
+                    var ordVersionStampList = orderListItem.VersionStamp;
+                }
+
+                //***** Jobsites (VersionStamp on Collection but not List) *****
                 StockingLocation myJobSite = StockingLocation.GetStockingLocation("");
                 var jobsiteVersionStamp = myJobSite.VersionStamp;
 
-            }
-          
-            
+                StockingLocationList myJobSiteList = StockingLocationList.GetJobsites(false, JobTreeNodeDisplayType.Name, Guid.Empty);
+                //foreach (StockingLocationListItem jobsiteListItem in myJobSiteList)
+                //{
+                    //var jobVersionStampList = jobsiteListItem.VersionStamp;
+                //}
+                
 
-            //Movement myMovement = Movement.GetMovement()
+            }
         }
         #endregion
     }

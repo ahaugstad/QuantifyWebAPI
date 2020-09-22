@@ -133,7 +133,7 @@ namespace QuantifyWebAPI.Controllers
                             break;
                     }
                     myPurchaseOrderData.notes = myPurchase.Notes;
-                    myPurchaseOrderData.transaction_date = myPurchase.MovementDate;
+                    //myPurchaseOrderData.entered_by = myPurchase.;
                     
                     //***** Build line item data profile *****
                     foreach (MovementProductListItem purchaseProductListItem in myPurchaseProducts)

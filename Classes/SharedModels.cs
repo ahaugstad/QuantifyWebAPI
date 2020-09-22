@@ -28,13 +28,6 @@ namespace QuantifyWebAPI.Classes
         public string country { get; set; }
     }
 
-    public class Contact
-    {
-        public string contact_name { get; set; }
-        public string contact_phone { get; set; }
-        public string contact_email { get; set; }
-    }
-
     public class ObjectVersions
     {
         public string object_type { get; set; }

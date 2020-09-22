@@ -58,35 +58,33 @@ namespace QuantifyWebAPI.Controllers
 
             QuantHelper.QuantifyLogin();
 
-            //***** Get all products and all consumables - need to do this in separate calls
-            //***** Will loop through these collections and compare VersionStamp against appropriate record in our Products dictionary *****
-            ProductCollection all_products = ProductCollection.GetProductCollection(ProductType.Product);
-            ProductCollection all_consumables = ProductCollection.GetProductCollection(ProductType.Consumable);
+            //***** Get all products and all consumables - will loop through this list and compare VersionStamp against appropriate record in our Products dictionary *****
+            ProductList products_list = ProductList.GetProductList(ProductType.Product);
+            ProductList consumables_list = ProductList.GetProductList(ProductType.Consumable);
 
             //***** Concatenate product and consumable collections together so we only need to loop once *****
-            var combined_products = all_products.Concat(all_consumables);
+            var combined_products = products_list.Concat(consumables_list);
 
             //***** Get DataTable Data Structure for Version Control Stored Procedure *****
             DataTable dt = MySqlHelper.GetVersionTableStructure();
 
-            Dictionary<string, Product> myProductsDictionary = new Dictionary<string, Product>();
+            Dictionary<string, ProductListItem> myProductsDictionary = new Dictionary<string, ProductListItem>();
 
             //***** Loop through all products in both product and consumable catalogs *****
-            foreach (Product product in combined_products)
+            foreach (ProductListItem productListItem in combined_products)
             {
-                string myProductID = product.PartNumber;
-                //TODO: ADH 9/14/2020 - Revise this to take in product VersionStamp once Avontus implements it
-                //string timestampVersion = "0x" + String.Join("", jobsite.VersionStamp.Select(b => Convert.ToString(b, 16)));
-
+                string myProductID = productListItem.PartNumber;
+                string timestampVersion = "0x" + String.Join("", productListItem.VersionStamp.Select(b => Convert.ToString(b, 16)));
+                
                 //***** Add record to data table to be written to Version table in SQL *****
-                dt = MySqlHelper.CreateVersionDataRow(dt, "Product", myProductID, "");
+                dt = MySqlHelper.CreateVersionDataRow(dt, "Product", myProductID, timestampVersion);
       
                 //***** Build Dictionary *****
                 try
                 {
                     if (!myProductsDictionary.ContainsKey(myProductID))
                     {
-                        myProductsDictionary.Add(myProductID, product);
+                        myProductsDictionary.Add(myProductID, productListItem);
                     }
                     else
                     {
@@ -101,62 +99,61 @@ namespace QuantifyWebAPI.Controllers
 
             //***** Call data access layer *****
             DAL myDAL = new DAL();
-            //DataTable myChangedRecords = myDAL.GetChangedObjects(dt, connectionString);
+            DataTable myChangedRecords = myDAL.GetChangedObjects(dt, connectionString);
 
 
-            //if (myChangedRecords.Rows.Count > 0)
-            //{
-            ProductRootClass myProducts = new ProductRootClass();
-
-            //***** Create Audit Log and XRef table structures *****            
-            DataTable auditLog = MySqlHelper.GetAuditLogTableStructure();
-            DataTable productXRef =  MySqlHelper.GetXRefTableStructure();
-
-            //foreach (DataRow myRow in myChangedRecords.Rows)
-            foreach (var myProductObj in myProductsDictionary)
+            if (myChangedRecords.Rows.Count > 0)
             {
-                //string myProductID = myRow["QuantifyID"].ToString();
-                //Product myProduct = myProductsDictionary[myProductID];
+                ProductRootClass myProducts = new ProductRootClass();
 
-                //***** Initialize classes to use in building data profile
-                Product myProduct = (Product)myProductObj.Value;
-                ProductData myProductData = new ProductData();
-                ProductCategory myProductCategory = ProductCategory.GetProductCategory(myProduct.ProductCategoryID, myProduct.ProductType);
+                //***** Create Audit Log and XRef table structures *****            
+                DataTable auditLog = MySqlHelper.GetAuditLogTableStructure();
+                DataTable productXRef =  MySqlHelper.GetXRefTableStructure();
 
-                //***** Build data profile *****
-                myProductData.catalog = myProduct.ProductType.ToDescription();
-                myProductData.category = myProductCategory.RevenueCode;
-                myProductData.list_price = myProduct.DefaultList.ToString();
-                myProductData.unit_cost = myProduct.DefaultCost.ToString();
-                myProductData.product_id = myProductObj.Key;
-                myProductData.description = myProduct.Description;
+                foreach (DataRow myRow in myChangedRecords.Rows)
+                {
+                    string myProductID = myRow["QuantifyID"].ToString();
+                    ProductListItem myProductListItem = myProductsDictionary[myProductID];
 
-                //***** Package as class, serialize to JSON and write to data table to get mass inserted into SQL *****
-                myProducts.entity = "Product";
-                myProducts.Product = myProductData;
-                string myJsonObject = JsonConvert.SerializeObject(myProducts);
+                    //***** Initialize classes to use in building data profile
+                    ProductData myProductData = new ProductData();
+                    Product myProduct = Product.GetProduct(myProductListItem.ProductID);
+                    ProductCategory myProductCategory = ProductCategory.GetProductCategory(myProduct.ProductCategoryID, myProduct.ProductType);
 
-                //***** Create audit log datarow ******                 
-                auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Product", myProductData.product_id, myJsonObject, "", "A");
+                    //***** Build data profile *****
+                    myProductData.catalog = myProduct.ProductType.ToDescription();
+                    myProductData.category = myProductCategory.RevenueCode;
+                    myProductData.list_price = myProduct.DefaultList.ToString();
+                    myProductData.unit_cost = myProduct.DefaultCost.ToString();
+                    myProductData.product_id = myProductID;
+                    myProductData.description = myProduct.Description;
 
-                //****** Create XRef datarow *****
-                productXRef = MySqlHelper.CreateXRefDataRow(productXRef, myProductData.product_id, myProduct.PartNumber, "");
+                    //***** Package as class, serialize to JSON and write to data table to get mass inserted into SQL *****
+                    myProducts.entity = "Product";
+                    myProducts.Product = myProductData;
+                    string myJsonObject = JsonConvert.SerializeObject(myProducts);
+
+                    //***** Create audit log datarow ******                 
+                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Product", myProductData.product_id, myJsonObject, "", "A");
+
+                    //****** Create XRef datarow *****
+                    productXRef = MySqlHelper.CreateXRefDataRow(productXRef, myProductData.product_id, myProduct.PartNumber, "");
+                }
+                //***** Insert to Audit Log and XRef tables for Boomi to reference *****
+                DataTable myReturnResultAudit = myDAL.InsertAuditLog(auditLog, connectionString);
+                DataTable myReturnResultXRef = myDAL.InsertProductXRef(productXRef, connectionString);
+
+                string resultAudit = myReturnResultAudit.Rows[0][0].ToString();
+                string resultXRef = myReturnResultXRef.Rows[0][0].ToString();
+                if (resultAudit.ToLower() == "success" && resultXRef.ToLower() == "success")
+                {
+                    success = true;
+                }
+                else
+                {
+                    success = false;
+                }
             }
-            //***** Insert to Audit Log and XRef tables for Boomi to reference *****
-            DataTable myReturnResultAudit = myDAL.InsertAuditLog(auditLog, connectionString);
-            DataTable myReturnResultXRef = myDAL.InsertProductXRef(productXRef, connectionString);
-
-            string resultAudit = myReturnResultAudit.Rows[0][0].ToString();
-            string resultXRef = myReturnResultXRef.Rows[0][0].ToString();
-            if (resultAudit.ToLower() == "success" && resultXRef.ToLower() == "success")
-            {
-                success = true;
-            }
-            else
-            {
-                success = false;
-            }
-            //}
             return success;
         }
     }

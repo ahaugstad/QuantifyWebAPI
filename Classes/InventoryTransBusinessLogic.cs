@@ -53,7 +53,7 @@ namespace QuantifyWebAPI.Controllers
 
             //***** Get all transfers and adjustments (will call 'InventoryTrans')- will loop through this and compare VersionStamp against appropriate record in our TransactionVersions dictionary *****
             MovementCollection all_inventory_trans = MovementCollection.GetMovementCollection(MovementType.All);
-
+            
             //***** Get DataTable Data Structure for Version Control Stored Procedure *****
             DataTable dt = MySqlHelper.GetVersionTableStructure();
 
