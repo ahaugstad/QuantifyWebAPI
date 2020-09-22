@@ -51,8 +51,11 @@ namespace QuantifyWebAPI.Controllers
 
             QuantHelper.QuantifyLogin();
 
-            //***** Get all purchases - will loop through this and compare VersionStamp against appropriate record in our TransactionVersions dictionary *****
+            //***** Get all sales - will loop through this and compare VersionStamp against appropriate record in our TransactionVersions dictionary *****
             MovementCollection all_sales = MovementCollection.GetMovementCollection(MovementType.All);
+
+            //***** Also need to include shipments that include out of service return orders *****
+            ShipmentCollection all_shipments = ShipmentCollection.GetShipmentCollection(Guid.Empty);
 
             //***** Get DataTable Data Structure for Version Control Stored Procedure *****
             DataTable dt = MySqlHelper.GetVersionTableStructure();
@@ -66,7 +69,8 @@ namespace QuantifyWebAPI.Controllers
                 if (
                     mySale.TypeOfMovement == MovementType.SellNew ||
                     mySale.TypeOfMovement == MovementType.SellForRent ||
-                    mySale.TypeOfMovement == MovementType.SellConsumables
+                    mySale.TypeOfMovement == MovementType.SellConsumables ||
+                    mySale.TypeOfMovement == MovementType.SellDamaged
                     )
                 {
                     string mySaleNumber = mySale.MovementNumber;
