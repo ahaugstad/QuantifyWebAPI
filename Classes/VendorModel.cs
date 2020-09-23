@@ -27,7 +27,7 @@ namespace QuantifyWebAPI.Classes
     {
         public VendorData()
         {
-            Address = new List<Address>();
+            Addresses = new List<Address>();
         }
 
         public string vendor_id { get; set; }
@@ -35,7 +35,17 @@ namespace QuantifyWebAPI.Classes
         public string vendor_phone { get; set; }
         public string vendor_email { get; set; }
         public string vendor_fax { get; set; }
-        public List<Address> Address { get; set; }
+        public List<Address> Addresses { get; set; }
+    }
+
+    public class VendorResponseObj
+    {
+        public string status { get; set; }
+        public List<string> errorList { get; set; }
+        public VendorResponseObj()
+        {
+            errorList = new List<string>();
+        }
     }
 
 

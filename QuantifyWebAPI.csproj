@@ -44,22 +44,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Avontus.Core, Version=3.7.0.1, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files\Avontus\Quantify Client\Avontus.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="Avontus.Quantify.Reports, Version=8.3.1457.125, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files\Avontus\Quantify Client\Avontus.Quantify.Reports.dll</HintPath>
-    </Reference>
-    <Reference Include="Avontus.Rental.Library, Version=8.3.1457.125, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files\Avontus\Quantify Client\Avontus.Rental.Library.dll</HintPath>
-    </Reference>
-    <Reference Include="Avontus.Rental.Utility, Version=8.3.1457.125, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files\Avontus\Quantify Client\Avontus.Rental.Utility.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=1.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.Bcl.AsyncInterfaces.1.1.0\lib\net461\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
     </Reference>
@@ -202,9 +186,12 @@
     <Compile Include="Areas\HelpPage\SampleGeneration\SampleDirection.cs" />
     <Compile Include="Areas\HelpPage\SampleGeneration\TextSample.cs" />
     <Compile Include="Areas\HelpPage\XmlDocumentationProvider.cs" />
+    <Compile Include="Classes\VendorBusinessLogic.cs" />
+    <Compile Include="Classes\InvoiceBusinessLogic.cs" />
     <Compile Include="Classes\SalesOrderBusinessLogic.cs" />
     <Compile Include="Classes\PurchaseOrderBusinessLogic.cs" />
     <Compile Include="Classes\InventoryTransBusinessLogic.cs" />
+    <Compile Include="Classes\InvoiceModel.cs" />
     <Compile Include="Classes\VendorModel.cs" />
     <Compile Include="Classes\SalesOrderModel.cs" />
     <Compile Include="Classes\PurchaseOrderModel.cs" />
@@ -290,6 +277,7 @@
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="Models\" />
+    <Folder Include="SupportingDlls\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="fonts\glyphicons-halflings-regular.woff2" />
