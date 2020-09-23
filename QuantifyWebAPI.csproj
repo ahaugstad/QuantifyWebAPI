@@ -205,6 +205,7 @@
     <Compile Include="Classes\SalesOrderBusinessLogic.cs" />
     <Compile Include="Classes\PurchaseOrderBusinessLogic.cs" />
     <Compile Include="Classes\InventoryTransBusinessLogic.cs" />
+    <Compile Include="Classes\VendorModel.cs" />
     <Compile Include="Classes\SalesOrderModel.cs" />
     <Compile Include="Classes\PurchaseOrderModel.cs" />
     <Compile Include="Classes\InventoryTransModel.cs" />
