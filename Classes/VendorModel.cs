@@ -17,14 +17,11 @@ using Avontus.Rental.Library.ToolWatchImport;
 namespace QuantifyWebAPI.Classes
 {
     // Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(myJsonResponse); 
-    public class VendoRootClass
+    public class VendorRootClass
     {
         public string entity { get; set; }
         public VendorData VendorData { get; set; }
     }
-
-
-
 
     public class VendorData
     {

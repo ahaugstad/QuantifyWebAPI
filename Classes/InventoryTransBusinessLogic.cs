@@ -51,34 +51,42 @@ namespace QuantifyWebAPI.Controllers
 
             QuantHelper.QuantifyLogin();
 
-            //***** Get all transfers and adjustments (will call 'InventoryTrans')- will loop through this and compare VersionStamp against appropriate record in our TransactionVersions dictionary *****
-            MovementCollection all_inventory_trans = MovementCollection.GetMovementCollection(MovementType.All);
-            
+            //***** Get all transfers and adjustments (will call 'InventoryTrans' as a group)
+            //      will loop through these and compare VersionStamp against appropriate record in our Versions dictionary *****
+            MovementCollection all_inventory_trans = MovementCollection.GetMovementCollection(MovementType.TransferNewToRent);
+            //TODO: ADH 9/23/20 - Identify if we need to consider consumable adjustments or if those aren't a thing
+            StockedProductAdjustmentCollection all_adjustments = StockedProductAdjustmentCollection.GetStockedProductAdjustmentCollection(ProductType.Product);
+
             //***** Get DataTable Data Structure for Version Control Stored Procedure *****
             DataTable dt = MySqlHelper.GetVersionTableStructure();
 
-            Dictionary<string, Movement> myInventoryTransDictionary = new Dictionary<string, Movement>();
+            //***** Create Dictionaries to optimize lookups/version compares *****
+            Dictionary<string, Movement> myTransfersDictionary = new Dictionary<string, Movement>();
+            Dictionary<string, StockedProductAdjustment> myAdjustmentsDictionary = new Dictionary<string, StockedProductAdjustment>();
 
-            foreach (Movement myInventoryTrans in all_inventory_trans)
+            //***** Loop through Inventory Transfers *****
+            foreach (Movement myTransfer in all_inventory_trans)
             {
-                //***** Need to include all types of transactions that result in inventory being received, either partially or fully *****
-                //      (i.e. green arrow at left of transaction in list in Quantify turns gray)
-                //TODO: ADH 9/16/2020 - Identify where inventory adjustments are housed in API/database, then merge with below
-                if (
-                    myInventoryTrans.TypeOfMovement == MovementType.TransferNewToRent
-                    )
+                string myTransferNumber = myTransfer.MovementNumber;
+                string timestampVersion = "0x" + String.Join("", myTransfer.VersionStamp.Select(b => Convert.ToString(b, 16)));
+
+                //***** Add record to data table to be written to Version table in SQL *****
+                dt = MySqlHelper.CreateVersionDataRow(dt, "InventoryTrans", myTransferNumber, timestampVersion.ToString());
+
+                //***** Build Dictionary *****
+                if (!myTransfersDictionary.ContainsKey(myTransferNumber))
                 {
-                    string myInventoryTransNumber = myInventoryTrans.MovementNumber;
-                    string timestampVersion = "0x" + String.Join("", myInventoryTrans.VersionStamp.Select(b => Convert.ToString(b, 16)));
+                    myTransfersDictionary.Add(myTransferNumber, myTransfer);
+                }
+            }
 
-                    //***** Add record to data table to be written to Version table in SQL *****
-                    dt = MySqlHelper.CreateVersionDataRow(dt, "InventoryTrans", myInventoryTransNumber, timestampVersion.ToString());
-
-                    //***** Build Dictionary *****
-                    if (!myInventoryTransDictionary.ContainsKey(myInventoryTransNumber))
-                    {
-                        myInventoryTransDictionary.Add(myInventoryTransNumber, myInventoryTrans);
-                    }
+            //***** Loop through Adjustments *****
+            foreach (StockedProductAdjustment myAdjustment in all_adjustments)
+            {
+                if (myAdjustment.PartNumber == "HR-PC-33.565")
+                {
+                    var myTestAdjustment = myAdjustment;
+                    var myAdjustmentPart = myTestAdjustment.PartNumber;
                 }
             }
 
@@ -98,15 +106,15 @@ namespace QuantifyWebAPI.Controllers
                 {
                     //***** Initalize fields and classes to be used to build data profile *****
                     string myInventoryTransID = myRow["QuantifyID"].ToString();
-                    Movement myInventoryTrans = myInventoryTransDictionary[myInventoryTransID];
-                    Order myOrder = Order.GetOrder(myInventoryTrans.OrderID);
-                    MovementProductList myInventoryTransProducts = MovementProductList.GetMovementProductList(myInventoryTrans.MovementID);
+                    Movement myTransfer = myTransfersDictionary[myInventoryTransID];
+                    Order myOrder = Order.GetOrder(myTransfer.OrderID);
+                    MovementProductList myInventoryTransProducts = MovementProductList.GetMovementProductList(myTransfer.MovementID);
                     
                     //***** Build header data profile *****
                     InventoryTransData myInventoryTransData = new InventoryTransData();                    
                     myInventoryTransData.inventory_trans_id = myInventoryTransID;
-                    myInventoryTransData.transaction_type = myInventoryTrans.TypeOfMovement.ToDescription();
-                    switch (myInventoryTrans.TypeOfMovement)
+                    myInventoryTransData.transaction_type = myTransfer.TypeOfMovement.ToDescription();
+                    switch (myTransfer.TypeOfMovement)
                     {
                         case MovementType.TransferNewToRent:
                             myInventoryTransData.from_warehouse = ((int)Warehouse.New).ToString();
