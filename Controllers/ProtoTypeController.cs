@@ -386,39 +386,40 @@ namespace QuantifyWebAPI.Controllers
                 Product myProduct = Product.GetProduct(Guid.Empty);
                 //var prodVersionStamp = myProduct.VersionStamp;
 
-                //ProductList myProductList = ProductList.GetProductList(ProductType.All);
-                //foreach (ProductListItem productListItem in myProductList)
+                ProductList myProductList = ProductList.GetProductList(ProductType.All);
+                foreach (ProductListItem productListItem in myProductList)
+                {
+                    var prodVersionStampList = productListItem.VersionStamp;
+                }
+
+                //***** Shipments *****
+                Shipment myShipment = Shipment.GetShipment("", true, true);
+                var shipVersionStamp = myShipment.VersionStamp;
+
+                //***** Invoices *****
+                InvoiceCollection invoices = InvoiceCollection.GetInvoiceCollection(InvoiceExportStatus.All);
+                Invoice myInvoice = Invoice.GetInvoice(Guid.Empty,true);
+                var invoiceVersionStamp = myInvoice.ModifyDate;
+
+                //***** Orders (VersionStamp on List but not Collection) *****
+                Order myOrder = Order.GetOrder(Guid.Empty);
+                //var orderVersionStamp = myOrder.VersionStamp;
+
+                OrderList myOrderList = OrderList.GetOrderList(Guid.Empty, OrderTypeEnum.Both, ActiveStatus.Both);
+                foreach (OrderListItem orderListItem in myOrderList)
+                {
+                    var ordVersionStampList = orderListItem.VersionStamp;
+                }
+
+                //***** Jobsites (VersionStamp on Collection but not List) *****
+                StockingLocation myJobSite = StockingLocation.GetStockingLocation("");
+                var jobsiteVersionStamp = myJobSite.VersionStamp;
+
+                StockingLocationList myJobSiteList = StockingLocationList.GetJobsites(false, JobTreeNodeDisplayType.Name, Guid.Empty);
+                //foreach (StockingLocationListItem jobsiteListItem in myJobSiteList)
                 //{
-                //    var prodVersionStampList = productListItem.VersionStamp;
+                    //var jobVersionStampList = jobsiteListItem.VersionStamp;
                 //}
-
-                ////***** Shipments *****
-                //Shipment myShipment = Shipment.GetShipment("", true, true);
-                //var shipVersionStamp = myShipment.VersionStamp;
-
-                ////***** Invoices *****
-                //Invoice myInvoice = Invoice.GetInvoice(Guid.Empty,true);
-                //var invoiceVersionStamp = myInvoice.ModifyDate;
-
-                ////***** Orders (VersionStamp on List but not Collection) *****
-                //Order myOrder = Order.GetOrder(Guid.Empty);
-                ////var orderVersionStamp = myOrder.VersionStamp;
-
-                //OrderList myOrderList = OrderList.GetOrderList(Guid.Empty, OrderTypeEnum.Both, ActiveStatus.Both);
-                //foreach (OrderListItem orderListItem in myOrderList)
-                //{
-                //    var ordVersionStampList = orderListItem.VersionStamp;
-                //}
-
-                ////***** Jobsites (VersionStamp on Collection but not List) *****
-                //StockingLocation myJobSite = StockingLocation.GetStockingLocation("");
-                //var jobsiteVersionStamp = myJobSite.VersionStamp;
-
-                //StockingLocationList myJobSiteList = StockingLocationList.GetJobsites(false, JobTreeNodeDisplayType.Name, Guid.Empty);
-                ////foreach (StockingLocationListItem jobsiteListItem in myJobSiteList)
-                ////{
-                //    //var jobVersionStampList = jobsiteListItem.VersionStamp;
-                ////}
                 
 
             }

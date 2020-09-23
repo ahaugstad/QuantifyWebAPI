@@ -64,6 +64,16 @@ namespace QuantifyWebAPI.Controllers
                 //***** Need to include all types of transactions that result in inventory being received, either partially or fully *****
                 //      (i.e. green arrow at left of transaction in list in Quantify turns gray)
                 if (
+                    myPurchase.TypeOfMovement == MovementType.BackOrderCancelled ||
+                    myPurchase.TypeOfMovement == MovementType.BackOrderCompleted ||
+                    myPurchase.TypeOfMovement == MovementType.BackOrderCompletedWithBackOrder ||
+                    myPurchase.TypeOfMovement == MovementType.NewBackOrderCancelled ||
+                    myPurchase.TypeOfMovement == MovementType.NewBackOrderCompleted ||
+                    myPurchase.TypeOfMovement == MovementType.NewBackOrderCompletedWithBackOrder ||
+                    myPurchase.TypeOfMovement == MovementType.NewOrderCompleted ||
+                    myPurchase.TypeOfMovement == MovementType.NewOrderCompletedWithBackOrder ||
+                    myPurchase.TypeOfMovement == MovementType.OrderCompleted ||
+                    myPurchase.TypeOfMovement == MovementType.OrderCompletedWithBackOrder ||
                     myPurchase.TypeOfMovement == MovementType.PurchaseConsumables ||
                     myPurchase.TypeOfMovement == MovementType.NewOrdered ||
                     myPurchase.TypeOfMovement == MovementType.Ordered
@@ -92,7 +102,7 @@ namespace QuantifyWebAPI.Controllers
             {
                 PurchaseOrderRootClass myPurchaseOrders = new PurchaseOrderRootClass();
 
-                //***** Create Audit Log and XRef table structures *****            
+                //***** Create Audit Log and XRef table structures *****
                 DataTable auditLog = MySqlHelper.GetAuditLogTableStructure();
 
                 foreach (DataRow myRow in myChangedRecords.Rows)
@@ -117,11 +127,43 @@ namespace QuantifyWebAPI.Controllers
                     else
                     {
                         myPurchaseOrderData.order_number = myPurchase.BackOrderNumber;
-                    }     
+                    }
 
                     //***** Assign warehouse based on type of movement *****
                     switch (myPurchase.TypeOfMovement)
                     {
+                        //TODO: ADH 9/23/2020 - BUSINESS QUESTION: How do we handle Cancelled backorders?
+                        case MovementType.BackOrderCancelled:
+                            myPurchaseOrderData.to_warehouse = ((int)Warehouse.Available).ToString();
+                            break;
+                        case MovementType.BackOrderCompleted:
+                            myPurchaseOrderData.to_warehouse = ((int)Warehouse.Available).ToString();
+                            break;
+                        case MovementType.BackOrderCompletedWithBackOrder:
+                            myPurchaseOrderData.to_warehouse = ((int)Warehouse.Available).ToString();
+                            break;
+                        //TODO: ADH 9/23/2020 - BUSINESS QUESTION: How do we handle Cancelled backorders?
+                        case MovementType.NewBackOrderCancelled:
+                            myPurchaseOrderData.to_warehouse = ((int)Warehouse.New).ToString();
+                            break;
+                        case MovementType.NewBackOrderCompleted:
+                            myPurchaseOrderData.to_warehouse = ((int)Warehouse.New).ToString();
+                            break;
+                        case MovementType.NewBackOrderCompletedWithBackOrder:
+                            myPurchaseOrderData.to_warehouse = ((int)Warehouse.New).ToString();
+                            break;
+                        case MovementType.NewOrderCompletedWithBackOrder:
+                            myPurchaseOrderData.to_warehouse = ((int)Warehouse.New).ToString();
+                            break;
+                        case MovementType.NewOrderCompleted:
+                            myPurchaseOrderData.to_warehouse = ((int)Warehouse.New).ToString();
+                            break;
+                        case MovementType.OrderCompletedWithBackOrder:
+                            myPurchaseOrderData.to_warehouse = ((int)Warehouse.Available).ToString();
+                            break;
+                        case MovementType.OrderCompleted:
+                            myPurchaseOrderData.to_warehouse = ((int)Warehouse.Available).ToString();
+                            break;
                         case MovementType.NewOrdered:
                             myPurchaseOrderData.to_warehouse = ((int)Warehouse.New).ToString();
                             break;
@@ -140,10 +182,10 @@ namespace QuantifyWebAPI.Controllers
                     {
                         Product myProduct = Product.GetProduct(purchaseProductListItem.BaseProductID);
                         PurchaseOrderLine myPurchaseOrderLine = new PurchaseOrderLine();
-                        myPurchaseOrderLine.part_number = purchaseProductListItem.PartNumber;            
+                        myPurchaseOrderLine.part_number = purchaseProductListItem.PartNumber;   
                         myPurchaseOrderLine.quantity = purchaseProductListItem.Quantity.ToString();
                         //***** Only set received quantity if we are doing direct purchase of consumables *****
-                        if (myPurchase.TypeOfMovement == MovementType.PurchaseConsumables)
+                        if (myPurchase.TypeOfMovement != MovementType.NewOrdered && myPurchase.TypeOfMovement != MovementType.Ordered)
                         {
                             myPurchaseOrderLine.received_quantity = purchaseProductListItem.ReceivedQuantity.ToString();
                         }
