@@ -397,6 +397,7 @@ namespace QuantifyWebAPI.Controllers
                 var shipVersionStamp = myShipment.VersionStamp;
 
                 //***** Invoices *****
+                InvoiceCollection invoices = InvoiceCollection.GetInvoiceCollection(InvoiceExportStatus.All);
                 Invoice myInvoice = Invoice.GetInvoice(Guid.Empty,true);
                 var invoiceVersionStamp = myInvoice.ModifyDate;
 

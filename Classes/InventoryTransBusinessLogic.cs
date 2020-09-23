@@ -65,16 +65,6 @@ namespace QuantifyWebAPI.Controllers
                 //      (i.e. green arrow at left of transaction in list in Quantify turns gray)
                 //TODO: ADH 9/16/2020 - Identify where inventory adjustments are housed in API/database, then merge with below
                 if (
-                    myInventoryTrans.TypeOfMovement == MovementType.BackOrderCancelled ||
-                    myInventoryTrans.TypeOfMovement == MovementType.BackOrderCompleted ||
-                    myInventoryTrans.TypeOfMovement == MovementType.BackOrderCompletedWithBackOrder ||
-                    myInventoryTrans.TypeOfMovement == MovementType.NewBackOrderCancelled ||
-                    myInventoryTrans.TypeOfMovement == MovementType.NewBackOrderCompleted ||
-                    myInventoryTrans.TypeOfMovement == MovementType.NewBackOrderCompletedWithBackOrder ||
-                    myInventoryTrans.TypeOfMovement == MovementType.NewOrderCompleted ||
-                    myInventoryTrans.TypeOfMovement == MovementType.NewOrderCompletedWithBackOrder ||
-                    myInventoryTrans.TypeOfMovement == MovementType.OrderCompleted ||
-                    myInventoryTrans.TypeOfMovement == MovementType.OrderCompletedWithBackOrder ||
                     myInventoryTrans.TypeOfMovement == MovementType.TransferNewToRent
                     )
                 {
@@ -116,51 +106,8 @@ namespace QuantifyWebAPI.Controllers
                     InventoryTransData myInventoryTransData = new InventoryTransData();                    
                     myInventoryTransData.inventory_trans_id = myInventoryTransID;
                     myInventoryTransData.transaction_type = myInventoryTrans.TypeOfMovement.ToDescription();
-                    //myInventoryTransData.package_type = myInventoryTrans.BusinessPartnerType.ToDescription();
                     switch (myInventoryTrans.TypeOfMovement)
                     {
-                        case MovementType.BackOrderCancelled:
-                            myInventoryTransData.to_warehouse = ((int)Warehouse.Available).ToString();
-                            //TODO: ADH 9/21/2020 - Identify if this should be R type in WebApps or something else
-                            myInventoryTransData.transaction_type = "R";
-                            break;
-                        case MovementType.BackOrderCompleted:
-                            myInventoryTransData.to_warehouse = ((int)Warehouse.Available).ToString();
-                            myInventoryTransData.transaction_type = "R";
-                            break;
-                        case MovementType.BackOrderCompletedWithBackOrder:
-                            myInventoryTransData.to_warehouse = ((int)Warehouse.Available).ToString();
-                            myInventoryTransData.transaction_type = "R";
-                            break;
-                        case MovementType.NewBackOrderCancelled:
-                            myInventoryTransData.to_warehouse = ((int)Warehouse.New).ToString();
-                            //TODO: ADH 9/21/2020 - Identify if this should be R type in WebApps or something else
-                            myInventoryTransData.transaction_type = "R";
-                            break;
-                        case MovementType.NewBackOrderCompleted:
-                            myInventoryTransData.to_warehouse = ((int)Warehouse.New).ToString();
-                            myInventoryTransData.transaction_type = "R";
-                            break;
-                        case MovementType.NewBackOrderCompletedWithBackOrder:
-                            myInventoryTransData.to_warehouse = ((int)Warehouse.New).ToString();
-                            myInventoryTransData.transaction_type = "R";
-                            break;
-                        case MovementType.NewOrderCompletedWithBackOrder:
-                            myInventoryTransData.to_warehouse = ((int)Warehouse.New).ToString();
-                            myInventoryTransData.transaction_type = "R";
-                            break;
-                        case MovementType.NewOrderCompleted:
-                            myInventoryTransData.to_warehouse = ((int)Warehouse.New).ToString();
-                            myInventoryTransData.transaction_type = "R";
-                            break;
-                        case MovementType.OrderCompletedWithBackOrder:
-                            myInventoryTransData.to_warehouse = ((int)Warehouse.Available).ToString();
-                            myInventoryTransData.transaction_type = "R";
-                            break;
-                        case MovementType.OrderCompleted:
-                            myInventoryTransData.to_warehouse = ((int)Warehouse.Available).ToString();
-                            myInventoryTransData.transaction_type = "R";
-                            break;
                         case MovementType.TransferNewToRent:
                             myInventoryTransData.from_warehouse = ((int)Warehouse.New).ToString();
                             myInventoryTransData.to_warehouse = ((int)Warehouse.Available).ToString();
