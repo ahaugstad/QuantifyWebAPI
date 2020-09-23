@@ -21,6 +21,7 @@ using Avontus.Rental.Library.Accounting;
 using Avontus.Rental.Library.Accounting.XeroAccounting;
 using Avontus.Rental.Library.Security;
 using Avontus.Rental.Library.ToolWatchImport;
+using Avontus.Rental.Library.Logging;
 
 // Internal Class references
 using QuantifyWebAPI.Classes;
