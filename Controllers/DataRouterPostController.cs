@@ -67,13 +67,13 @@ namespace QuantifyWebAPI.Controllers
             PurchaseOrderBusinessLogic myPurchaseOrderResponse = new PurchaseOrderBusinessLogic(myQuantifyCredentials);
             myPurchaseOrderResponse.GetIDsToProcess(StrVersionDBConn);
 
-            ////***** Run Sales Order Transactions *****
-            //SalesOrderBusinessLogic mySalesOrderResponse = new SalesOrderBusinessLogic(myQuantifyCredentials);
-            //mySalesOrderResponse.GetIDsToProcess(StrVersionDBConn);
+            //***** Run Sales Order Transactions *****
+            SalesOrderBusinessLogic mySalesOrderResponse = new SalesOrderBusinessLogic(myQuantifyCredentials);
+            mySalesOrderResponse.GetIDsToProcess(StrVersionDBConn);
 
-            ////***** Run Inventory Transactions *****
-            //InventoryTransBusinessLogic myInventoryTransResponse = new InventoryTransBusinessLogic(myQuantifyCredentials);
-            //myInventoryTransResponse.GetIDsToProcess(StrVersionDBConn);
+            //***** Run Inventory Transactions *****
+            InventoryTransBusinessLogic myInventoryTransResponse = new InventoryTransBusinessLogic(myQuantifyCredentials);
+            myInventoryTransResponse.GetIDsToProcess(StrVersionDBConn);
 
             //***** Run Invoice Transactions *****
 

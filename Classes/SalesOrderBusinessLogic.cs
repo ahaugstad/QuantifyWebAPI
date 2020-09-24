@@ -52,11 +52,14 @@ namespace QuantifyWebAPI.Controllers
 
             QuantHelper.QuantifyLogin();
 
-            //***** Get all sales - will loop through this and compare VersionStamp against appropriate record in our TransactionVersions dictionary *****
+            //***** Get all sales - will loop through this and compare VersionStamp against appropriate record in Versions table *****
             MovementCollection all_sales = MovementCollection.GetMovementCollection(MovementType.All);
 
             //***** Also need to include shipments that include out of service return orders (will call Returns) *****
-            ShipmentCollection all_returns = ShipmentCollection.GetShipmentCollection(ShipmentStatusType.Completed);
+            //TODO: ADH 9/24/2020 - Change this to be maybe a few days back only after we run initial integration
+            DateTime startDate = DateTime.Now.AddDays(-14);
+            DateTime endDate = DateTime.Now;
+            ShipmentList all_returns_list = ShipmentList.GetShipmentList(startDate, endDate);
 
             //***** Get DataTable Data Structure for Version Control Stored Procedure *****
             DataTable dt = MySqlHelper.GetVersionTableStructure();
@@ -90,11 +93,12 @@ namespace QuantifyWebAPI.Controllers
                 }
             }
 
-            foreach (Shipment myReturn in all_returns)
+            foreach (ShipmentListItem myReturnListItem in all_returns_list)
             {
                 //***** Evaluate if shipment has Out of Service products - this will determine if we need to integrate a return order or not *****
-                if (myReturn.OutOfServiceShipmentProducts.Count > 0)
+                if (myReturnListItem.ShipmentType == ShipmentType.Return)
                 {
+                    Shipment myReturn = Shipment.GetShipment(myReturnListItem.ShipmentID, false, false, false);
                     string myReturnNumber = myReturn.ShipmentNumber;
                     string timestampVersion = "0x" + String.Join("", myReturn.VersionStamp.Select(b => Convert.ToString(b, 16)));
 
@@ -218,7 +222,8 @@ namespace QuantifyWebAPI.Controllers
                     string myJsonObject = JsonConvert.SerializeObject(mySalesOrders);
 
                     //***** Create audit log datarow ******                 
-                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "SalesOrder", mySalesOrderData.transaction_number, myJsonObject, "", myProcessStatus, myErrorText);
+                    //auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "SalesOrder", mySalesOrderData.transaction_number, myJsonObject, "", myProcessStatus, myErrorText);
+                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "SalesOrder", mySalesOrderData.transaction_number, myJsonObject, "", myProcessStatus);
                 }
                 //***** Create audit log record for Boomi to go pick up *****
                 // REST API URL: http://apimariaasad01.apigroupinc.api:9090/ws/rest/webapps_quantify/api

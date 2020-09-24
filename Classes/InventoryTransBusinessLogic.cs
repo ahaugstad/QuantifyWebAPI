@@ -53,7 +53,7 @@ namespace QuantifyWebAPI.Controllers
             QuantHelper.QuantifyLogin();
 
             //***** Get all transfers and adjustments (will call 'InventoryTrans' as a group)
-            //      will loop through these and compare VersionStamp against appropriate record in our Versions dictionary *****
+            //      will loop through these and compare VersionStamp against appropriate record in Versions table *****
             MovementCollection all_inventory_trans = MovementCollection.GetMovementCollection(MovementType.TransferNewToRent);
             //TODO: ADH 9/23/20 - Identify if we need to consider consumable adjustments or if those aren't a thing
             //StockedProductAdjustmentCollection all_adjustments = StockedProductAdjustmentCollection.GetStockedProductAdjustmentCollection(ProductType.Product);
@@ -84,16 +84,16 @@ namespace QuantifyWebAPI.Controllers
             }
 
             //***** Loop through all Adjustments *****
-            StockedProductAdjustmentCollection all_adjustments = StockedProductAdjustmentCollection.GetStockedProductAdjustmentCollection(ProductType.Product);
-            foreach (StockedProductAdjustment myAdjustment in all_adjustments)
-            {
-                //***** Need to use log entry list object for versioning of adjustments *****
-                LogEntryList logAdjustments = LogEntryList.GetLogEntryList(myAdjustment.StockedProductID);
-                if (logAdjustments.Count > 0)
-                {
-                    //Do something
-                }
-            }
+            //StockedProductAdjustmentCollection all_adjustments = StockedProductAdjustmentCollection.GetStockedProductAdjustmentCollection(ProductType.Product);
+            //foreach (StockedProductAdjustment myAdjustment in all_adjustments)
+            //{
+            //    //***** Need to use log entry list object for versioning of adjustments *****
+            //    LogEntryList logAdjustments = LogEntryList.GetLogEntryList(myAdjustment.StockedProductID);
+            //    if (logAdjustments.Count > 0)
+            //    {
+            //        //Do something
+            //    }
+            //}
 
             //***** Call data access layer *****
             DAL myDAL = new DAL();
@@ -117,7 +117,6 @@ namespace QuantifyWebAPI.Controllers
                     //***** Initalize fields and classes to be used to build data profile *****
                     string myInventoryTransID = myRow["QuantifyID"].ToString();
                     Movement myTransfer = myTransfersDictionary[myInventoryTransID];
-                    Order myOrder = Order.GetOrder(myTransfer.OrderID);
                     MovementProductList myInventoryTransProducts = MovementProductList.GetMovementProductList(myTransfer.MovementID);
                     
                     //***** Build header data profile *****              
@@ -153,7 +152,8 @@ namespace QuantifyWebAPI.Controllers
                     string myJsonObject = JsonConvert.SerializeObject(myInventoryTransactions);
 
                     //***** Create audit log datarow ******                 
-                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "InventoryTrans", myInventoryTransData.inventory_trans_id, myJsonObject, "", myProcessStatus, myErrorText);
+                    //auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "InventoryTrans", myInventoryTransData.inventory_trans_id, myJsonObject, "", myProcessStatus, myErrorText);
+                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "InventoryTrans", myInventoryTransData.inventory_trans_id, myJsonObject, "", myProcessStatus);
                 }
                 //***** Create audit log record for Boomi to go pick up *****
                 // REST API URL: http://apimariaasad01.apigroupinc.api:9090/ws/rest/webapps_quantify/api

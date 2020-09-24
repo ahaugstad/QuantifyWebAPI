@@ -59,7 +59,7 @@ namespace QuantifyWebAPI.Controllers
 
             QuantHelper.QuantifyLogin();
 
-            //***** Get all products and all consumables - will loop through this list and compare VersionStamp against appropriate record in our Products dictionary *****
+            //***** Get all products and all consumables - will loop through this list and compare VersionStamp against appropriate record in Versions table *****
             ProductList products_list = ProductList.GetProductList(ProductType.Product);
             ProductList consumables_list = ProductList.GetProductList(ProductType.Consumable);
 
@@ -138,7 +138,8 @@ namespace QuantifyWebAPI.Controllers
                     string myJsonObject = JsonConvert.SerializeObject(myProducts);
 
                     //***** Create audit log datarow ******                 
-                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Product", myProductData.product_id, myJsonObject, "", myProcessStatus, myErrorText);
+                    //auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Product", myProductData.product_id, myJsonObject, "", myProcessStatus, myErrorText);
+                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Product", myProductData.product_id, myJsonObject, "", myProcessStatus);
 
                     //****** Create XRef datarow *****
                     productXRef = MySqlHelper.CreateXRefDataRow(productXRef, myProductData.product_id, myProduct.PartNumber, "");

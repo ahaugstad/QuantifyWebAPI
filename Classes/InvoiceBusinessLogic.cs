@@ -52,40 +52,36 @@ namespace QuantifyWebAPI.Controllers
 
             QuantHelper.QuantifyLogin();
 
-            //***** Get all sales - will loop through this and compare VersionStamp against appropriate record in our TransactionVersions dictionary *****
-            MovementCollection all_Invoices = MovementCollection.GetMovementCollection(MovementType.All);
-
-            //***** Also need to include shipments that include out of service return orders *****
-            ShipmentCollection all_shipments = ShipmentCollection.GetShipmentCollection(Guid.Empty);
+            //***** Get all invoices - will loop through this and compare VersionStamp against appropriate record in Versions table *****
+            InvoiceCollection all_Invoices = InvoiceCollection.GetInvoiceCollection(InvoiceExportStatus.All);
+            InvoiceList all_Invoices_List = InvoiceList.GetInvoiceList(InvoiceExportStatus.All);
 
             //***** Get DataTable Data Structure for Version Control Stored Procedure *****
             DataTable dt = MySqlHelper.GetVersionTableStructure();
 
-            Dictionary<string, Movement> mySalesDictionary = new Dictionary<string, Movement>();
+            Dictionary<string, Invoice> myInvoicesDictionary = new Dictionary<string, Invoice>();
 
-            foreach (Movement myInvoice in all_Invoices)
+            foreach (Invoice myInvoice in all_Invoices)
             {
-                //***** Need to include all types of transactions that result in inventory being received, either partially or fully *****
-                //      (i.e. green arrow at left of transaction in list in Quantify turns gray)
-                if (
-                    myInvoice.TypeOfMovement == MovementType.SellNew ||
-                    myInvoice.TypeOfMovement == MovementType.SellForRent ||
-                    myInvoice.TypeOfMovement == MovementType.SellConsumables ||
-                    myInvoice.TypeOfMovement == MovementType.SellDamaged
-                    )
-                {
-                    string myInvoiceNumber = myInvoice.MovementNumber;
-                    string timestampVersion = "0x" + String.Join("", myInvoice.VersionStamp.Select(b => Convert.ToString(b, 16)));
+                //TODO: ADH 9/24/2020 - Apply criteria for which Invoices we will be considering in process, if any
+                //if (
+                //    //myInvoice.
+                //    )
+                //{
+                    string myInvoiceNumber = myInvoice.InvoiceNumber;
+                    //TODO: ADH 9/24/2020 - Modify line below to send numerical representation of date (cast as string) as timestamp
+                    string timestampVersion = myInvoice.ModifyDate.ToString();
+                    //string timestampVersion = "0x" + String.Join("", myInvoice.ModifyDate.Select(b => Convert.ToString(b, 16)));
 
                     //***** Add record to data table to be written to Version table in SQL *****
                     dt = MySqlHelper.CreateVersionDataRow(dt, "Invoice", myInvoiceNumber, timestampVersion.ToString());
 
                     //***** Build Dictionary *****
-                    if (!mySalesDictionary.ContainsKey(myInvoiceNumber))
+                    if (!myInvoicesDictionary.ContainsKey(myInvoiceNumber))
                     {
-                        mySalesDictionary.Add(myInvoiceNumber, myInvoice);
+                        myInvoicesDictionary.Add(myInvoiceNumber, myInvoice);
                     }
-                }
+                //}
             }
 
             //***** Call data access layer *****
@@ -109,43 +105,41 @@ namespace QuantifyWebAPI.Controllers
 
                     //***** Initalize fields and classes to be used to build data profile *****
                     string myInvoiceID = myRow["QuantifyID"].ToString();
-                    Movement myInvoice = mySalesDictionary[myInvoiceID];
-                    Order myOrder = Order.GetOrder(myInvoice.OrderID);
-                    BusinessPartner myCustomer = BusinessPartner.GetBusinessPartnerByNumber(myInvoice.MovementBusinessPartnerNumber);
-                    MovementProductList myInvoiceProducts = MovementProductList.GetMovementProductList(myInvoice.MovementID);
+                    Invoice myInvoice = myInvoicesDictionary[myInvoiceID];
+                    InvoiceProductChargeCollection myInvoiceProductCharges = InvoiceProductChargeCollection.GetInvoiceProductChargeCollection(myInvoice.InvoiceID);
 
                     //***** Build header data profile *****
-                    myInvoiceData.transaction_number = myInvoice.MovementNumber;
-                    myInvoiceData.customer_number = myCustomer.AccountingID;
-                    //TODO: ADH 9/22/2020 - Figure out why jobsite not coming through for every record: dirty data?
-                    //mySalesOrderData.job_number = mySale.JobSite.Number;
-                    myInvoiceData.reference_number = myInvoice.BusinessPartnerNumber;
+                    myInvoiceData.invoice_id = myInvoiceID;
+                    myInvoiceData.customer_number = myInvoice.Customer.PartnerNumber;
+                    myInvoiceData.job_number = myInvoice.JobSite.Number;
                     myInvoiceData.branch_office = myInvoice.JobSite.ParentBranchOrLaydown.Number;
+                    myInvoiceData.invoice_date = myInvoice.InvoiceDateTime.ToShortDateString();
+                    myInvoiceData.invoice_total = myInvoice.TotalInvoice.ToString();
 
                     //***** Assign warehouse based on type of movement *****
-                    switch (myInvoice.TypeOfMovement)
-                    {
-                        case MovementType.SellNew:
-                            myInvoiceData.from_warehouse = ((int)Warehouse.New).ToString();
-                            break;
-                        case MovementType.SellForRent:
-                            myInvoiceData.from_warehouse = ((int)Warehouse.Available).ToString();
-                            break;
-                        case MovementType.SellConsumables:
-                            myInvoiceData.from_warehouse = ((int)Warehouse.Consumable).ToString(); 
-                            break;
-                    }
+                    //switch (myInvoice.TypeOfMovement)
+                    //{
+                    //    case MovementType.SellNew:
+                    //        myInvoiceData.from_warehouse = ((int)Warehouse.New).ToString();
+                    //        break;
+                    //    case MovementType.SellForRent:
+                    //        myInvoiceData.from_warehouse = ((int)Warehouse.Available).ToString();
+                    //        break;
+                    //    case MovementType.SellConsumables:
+                    //        myInvoiceData.from_warehouse = ((int)Warehouse.Consumable).ToString(); 
+                    //        break;
+                    //}
                     
                     //***** Build line item data profile *****
-                    foreach (MovementProductListItem InvoiceProductListItem in myInvoiceProducts)
+                    foreach (InvoiceProductCharge invoiceProductCharge in myInvoiceProductCharges)
                     {
-                        Product myProduct = Product.GetProduct(InvoiceProductListItem.BaseProductID);
-                        InvoiceLine myInvoiceLine = new InvoiceLine();
-                        myInvoiceLine.part_number = InvoiceProductListItem.PartNumber;
-                        myInvoiceLine.quantity = InvoiceProductListItem.Quantity.ToString();
-                        myInvoiceLine.price_ea = InvoiceProductListItem.SellPrice.ToString();
-                        myInvoiceLine.unit_of_measure = myProduct.UnitOfMeasureName;
-                        myInvoiceData.Lines.Add(myInvoiceLine);
+                        //Product myProduct = Product.GetProduct(InvoiceProductListItem.BaseProductID);
+                        //InvoiceLine myInvoiceLine = new InvoiceLine();
+                        //myInvoiceLine.part_number = InvoiceProductListItem.PartNumber;
+                        //myInvoiceLine.quantity = InvoiceProductListItem.Quantity.ToString();
+                        //myInvoiceLine.price_ea = InvoiceProductListItem.SellPrice.ToString();
+                        //myInvoiceLine.unit_of_measure = myProduct.UnitOfMeasureName;
+                        //myInvoiceData.Lines.Add(myInvoiceLine);
                     }
 
                     //***** Package as class, serialize to JSON and write to audit log table *****
@@ -154,7 +148,8 @@ namespace QuantifyWebAPI.Controllers
                     string myJsonObject = JsonConvert.SerializeObject(myInvoices);
 
                     //***** Create audit log datarow ******                 
-                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Invoice", myInvoiceData.transaction_number, myJsonObject, "", myProcessStatus, myErrorText);
+                    //auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Invoice", myInvoiceData.transaction_number, myJsonObject, "", myProcessStatus, myErrorText);
+                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Invoice", myInvoiceData.transaction_number, myJsonObject, "", myProcessStatus);
                 }
                 //***** Create audit log record for Boomi to go pick up *****
                 // REST API URL: http://apimariaasad01.apigroupinc.api:9090/ws/rest/webapps_quantify/api

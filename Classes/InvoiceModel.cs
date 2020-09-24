@@ -32,14 +32,12 @@ namespace QuantifyWebAPI.Classes
             Lines = new List<InvoiceLine>();
         }
 
-        public string transaction_number { get; set; }
+        public string invoice_id { get; set; }
         public string job_number { get; set; }
         public string customer_number { get; set; }
-        public string reference_number { get; set; }
         public string branch_office { get; set; }
-        public string from_warehouse { get; set; }
-        public string notes { get; set; }
-        public string transaction_date { get; set; }
+        public string invoice_date { get; set; }
+        public string invoice_total { get; set; }
         public List<InvoiceLine> Lines { get; set; }
     }
 
