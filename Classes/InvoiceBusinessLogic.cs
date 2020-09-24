@@ -102,6 +102,11 @@ namespace QuantifyWebAPI.Controllers
 
                 foreach (DataRow myRow in myChangedRecords.Rows)
                 {
+                    //***** Initialize error tracking fields and data package *****
+                    string myErrorText = "";
+                    string myProcessStatus = "A";
+                    InvoiceData myInvoiceData = new InvoiceData();
+
                     //***** Initalize fields and classes to be used to build data profile *****
                     string myInvoiceID = myRow["QuantifyID"].ToString();
                     Movement myInvoice = mySalesDictionary[myInvoiceID];
@@ -110,7 +115,6 @@ namespace QuantifyWebAPI.Controllers
                     MovementProductList myInvoiceProducts = MovementProductList.GetMovementProductList(myInvoice.MovementID);
 
                     //***** Build header data profile *****
-                    InvoiceData myInvoiceData = new InvoiceData();
                     myInvoiceData.transaction_number = myInvoice.MovementNumber;
                     myInvoiceData.customer_number = myCustomer.AccountingID;
                     //TODO: ADH 9/22/2020 - Figure out why jobsite not coming through for every record: dirty data?
@@ -150,7 +154,7 @@ namespace QuantifyWebAPI.Controllers
                     string myJsonObject = JsonConvert.SerializeObject(myInvoices);
 
                     //***** Create audit log datarow ******                 
-                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Invoice", myInvoiceData.transaction_number, myJsonObject, "", "A");
+                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Invoice", myInvoiceData.transaction_number, myJsonObject, "", myProcessStatus, myErrorText);
                 }
                 //***** Create audit log record for Boomi to go pick up *****
                 // REST API URL: http://apimariaasad01.apigroupinc.api:9090/ws/rest/webapps_quantify/api

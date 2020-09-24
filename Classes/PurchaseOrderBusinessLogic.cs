@@ -106,25 +106,24 @@ namespace QuantifyWebAPI.Controllers
                 //***** Create Audit Log and XRef table structures *****
                 DataTable auditLog = MySqlHelper.GetAuditLogTableStructure();
 
-                //TODO: ADH 9/23/20 - Ask Ernie: what is best way to do this? We can get 'Log' info by giving it a list of our changed records' movement IDs
-                //List<Movement> purchaseList = 
-                //LogEntryList all_logs = LogEntryList.GetLogEntryListForMovements(List < Movement > myPurchase.MovementID, LogEntryList.MonthRange.ThisMonth);
-
                 foreach (DataRow myRow in myChangedRecords.Rows)
                 {
-                    //***** Initalize fields and classes to be used to build data profile *****
+                    //***** Initialize error tracking fields and data package *****
                     string myErrorText = "";
                     string myProcessStatus = "A";
+                    PurchaseOrderData myPurchaseOrderData = new PurchaseOrderData();
+
+                    //***** Initalize fields and classes to be used to build data profile *****
                     string myPurchaseID = myRow["QuantifyID"].ToString();
                     Movement myPurchase = myPurchasesDictionary[myPurchaseID];
                     Order myOrder = Order.GetOrder(myPurchase.OrderID);
                     BusinessPartner myVendor = BusinessPartner.GetBusinessPartnerByNumber(myPurchase.MovementBusinessPartnerNumber);
                     MovementProductList myPurchaseProducts = MovementProductList.GetMovementProductList(myPurchase.MovementID);
                     
-                    //***** Build header data profile *****
-                    PurchaseOrderData myPurchaseOrderData = new PurchaseOrderData();                    
+                    //***** Build header data profile *****                   
                     myPurchaseOrderData.transaction_number = myPurchase.MovementNumber;
                     myPurchaseOrderData.vendor_number = myVendor.AccountingID;
+                    //myPurchaseOrderData.order_number = myPurchase.MovementNumber;
 
                     //***** Use ReferenceNumber instead of BackOrderNumber for PO Number if we are doing direct purchase of consumables *****
                     //TODO: ADH 9/23/20 - Code duplicate BackOrderNumber and BusinessPartnerNumber check here and flag errors
@@ -183,10 +182,14 @@ namespace QuantifyWebAPI.Controllers
                             break;
                     }
                     myPurchaseOrderData.notes = myPurchase.Notes;
-                    
-                    //TODO: ADH 9/23/20 - Identify how we are going to handle this 'entered_by' functionality 
-                    // (pending Avontus answer on LogEntryList object, and figuring out if that contains actual created user)
-                    //myPurchaseOrderData.entered_by = myPurchase.;
+
+                    //TODO: ADH 9/24/20 - BUSINESS DECISION: Identify how we are going to handle this 'entered_by' functionality, since it only gets populated after receiving
+                    myPurchaseOrderData.entered_by = "QuantifyInt";
+                    //if (myPurchase.MovementNumber == "MOV-0000126")
+                    //{
+                    //    LogEntryList logEntryList = LogEntryList.GetLogEntryList(myPurchase.MovementID);
+                    //    myPurchaseOrderData.entered_by = logEntryList[0].UserName;
+                    //}
                     
                     //***** Build line item data profile *****
                     foreach (MovementProductListItem purchaseProductListItem in myPurchaseProducts)
@@ -211,7 +214,7 @@ namespace QuantifyWebAPI.Controllers
                     string myJsonObject = JsonConvert.SerializeObject(myPurchaseOrders);
 
                     //***** Create audit log datarow ******                 
-                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "PurchaseOrder", myPurchaseOrderData.transaction_number, myJsonObject, myErrorText, myProcessStatus);
+                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "PurchaseOrder", myPurchaseOrderData.transaction_number, myJsonObject, "", myProcessStatus, myErrorText);
                 }
                 //***** Create audit log record for Boomi to go pick up *****
                 // REST API URL: http://apimariaasad01.apigroupinc.api:9090/ws/rest/webapps_quantify/api

@@ -134,20 +134,19 @@ namespace QuantifyWebAPI.Controllers
                         //***** Initalize fields and classes to be used to build data profile *****
                         string mySalesID = myRow["QuantifyID"].ToString();
                         Movement mySale = mySalesDictionary[mySalesID];
-                        Order myOrder = Order.GetOrder(mySale.OrderID);
                         BusinessPartner myCustomer = BusinessPartner.GetBusinessPartnerByNumber(mySale.MovementBusinessPartnerNumber);
                         MovementProductList mySaleProducts = MovementProductList.GetMovementProductList(mySale.MovementID);
 
                         //***** Build header data profile *****
                         mySalesOrderData.transaction_number = mySale.MovementNumber;
                         mySalesOrderData.customer_number = myCustomer.AccountingID;
-                        mySalesOrderData.reference_number = mySale.BusinessPartnerNumber;
-                        mySalesOrderData.branch_office = mySale.JobSite.ParentBranchOrLaydown.Number;
+                        mySalesOrderData.reference_number = mySale.BusinessPartnerNumber;  
 
                         //***** Evaluate jobsite and confirm one has been selected. If one hasn't, log it as error *****
                         if (mySale.JobSite != null)
                         {
                             mySalesOrderData.job_number = mySale.JobSite.Number;
+                            mySalesOrderData.branch_office = mySale.JobSite.ParentBranchOrLaydown.Number;
                         }
                         else
                         {
@@ -183,7 +182,7 @@ namespace QuantifyWebAPI.Controllers
                     }
 
                     //***** Process Return Orders *****
-                    else
+                    else if (myRow["Entity"].ToString() == "ReturnOrder")
                     {
                         //***** Initalize fields and classes to be used to build data profile *****
                         string myReturnID = myRow["QuantifyID"].ToString();
@@ -197,7 +196,7 @@ namespace QuantifyWebAPI.Controllers
                         //mySalesOrderData.reference_number = mySale.BusinessPartnerNumber;
                         mySalesOrderData.branch_office = myReturn.FromStockingLocation.ParentBranchOrLaydown.Number;
                         mySalesOrderData.job_number = myReturn.FromStockingLocation.Number;
-                        //TODO: ADH 9/23/20 - Identify if this is appropriate warehouse: seems like only options is to return available (since at that point it's used?)
+                        //TODO: ADH 9/23/20 - Identify if this is appropriate warehouse: seems like only option is to return available (since at that point it's used?)
                         mySalesOrderData.from_warehouse = ((int)Warehouse.Available).ToString();
 
                         //***** Build line item data profile *****
@@ -219,7 +218,7 @@ namespace QuantifyWebAPI.Controllers
                     string myJsonObject = JsonConvert.SerializeObject(mySalesOrders);
 
                     //***** Create audit log datarow ******                 
-                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "SalesOrder", mySalesOrderData.transaction_number, myJsonObject, myErrorText, myProcessStatus);
+                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "SalesOrder", mySalesOrderData.transaction_number, myJsonObject, "", myProcessStatus, myErrorText);
                 }
                 //***** Create audit log record for Boomi to go pick up *****
                 // REST API URL: http://apimariaasad01.apigroupinc.api:9090/ws/rest/webapps_quantify/api

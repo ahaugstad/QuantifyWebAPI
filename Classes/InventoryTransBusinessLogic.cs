@@ -56,7 +56,9 @@ namespace QuantifyWebAPI.Controllers
             //      will loop through these and compare VersionStamp against appropriate record in our Versions dictionary *****
             MovementCollection all_inventory_trans = MovementCollection.GetMovementCollection(MovementType.TransferNewToRent);
             //TODO: ADH 9/23/20 - Identify if we need to consider consumable adjustments or if those aren't a thing
-            StockedProductAdjustmentCollection all_adjustments = StockedProductAdjustmentCollection.GetStockedProductAdjustmentCollection(ProductType.Product);
+            //StockedProductAdjustmentCollection all_adjustments = StockedProductAdjustmentCollection.GetStockedProductAdjustmentCollection(ProductType.Product);
+
+            
 
             //***** Get DataTable Data Structure for Version Control Stored Procedure *****
             DataTable dt = MySqlHelper.GetVersionTableStructure();
@@ -81,13 +83,15 @@ namespace QuantifyWebAPI.Controllers
                 }
             }
 
-            //***** Loop through Adjustments *****
+            //***** Loop through all Adjustments *****
+            StockedProductAdjustmentCollection all_adjustments = StockedProductAdjustmentCollection.GetStockedProductAdjustmentCollection(ProductType.Product);
             foreach (StockedProductAdjustment myAdjustment in all_adjustments)
             {
-                if (myAdjustment.PartNumber == "HR-PC-33.565")
+                //***** Need to use log entry list object for versioning of adjustments *****
+                LogEntryList logAdjustments = LogEntryList.GetLogEntryList(myAdjustment.StockedProductID);
+                if (logAdjustments.Count > 0)
                 {
-                    var myTestAdjustment = myAdjustment;
-                    var myAdjustmentPart = myTestAdjustment.PartNumber;
+                    //Do something
                 }
             }
 
@@ -105,14 +109,18 @@ namespace QuantifyWebAPI.Controllers
 
                 foreach (DataRow myRow in myChangedRecords.Rows)
                 {
+                    //***** Initialize error tracking fields and data package *****
+                    string myErrorText = "";
+                    string myProcessStatus = "A";
+                    InventoryTransData myInventoryTransData = new InventoryTransData();
+
                     //***** Initalize fields and classes to be used to build data profile *****
                     string myInventoryTransID = myRow["QuantifyID"].ToString();
                     Movement myTransfer = myTransfersDictionary[myInventoryTransID];
                     Order myOrder = Order.GetOrder(myTransfer.OrderID);
                     MovementProductList myInventoryTransProducts = MovementProductList.GetMovementProductList(myTransfer.MovementID);
                     
-                    //***** Build header data profile *****
-                    InventoryTransData myInventoryTransData = new InventoryTransData();                    
+                    //***** Build header data profile *****              
                     myInventoryTransData.inventory_trans_id = myInventoryTransID;
                     myInventoryTransData.transaction_type = myTransfer.TypeOfMovement.ToDescription();
                     switch (myTransfer.TypeOfMovement)
@@ -145,7 +153,7 @@ namespace QuantifyWebAPI.Controllers
                     string myJsonObject = JsonConvert.SerializeObject(myInventoryTransactions);
 
                     //***** Create audit log datarow ******                 
-                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "InventoryTrans", myInventoryTransData.inventory_trans_id, myJsonObject, "", "A");
+                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "InventoryTrans", myInventoryTransData.inventory_trans_id, myJsonObject, "", myProcessStatus, myErrorText);
                 }
                 //***** Create audit log record for Boomi to go pick up *****
                 // REST API URL: http://apimariaasad01.apigroupinc.api:9090/ws/rest/webapps_quantify/api

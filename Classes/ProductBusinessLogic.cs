@@ -113,11 +113,14 @@ namespace QuantifyWebAPI.Controllers
 
                 foreach (DataRow myRow in myChangedRecords.Rows)
                 {
+                    //***** Initialize error tracking fields and data package *****
+                    string myErrorText = "";
+                    string myProcessStatus = "A";
+                    ProductData myProductData = new ProductData();
+
+                    //***** Initialize fields and classes to use in building data profile
                     string myProductID = myRow["QuantifyID"].ToString();
                     ProductListItem myProductListItem = myProductsDictionary[myProductID];
-
-                    //***** Initialize classes to use in building data profile
-                    ProductData myProductData = new ProductData();
                     Product myProduct = Product.GetProduct(myProductListItem.ProductID);
                     ProductCategory myProductCategory = ProductCategory.GetProductCategory(myProduct.ProductCategoryID, myProduct.ProductType);
 
@@ -135,7 +138,7 @@ namespace QuantifyWebAPI.Controllers
                     string myJsonObject = JsonConvert.SerializeObject(myProducts);
 
                     //***** Create audit log datarow ******                 
-                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Product", myProductData.product_id, myJsonObject, "", "A");
+                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Product", myProductData.product_id, myJsonObject, "", myProcessStatus, myErrorText);
 
                     //****** Create XRef datarow *****
                     productXRef = MySqlHelper.CreateXRefDataRow(productXRef, myProductData.product_id, myProduct.PartNumber, "");
