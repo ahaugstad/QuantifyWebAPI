@@ -165,11 +165,11 @@ namespace QuantifyWebAPI.Controllers
                         string myJsonObject = JsonConvert.SerializeObject(myJobs);
 
                         //***** Create audit log datarow ******                 
-                        //auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Job", myJobData.job_id, myJsonObject, "", myProcessStatus, myErrorText);
-                        auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Job", myJobData.job_id, myJsonObject, "", myProcessStatus);
+                        auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Job", myJobData.job_id, myJsonObject, "", myProcessStatus, myErrorText);
 
                     }
                 }
+
                 //***** Create audit log record for Boomi to go pick up *****
                 DataTable myReturnResult = myDAL.InsertAuditLog(auditLog, connectionString);
 

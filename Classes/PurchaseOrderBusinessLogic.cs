@@ -214,11 +214,10 @@ namespace QuantifyWebAPI.Controllers
                     string myJsonObject = JsonConvert.SerializeObject(myPurchaseOrders);
 
                     //***** Create audit log datarow ******                 
-                    //auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "PurchaseOrder", myPurchaseOrderData.transaction_number, myJsonObject, "", myProcessStatus, myErrorText);
-                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "PurchaseOrder", myPurchaseOrderData.transaction_number, myJsonObject, "", myProcessStatus);
+                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "PurchaseOrder", myPurchaseOrderData.transaction_number, myJsonObject, "", myProcessStatus, myErrorText);
                 }
+
                 //***** Create audit log record for Boomi to go pick up *****
-                // REST API URL: http://apimariaasad01.apigroupinc.api:9090/ws/rest/webapps_quantify/api
                 DataTable myReturnResult = myDAL.InsertAuditLog(auditLog, connectionString);
 
                 //TODO: ADH 9/4/2020 - Figure out why following line is failing

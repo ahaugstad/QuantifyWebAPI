@@ -138,12 +138,12 @@ namespace QuantifyWebAPI.Controllers
                     string myJsonObject = JsonConvert.SerializeObject(myProducts);
 
                     //***** Create audit log datarow ******                 
-                    //auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Product", myProductData.product_id, myJsonObject, "", myProcessStatus, myErrorText);
-                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Product", myProductData.product_id, myJsonObject, "", myProcessStatus);
+                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Product", myProductData.product_id, myJsonObject, "", myProcessStatus, myErrorText);
 
                     //****** Create XRef datarow *****
                     productXRef = MySqlHelper.CreateXRefDataRow(productXRef, myProductData.product_id, myProduct.PartNumber, "");
                 }
+
                 //***** Insert to Audit Log and XRef tables for Boomi to reference *****
                 DataTable myReturnResultAudit = myDAL.InsertAuditLog(auditLog, connectionString);
                 DataTable myReturnResultXRef = myDAL.InsertProductXRef(productXRef, connectionString);

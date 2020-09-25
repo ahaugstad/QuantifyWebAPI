@@ -145,7 +145,7 @@ namespace QuantifyWebAPI.Classes
             return MyDataTable;
         }
 
-        public DataTable CreateAuditLogDataRow(DataTable TargetDataTable, String Entity, String QuantifyID, String PackageSchema, String QuantifyDepartment, String ProcessStatus)
+        public DataTable CreateAuditLogDataRow(DataTable TargetDataTable, String Entity, String QuantifyID, String PackageSchema, String QuantifyDepartment, String ProcessStatus, String ErrorMessage)
         {
             DataRow myNewRow = TargetDataTable.NewRow();
             myNewRow["Entity"] = Entity;
@@ -153,7 +153,7 @@ namespace QuantifyWebAPI.Classes
             myNewRow["PackageSchema"] = PackageSchema;
             myNewRow["QuantifyDepartment"] = QuantifyDepartment;
             myNewRow["ProcessStatus"] = ProcessStatus;
-            //myNewRow["ErrorMessage"] = ErrorMessage;
+            myNewRow["ErrorMessage"] = ErrorMessage;
             TargetDataTable.Rows.Add(myNewRow);
 
             return TargetDataTable;
