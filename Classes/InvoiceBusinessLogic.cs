@@ -59,29 +59,22 @@ namespace QuantifyWebAPI.Controllers
             //***** Get DataTable Data Structure for Version Control Stored Procedure *****
             DataTable dt = MySqlHelper.GetVersionTableStructure();
 
-            Dictionary<string, Invoice> myInvoicesDictionary = new Dictionary<string, Invoice>();
+            Dictionary<string, InvoiceListItem> myInvoicesDictionary = new Dictionary<string, InvoiceListItem>();
 
-            foreach (Invoice myInvoice in all_Invoices)
+            foreach (InvoiceListItem myInvoiceListItem in all_Invoices_List)
             {
-                //TODO: ADH 9/24/2020 - Apply criteria for which Invoices we will be considering in process, if any
-                //if (
-                //    //myInvoice.
-                //    )
-                //{
-                    string myInvoiceNumber = myInvoice.InvoiceNumber;
-                    //TODO: ADH 9/24/2020 - Modify line below to send numerical representation of date (cast as string) as timestamp
-                    string timestampVersion = myInvoice.ModifyDate.ToString();
-                    //string timestampVersion = "0x" + String.Join("", myInvoice.ModifyDate.Select(b => Convert.ToString(b, 16)));
+                string myInvoiceNumber = myInvoiceListItem.InvoiceNumber;
+                DateTime myModifyDate = Convert.ToDateTime(myInvoiceListItem.LastModifyDate);
+                string timestampVersion = myModifyDate.Ticks.ToString();
 
-                    //***** Add record to data table to be written to Version table in SQL *****
-                    dt = MySqlHelper.CreateVersionDataRow(dt, "Invoice", myInvoiceNumber, timestampVersion.ToString());
+                //***** Add record to data table to be written to Version table in SQL *****
+                dt = MySqlHelper.CreateVersionDataRow(dt, "Invoice", myInvoiceNumber, timestampVersion.ToString());
 
-                    //***** Build Dictionary *****
-                    if (!myInvoicesDictionary.ContainsKey(myInvoiceNumber))
-                    {
-                        myInvoicesDictionary.Add(myInvoiceNumber, myInvoice);
-                    }
-                //}
+                //***** Build Dictionary *****
+                if (!myInvoicesDictionary.ContainsKey(myInvoiceNumber))
+                {
+                    myInvoicesDictionary.Add(myInvoiceNumber, myInvoiceListItem);
+                }
             }
 
             //***** Call data access layer *****
@@ -99,15 +92,16 @@ namespace QuantifyWebAPI.Controllers
                 foreach (DataRow myRow in myChangedRecords.Rows)
                 {
                     //***** Initialize error tracking fields and data package *****
-                    string myErrorText = "";
+                    var myErrorText = "";
                     string myProcessStatus = "A";
                     InvoiceData myInvoiceData = new InvoiceData();
 
                     //***** Initalize fields and classes to be used to build data profile *****
                     string myInvoiceID = myRow["QuantifyID"].ToString();
-                    Invoice myInvoice = myInvoicesDictionary[myInvoiceID];
+                    InvoiceListItem myInvoiceListItem = myInvoicesDictionary[myInvoiceID];
+                    Invoice myInvoice = Invoice.GetInvoice(myInvoiceListItem.InvoiceID, true);
                     InvoiceProductChargeCollection myInvoiceProductCharges = InvoiceProductChargeCollection.GetInvoiceProductChargeCollection(myInvoice.InvoiceID);
-
+                    
                     //***** Build header data profile *****
                     myInvoiceData.invoice_id = myInvoiceID;
                     myInvoiceData.customer_number = myInvoice.Customer.PartnerNumber;
@@ -154,7 +148,6 @@ namespace QuantifyWebAPI.Controllers
                 //***** Create audit log record for Boomi to go pick up *****
                 DataTable myReturnResult = myDAL.InsertAuditLog(auditLog, connectionString);
 
-                //TODO: ADH 9/4/2020 - Figure out why following line is failing
                 string result = myReturnResult.Rows[0][0].ToString();
                 if (result.ToLower() == "success")
                 {

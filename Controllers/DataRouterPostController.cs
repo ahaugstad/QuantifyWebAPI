@@ -56,8 +56,8 @@ namespace QuantifyWebAPI.Controllers
         public void PingInitialization()
         {
             //***** Run Jobs *****
-            //JobBusinessLogic myJobResponse = new JobBusinessLogic();
-            //myJobResponse.GetIDsToProcess(StrVersionDBConn);
+            JobBusinessLogic myJobResponse = new JobBusinessLogic(myQuantifyCredentials);
+            myJobResponse.GetIDsToProcess(StrVersionDBConn);
 
             //***** Run Products *****
             ProductBusinessLogic myProductResponse = new ProductBusinessLogic(myQuantifyCredentials);
@@ -76,8 +76,8 @@ namespace QuantifyWebAPI.Controllers
             myInventoryTransResponse.GetIDsToProcess(StrVersionDBConn);
 
             //***** Run Invoice Transactions *****
-
-
+            InvoiceBusinessLogic myInvoiceResponse = new InvoiceBusinessLogic(myQuantifyCredentials);
+            myInvoiceResponse.GetIDsToProcess(StrVersionDBConn);
 
             //***** Call Boomi to kick off processing *****
             BoomiHelper.PostBoomiAPI();
@@ -151,7 +151,7 @@ namespace QuantifyWebAPI.Controllers
             {
                 myRaygunClient.SendInBackground(ex);
                 HttpResponse = Request.CreateResponse(HttpStatusCode.OK);
-                //ToDo:ERC 9/7/2020 Possibly Need to make Repsonse Class
+                //TODO: ERC 9/7/2020 - Possibly need to make Response Class
                 HttpResponse.Content = new StringContent("Failed");
             }
             return HttpResponse;

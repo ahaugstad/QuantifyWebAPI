@@ -71,6 +71,8 @@ namespace QuantifyWebAPI.Controllers
 
             Dictionary<string, ProductListItem> myProductsDictionary = new Dictionary<string, ProductListItem>();
 
+            Dictionary<string, string> myErrorDictionary = new Dictionary<string, string>();
+
             //***** Loop through all products in both product and consumable catalogs *****
             foreach (ProductListItem productListItem in combined_products)
             {
@@ -89,7 +91,7 @@ namespace QuantifyWebAPI.Controllers
                     }
                     else
                     {
-                        throw new System.ArgumentException("Duplicate product id", "Product Lookup");
+                        myErrorDictionary.Add(myProductID,"Duplicate product id");
                     }
                 }
                 catch (Exception ex)
@@ -114,12 +116,15 @@ namespace QuantifyWebAPI.Controllers
                 foreach (DataRow myRow in myChangedRecords.Rows)
                 {
                     //***** Initialize error tracking fields and data package *****
-                    string myErrorText = "";
+                    var myErrorText = "";
                     string myProcessStatus = "A";
+                    string myProductID = myRow["QuantifyID"].ToString();
                     ProductData myProductData = new ProductData();
 
-                    //***** Initialize fields and classes to use in building data profile
-                    string myProductID = myRow["QuantifyID"].ToString();
+                    //***** Check if duplicate product ID and log error if so *****
+                    if (myErrorDictionary.ContainsKey(myProductID)) { myErrorText = myErrorDictionary[myProductID]; }
+
+                    //***** Initialize classes to use in building data profile
                     ProductListItem myProductListItem = myProductsDictionary[myProductID];
                     Product myProduct = Product.GetProduct(myProductListItem.ProductID);
                     ProductCategory myProductCategory = ProductCategory.GetProductCategory(myProduct.ProductCategoryID, myProduct.ProductType);

@@ -128,7 +128,7 @@ namespace QuantifyWebAPI.Controllers
                 foreach (DataRow myRow in myChangedRecords.Rows)
                 {
                     //***** Initialize error tracking fields and data package *****
-                    string myErrorText = "";
+                    var myErrorText = "";
                     string myProcessStatus = "A";
                     SalesOrderData mySalesOrderData = new SalesOrderData();
 
@@ -228,7 +228,6 @@ namespace QuantifyWebAPI.Controllers
                 //***** Create audit log record for Boomi to go pick up *****
                 DataTable myReturnResult = myDAL.InsertAuditLog(auditLog, connectionString);
 
-                //TODO: ADH 9/4/2020 - Figure out why following line is failing
                 string result = myReturnResult.Rows[0][0].ToString();
                 if (result.ToLower() == "success")
                 {

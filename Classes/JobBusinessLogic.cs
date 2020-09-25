@@ -55,15 +55,14 @@ namespace QuantifyWebAPI.Controllers
             //***** Get all jobsites - will loop through this and compare VersionStamp against appropriate record in Versions table *****
             StockingLocationList all_jobsites = StockingLocationList.GetJobsites(false, JobTreeNodeDisplayType.Name, Guid.Empty);
 
-
             //***** Get DataTable Data Structure for Version Control Stored Procedure *****
             DataTable dt = MySqlHelper.GetVersionTableStructure();
 
             Dictionary<string, StockingLocation> myJobsDictionary = new Dictionary<string, StockingLocation>();
 
-            foreach (StockingLocationListItem jobsiteItem in all_jobsites)
+            foreach (StockingLocationListItem jobsiteListItem in all_jobsites)
             {
-                StockingLocation jobsite = StockingLocation.GetStockingLocation(jobsiteItem.StockingLocationID, false);
+                StockingLocation jobsite = StockingLocation.GetStockingLocation(jobsiteListItem.StockingLocationID, false);
                 string myJobsiteNumber = jobsite.Number;
                 string timestampVersion = "0x" + String.Join("", jobsite.VersionStamp.Select(b => Convert.ToString(b, 16)));
 
@@ -92,7 +91,7 @@ namespace QuantifyWebAPI.Controllers
                 foreach (DataRow myRow in myChangedRecords.Rows)
                 {
                     //***** Initialize error tracking fields and data package *****
-                    string myErrorText = "";
+                    var myErrorText = "";
                     string myProcessStatus = "A";
                     JobData myJobData = new JobData();
 
@@ -128,7 +127,6 @@ namespace QuantifyWebAPI.Controllers
                         myJobData.sales_tax_code = "";
                     }
                     myJobData.job_start_date = jobsite.StartDate;
-                    //TODO: ADH 9/8/2020 - Identify if we need a different field for this; I think this is the actual job stop date
                     myJobData.job_estimated_end_date = jobsite.StopDate;
 
                     //***** Branch office - may need to drill up/down more, depending *****

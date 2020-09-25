@@ -109,7 +109,7 @@ namespace QuantifyWebAPI.Controllers
                 foreach (DataRow myRow in myChangedRecords.Rows)
                 {
                     //***** Initialize error tracking fields and data package *****
-                    string myErrorText = "";
+                    var myErrorText = "";
                     string myProcessStatus = "A";
                     PurchaseOrderData myPurchaseOrderData = new PurchaseOrderData();
 
@@ -123,10 +123,10 @@ namespace QuantifyWebAPI.Controllers
                     //***** Build header data profile *****                   
                     myPurchaseOrderData.transaction_number = myPurchase.MovementNumber;
                     myPurchaseOrderData.vendor_number = myVendor.AccountingID;
+                    //TODO: ADH 9/25/2020 - Uncomment this line and delete following ~10 lines when Russ finishes converting MovementNumber numbering
                     //myPurchaseOrderData.order_number = myPurchase.MovementNumber;
 
                     //***** Use ReferenceNumber instead of BackOrderNumber for PO Number if we are doing direct purchase of consumables *****
-                    //TODO: ADH 9/23/20 - Code duplicate BackOrderNumber and BusinessPartnerNumber check here and flag errors
                     if (myPurchase.TypeOfMovement == MovementType.PurchaseConsumables)
                     {
                         myPurchaseOrderData.order_number = myPurchase.BusinessPartnerNumber;
@@ -183,7 +183,7 @@ namespace QuantifyWebAPI.Controllers
                     }
                     myPurchaseOrderData.notes = myPurchase.Notes;
 
-                    //TODO: ADH 9/24/20 - BUSINESS DECISION: Identify how we are going to handle this 'entered_by' functionality, since it only gets populated after receiving
+                    //TODO: ADH 9/24/2020 - BUSINESS DECISION: Identify how we are going to handle this 'entered_by' functionality, since it only gets populated after receiving
                     myPurchaseOrderData.entered_by = "QuantifyInt";
                     //if (myPurchase.MovementNumber == "MOV-0000126")
                     //{
@@ -220,7 +220,6 @@ namespace QuantifyWebAPI.Controllers
                 //***** Create audit log record for Boomi to go pick up *****
                 DataTable myReturnResult = myDAL.InsertAuditLog(auditLog, connectionString);
 
-                //TODO: ADH 9/4/2020 - Figure out why following line is failing
                 string result = myReturnResult.Rows[0][0].ToString();
                 if (result.ToLower() == "success")
                 {

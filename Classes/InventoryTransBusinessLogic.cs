@@ -55,10 +55,8 @@ namespace QuantifyWebAPI.Controllers
             //***** Get all transfers and adjustments (will call 'InventoryTrans' as a group)
             //      will loop through these and compare VersionStamp against appropriate record in Versions table *****
             MovementCollection all_inventory_trans = MovementCollection.GetMovementCollection(MovementType.TransferNewToRent);
-            //TODO: ADH 9/23/20 - Identify if we need to consider consumable adjustments or if those aren't a thing
-            //StockedProductAdjustmentCollection all_adjustments = StockedProductAdjustmentCollection.GetStockedProductAdjustmentCollection(ProductType.Product);
-
-            
+            //TODO: ADH 9/23/2020 - Identify if we need to consider consumable adjustments or if those aren't a thing
+            StockedProductAdjustmentCollection all_adjustments = StockedProductAdjustmentCollection.GetStockedProductAdjustmentCollection(ProductType.Product); 
 
             //***** Get DataTable Data Structure for Version Control Stored Procedure *****
             DataTable dt = MySqlHelper.GetVersionTableStructure();
@@ -110,7 +108,7 @@ namespace QuantifyWebAPI.Controllers
                 foreach (DataRow myRow in myChangedRecords.Rows)
                 {
                     //***** Initialize error tracking fields and data package *****
-                    string myErrorText = "";
+                    var myErrorText = "";
                     string myProcessStatus = "A";
                     InventoryTransData myInventoryTransData = new InventoryTransData();
 
@@ -129,7 +127,7 @@ namespace QuantifyWebAPI.Controllers
                             myInventoryTransData.to_warehouse = ((int)Warehouse.Available).ToString();
                             myInventoryTransData.transaction_type = "M";
                             break;
-                            //TODO: ADH - Include adjustments handling when applicable
+                            //TODO: ADH 9/25/2020 - Include adjustments handling when applicable
                             //myInventoryTransData.transaction_type = "A";
                     }
 
@@ -158,7 +156,6 @@ namespace QuantifyWebAPI.Controllers
                 //***** Create audit log record for Boomi to go pick up *****
                 DataTable myReturnResult = myDAL.InsertAuditLog(auditLog, connectionString);
 
-                //TODO: ADH 9/4/2020 - Figure out why following line is failing
                 string result = myReturnResult.Rows[0][0].ToString();
                 if (result.ToLower() == "success")
                 {

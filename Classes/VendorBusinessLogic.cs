@@ -51,8 +51,6 @@ namespace QuantifyWebAPI.Controllers
             //***** Instantiate response class for logging successes/errors if fail ***** 
             VendorResponseObj VendorResponse = new VendorResponseObj();
 
-
-
             //***** Try to Deserialize to Class object and Process Data *****
             try
             {
@@ -68,11 +66,8 @@ namespace QuantifyWebAPI.Controllers
                 string VendorName = myDeserializedClass.VendorData.vendor_name;
                 string VendorPhone = myDeserializedClass.VendorData.vendor_phone;
                 string VendorEmail = myDeserializedClass.VendorData.vendor_email;
-                //TODO: ADH 9/1/2020 - BUSINESS DECISION
-                // QuantifyWebAPI.Classes.Contact myContact = myDeserializedClass.CustomerData.Contact[0];
-                // string CustomerEmail2 = myContact.contact_email;
                 string VendorFax = myDeserializedClass.VendorData.vendor_fax;
-                //string VendorIsActive = myDeserializedClass.VendorData.is_active;
+                string VendorIsActive = myDeserializedClass.VendorData.is_active;
 
 
                 //*****  Instantiate customer we are inserting/updating; check if it already exists before updating/inserting ***** 
@@ -83,11 +78,6 @@ namespace QuantifyWebAPI.Controllers
                 {
                     //***** Create new customer ***** 
                     Vendor = BusinessPartner.NewBusinessPartner(PartnerTypes.Customer);
-                    //TODO: ADH 9/2/2020 - BUSINESS DECISION
-                    // See if the following line is what we want to do, since there is auto-numbering conventions in Quantify. 
-                    // We always have the AccountingID field to sync a record up with WebApps if need be.
-                    // If we uncomment this, we need to change all 'GetBusinessPartnerByAccountingID' calls to 'GetBusinessPartnerByNumber'
-                    //customer.PartnerNumber = CustomerNumber;
                 }
                 else
                 {
@@ -101,7 +91,7 @@ namespace QuantifyWebAPI.Controllers
                 Vendor.PhoneNumber = VendorPhone;
                 Vendor.EmailAddress = VendorEmail;
                 Vendor.FaxNumber = VendorFax;
-                //if (CustomerIsActive == "A") { customer.IsActive = true; } else { customer.IsActive = false; }
+                if (VendorIsActive == "A") { Vendor.IsActive = true; } else { Vendor.IsActive = false; }
 
                 //***** Validate and save the Customer record ***** 
                 VendorResponse = VendorValidateAndSave(Vendor);
@@ -122,20 +112,6 @@ namespace QuantifyWebAPI.Controllers
                             Vendor.Addresses.GetAddressByType(AddressTypes.Business).Street = myAddress.address1;
                             Vendor.Addresses.GetAddressByType(AddressTypes.Business).Street1 = myAddress.address2;
                             Vendor.Addresses.GetAddressByType(AddressTypes.Business).City = myAddress.city;
-                            //TODO: ADH 9/1/2020 - BUSINESS DECISION
-                            // Should we be adding in non-existent states through code? Or should we throw an error and have users configure it in Quantify UI? 
-                            // Check if State exists - if it doesn't, first need to add it, before passing GUID into State ID *****
-                            //if (state.StateID == Guid.Empty)
-                            //{
-                            //    State newState = State.NewState();
-                            //    newState.Name = myAddress.state;
-                            //    newState.Save();
-                            //    customer.Addresses.GetAddressByType(AddressTypes.Business).StateID = newState.StateID;
-                            //}
-                            //else
-                            //{
-                            //    customer.Addresses.GetAddressByType(AddressTypes.Business).StateID = state.StateID;
-                            //}
                             Vendor.Addresses.GetAddressByType(AddressTypes.Business).StateID = state.StateID;
                             Vendor.Addresses.GetAddressByType(AddressTypes.Business).StateName = myAddress.state.ToUpper();
                             Vendor.Addresses.GetAddressByType(AddressTypes.Business).PostalCode = myAddress.zip;
