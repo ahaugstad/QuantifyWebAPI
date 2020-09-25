@@ -21,6 +21,7 @@ using Avontus.Rental.Library.Accounting;
 using Avontus.Rental.Library.Accounting.XeroAccounting;
 using Avontus.Rental.Library.Security;
 using Avontus.Rental.Library.ToolWatchImport;
+using Avontus.Rental.Library.Logging;
 
 // Internal Class references
 using QuantifyWebAPI.Classes;
@@ -51,7 +52,7 @@ namespace QuantifyWebAPI.Controllers
 
             QuantHelper.QuantifyLogin();
 
-            //***** Get all jobsites - will loop through this and compare VersionStamp against appropriate record in our JobVersions dictionary *****
+            //***** Get all jobsites - will loop through this and compare VersionStamp against appropriate record in Versions table *****
             StockingLocationList all_jobsites = StockingLocationList.GetJobsites(false, JobTreeNodeDisplayType.Name, Guid.Empty);
 
 
@@ -90,65 +91,70 @@ namespace QuantifyWebAPI.Controllers
 
                 foreach (DataRow myRow in myChangedRecords.Rows)
                 {
+                    //***** Initialize error tracking fields and data package *****
+                    string myErrorText = "";
+                    string myProcessStatus = "A";
+                    JobData myJobData = new JobData();
+
+                    //***** Initalize fields and classes to be used to build data profile *****
                     string myJobID = myRow["QuantifyID"].ToString();
                     StockingLocation jobsite = myJobsDictionary[myJobID];
                     
-                        //***** Populate Fields *****
-                        JobData myJobData = new JobData();
+                    //***** Populate Fields *****
+                    myJobData.job_id = jobsite.Number;
+                    myJobData.job_name = jobsite.Description;
+                    myJobData.site_name = jobsite.Name;
 
-                        myJobData.job_id = jobsite.Number;
-                        myJobData.job_name = jobsite.Description;
-                        myJobData.site_name = jobsite.Name;
-                        //***** Look up shipping address to get individual address fields *****
-                        Avontus.Rental.Library.Address jobShippingAddress = jobsite.Addresses.GetAddressByType(AddressTypes.Shipping);
-                        myJobData.site_address1 = jobShippingAddress.Street;
-                        myJobData.site_city = jobShippingAddress.City;
-                        myJobData.site_state = jobShippingAddress.StateName;
-                        myJobData.site_zip = jobShippingAddress.PostalCode;
+                    //***** Look up shipping address to get individual address fields *****
+                    Avontus.Rental.Library.Address jobShippingAddress = jobsite.Addresses.GetAddressByType(AddressTypes.Shipping);
+                    myJobData.site_address1 = jobShippingAddress.Street;
+                    myJobData.site_city = jobShippingAddress.City;
+                    myJobData.site_state = jobShippingAddress.StateName;
+                    myJobData.site_zip = jobShippingAddress.PostalCode;
 
-                        //***** Look up customer to get customer ID *****
-                        BusinessPartner jobCustomer = BusinessPartner.GetBusinessPartner(jobsite.BusinessPartnerID);
-                        myJobData.customer_id = jobCustomer.AccountingID;
+                    //***** Look up customer to get customer ID *****
+                    BusinessPartner jobCustomer = BusinessPartner.GetBusinessPartner(jobsite.BusinessPartnerID);
+                    myJobData.customer_id = jobCustomer.AccountingID;
 
-                        //***** Identify if job is sales taxable, and if so, assign a use tax code (mapping to WebApps accordingly will be done in Boomi) *****
-                        if (jobsite.JobTax1ID != null && jobsite.JobTax1ID != Guid.Empty)
-                        {
-                            myJobData.sales_taxable = "Y";
-                            myJobData.sales_tax_code = jobsite.JobTax1.Name;
-                        }
-                        else
-                        {
-                            myJobData.sales_taxable = "N";
-                            myJobData.sales_tax_code = "";
-                        }
-                        myJobData.job_start_date = jobsite.StartDate;
-                        //TODO: ADH 9/8/2020 - Identify if we need a different field for this; I think this is the actual job stop date
-                        myJobData.job_estimated_end_date = jobsite.StopDate;
+                    //***** Identify if job is sales taxable, and if so, assign a use tax code (mapping to WebApps accordingly will be done in Boomi) *****
+                    if (jobsite.JobTax1ID != null && jobsite.JobTax1ID != Guid.Empty)
+                    {
+                        myJobData.sales_taxable = "Y";
+                        myJobData.sales_tax_code = jobsite.JobTax1.Name;
+                    }
+                    else
+                    {
+                        myJobData.sales_taxable = "N";
+                        myJobData.sales_tax_code = "";
+                    }
+                    myJobData.job_start_date = jobsite.StartDate;
+                    //TODO: ADH 9/8/2020 - Identify if we need a different field for this; I think this is the actual job stop date
+                    myJobData.job_estimated_end_date = jobsite.StopDate;
 
-                        //***** Branch office - may need to drill up/down more, depending *****
-                        myJobData.department = jobsite.ParentBranchOrLaydown.Number;
+                    //***** Branch office - may need to drill up/down more, depending *****
+                    myJobData.department = jobsite.ParentBranchOrLaydown.Number;
 
-                        //***** Job Type (will be mapped to WebApps Job Types in Boomi) *****
-                        if (jobsite.JobList1ID != null && jobsite.JobList1ID != Guid.Empty)
-                        {
-                            JobList1 myJobTypeList1 = JobList1.GetJobList1(jobsite.JobList1ID);
-                            myJobData.job_type = myJobTypeList1.Name;
-                        }
-                        else
-                        {
-                            myJobData.job_type = "Non-Scaffold";
-                        }
+                    //***** Job Type (will be mapped to WebApps Job Types in Boomi) *****
+                    if (jobsite.JobList1ID != null && jobsite.JobList1ID != Guid.Empty)
+                    {
+                        JobList1 myJobTypeList1 = JobList1.GetJobList1(jobsite.JobList1ID);
+                        myJobData.job_type = myJobTypeList1.Name;
+                    }
+                    else
+                    {
+                        myJobData.job_type = "Non-Scaffold";
+                    }
 
-                        //***** Retainage Amount (will be mapped appropriately to WebApps Retention field in Boomi) *****
-                        if (jobsite.JobList2ID != null && jobsite.JobList2ID != Guid.Empty)
-                        {
-                            JobList2 myJobTypeList2 = JobList2.GetJobList2(jobsite.JobList2ID);
-                            myJobData.retainage_percent = myJobTypeList2.Name;
-                        }
-                        else
-                        {
-                            myJobData.retainage_percent = "No Retainage";
-                        }
+                    //***** Retainage Amount (will be mapped appropriately to WebApps Retention field in Boomi) *****
+                    if (jobsite.JobList2ID != null && jobsite.JobList2ID != Guid.Empty)
+                    {
+                        JobList2 myJobTypeList2 = JobList2.GetJobList2(jobsite.JobList2ID);
+                        myJobData.retainage_percent = myJobTypeList2.Name;
+                    }
+                    else
+                    {
+                        myJobData.retainage_percent = "No Retainage";
+                    }
 
                     //***** Skip all jobs of type Non-Scaffold - will not be integrating these over *****
                     if (myJobData.job_type != "Non-Scaffold")
@@ -159,8 +165,9 @@ namespace QuantifyWebAPI.Controllers
                         string myJsonObject = JsonConvert.SerializeObject(myJobs);
 
                         //***** Create audit log datarow ******                 
-                        auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Job", myJobData.job_id, myJsonObject, "", "A");
-                  
+                        //auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Job", myJobData.job_id, myJsonObject, "", myProcessStatus, myErrorText);
+                        auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Job", myJobData.job_id, myJsonObject, "", myProcessStatus);
+
                     }
                 }
                 //***** Create audit log record for Boomi to go pick up *****

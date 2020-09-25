@@ -140,6 +140,7 @@ namespace QuantifyWebAPI.Classes
             MyDataTable.Columns.Add("PackageSchema", typeof(string));
             MyDataTable.Columns.Add("QuantifyDepartment", typeof(string));
             MyDataTable.Columns.Add("ProcessStatus", typeof(string));
+            //MyDataTable.Columns.Add("ErrorMessage", typeof(string));
 
             return MyDataTable;
         }
@@ -152,6 +153,7 @@ namespace QuantifyWebAPI.Classes
             myNewRow["PackageSchema"] = PackageSchema;
             myNewRow["QuantifyDepartment"] = QuantifyDepartment;
             myNewRow["ProcessStatus"] = ProcessStatus;
+            //myNewRow["ErrorMessage"] = ErrorMessage;
             TargetDataTable.Rows.Add(myNewRow);
 
             return TargetDataTable;

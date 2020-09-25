@@ -23,9 +23,6 @@ namespace QuantifyWebAPI.Classes
         public VendorData VendorData { get; set; }
     }
 
-
-
-
     public class VendorData
     {
         public VendorData()

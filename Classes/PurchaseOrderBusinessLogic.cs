@@ -21,6 +21,7 @@ using Avontus.Rental.Library.Accounting;
 using Avontus.Rental.Library.Accounting.XeroAccounting;
 using Avontus.Rental.Library.Security;
 using Avontus.Rental.Library.ToolWatchImport;
+using Avontus.Rental.Library.Logging;
 
 // Internal Class references
 using QuantifyWebAPI.Classes;
@@ -51,7 +52,7 @@ namespace QuantifyWebAPI.Controllers
 
             QuantHelper.QuantifyLogin();
 
-            //***** Get all purchases - will loop through this and compare VersionStamp against appropriate record in our TransactionVersions dictionary *****
+            //***** Get all purchases - will loop through this and compare VersionStamp against appropriate record in Versions table *****
             MovementCollection all_purchases = MovementCollection.GetMovementCollection(MovementType.All);
 
             //***** Get DataTable Data Structure for Version Control Stored Procedure *****
@@ -107,6 +108,11 @@ namespace QuantifyWebAPI.Controllers
 
                 foreach (DataRow myRow in myChangedRecords.Rows)
                 {
+                    //***** Initialize error tracking fields and data package *****
+                    string myErrorText = "";
+                    string myProcessStatus = "A";
+                    PurchaseOrderData myPurchaseOrderData = new PurchaseOrderData();
+
                     //***** Initalize fields and classes to be used to build data profile *****
                     string myPurchaseID = myRow["QuantifyID"].ToString();
                     Movement myPurchase = myPurchasesDictionary[myPurchaseID];
@@ -114,12 +120,13 @@ namespace QuantifyWebAPI.Controllers
                     BusinessPartner myVendor = BusinessPartner.GetBusinessPartnerByNumber(myPurchase.MovementBusinessPartnerNumber);
                     MovementProductList myPurchaseProducts = MovementProductList.GetMovementProductList(myPurchase.MovementID);
                     
-                    //***** Build header data profile *****
-                    PurchaseOrderData myPurchaseOrderData = new PurchaseOrderData();                    
+                    //***** Build header data profile *****                   
                     myPurchaseOrderData.transaction_number = myPurchase.MovementNumber;
                     myPurchaseOrderData.vendor_number = myVendor.AccountingID;
+                    //myPurchaseOrderData.order_number = myPurchase.MovementNumber;
 
                     //***** Use ReferenceNumber instead of BackOrderNumber for PO Number if we are doing direct purchase of consumables *****
+                    //TODO: ADH 9/23/20 - Code duplicate BackOrderNumber and BusinessPartnerNumber check here and flag errors
                     if (myPurchase.TypeOfMovement == MovementType.PurchaseConsumables)
                     {
                         myPurchaseOrderData.order_number = myPurchase.BusinessPartnerNumber;
@@ -175,7 +182,14 @@ namespace QuantifyWebAPI.Controllers
                             break;
                     }
                     myPurchaseOrderData.notes = myPurchase.Notes;
-                    //myPurchaseOrderData.entered_by = myPurchase.;
+
+                    //TODO: ADH 9/24/20 - BUSINESS DECISION: Identify how we are going to handle this 'entered_by' functionality, since it only gets populated after receiving
+                    myPurchaseOrderData.entered_by = "QuantifyInt";
+                    //if (myPurchase.MovementNumber == "MOV-0000126")
+                    //{
+                    //    LogEntryList logEntryList = LogEntryList.GetLogEntryList(myPurchase.MovementID);
+                    //    myPurchaseOrderData.entered_by = logEntryList[0].UserName;
+                    //}
                     
                     //***** Build line item data profile *****
                     foreach (MovementProductListItem purchaseProductListItem in myPurchaseProducts)
@@ -200,7 +214,8 @@ namespace QuantifyWebAPI.Controllers
                     string myJsonObject = JsonConvert.SerializeObject(myPurchaseOrders);
 
                     //***** Create audit log datarow ******                 
-                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "PurchaseOrder", myPurchaseOrderData.transaction_number, myJsonObject, "", "A");
+                    //auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "PurchaseOrder", myPurchaseOrderData.transaction_number, myJsonObject, "", myProcessStatus, myErrorText);
+                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "PurchaseOrder", myPurchaseOrderData.transaction_number, myJsonObject, "", myProcessStatus);
                 }
                 //***** Create audit log record for Boomi to go pick up *****
                 // REST API URL: http://apimariaasad01.apigroupinc.api:9090/ws/rest/webapps_quantify/api
