@@ -124,7 +124,7 @@ namespace QuantifyWebAPI.Controllers
                     else
                     {
                         myJobData.sales_taxable = "N";
-                        myJobData.sales_tax_code = "";
+                        myJobData.sales_tax_code = "";  
                     }
                     myJobData.job_start_date = jobsite.StartDate;
                     myJobData.job_estimated_end_date = jobsite.StopDate;
