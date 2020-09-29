@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 
 // Quantify API References
 using Avontus.Core;
+using Avontus.Rental.Utility;
 using Avontus.Rental.Library;
 using Avontus.Rental.Library.Accounting;
 using Avontus.Rental.Library.Accounting.XeroAccounting;
@@ -53,7 +54,6 @@ namespace QuantifyWebAPI.Controllers
             QuantHelper.QuantifyLogin();
 
             //***** Get all invoices - will loop through this and compare VersionStamp against appropriate record in Versions table *****
-            InvoiceCollection all_Invoices = InvoiceCollection.GetInvoiceCollection(InvoiceExportStatus.All);
             InvoiceList all_Invoices_List = InvoiceList.GetInvoiceList(InvoiceExportStatus.All);
 
             //***** Get DataTable Data Structure for Version Control Stored Procedure *****

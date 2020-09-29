@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 
 // Quantify API References
 using Avontus.Core;
+using Avontus.Rental.Utility;
 using Avontus.Rental.Library;
 using Avontus.Rental.Library.Accounting;
 using Avontus.Rental.Library.Accounting.XeroAccounting;
@@ -199,7 +200,11 @@ namespace QuantifyWebAPI.Controllers
                         myPurchaseOrderLine.part_number = purchaseProductListItem.PartNumber;   
                         myPurchaseOrderLine.quantity = purchaseProductListItem.Quantity.ToString();
                         //***** Only set received quantity if we are doing direct purchase of consumables *****
-                        if (myPurchase.TypeOfMovement != MovementType.NewOrdered && myPurchase.TypeOfMovement != MovementType.Ordered)
+                        if (myPurchase.TypeOfMovement == MovementType.PurchaseConsumables)
+                        {
+                            myPurchaseOrderLine.received_quantity = purchaseProductListItem.Quantity.ToString();
+                        }
+                        else if (myPurchase.TypeOfMovement != MovementType.NewOrdered && myPurchase.TypeOfMovement != MovementType.Ordered)
                         {
                             myPurchaseOrderLine.received_quantity = purchaseProductListItem.ReceivedQuantity.ToString();
                         }

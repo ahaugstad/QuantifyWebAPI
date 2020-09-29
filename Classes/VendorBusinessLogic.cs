@@ -67,7 +67,6 @@ namespace QuantifyWebAPI.Controllers
                 string VendorPhone = myDeserializedClass.VendorData.vendor_phone;
                 string VendorEmail = myDeserializedClass.VendorData.vendor_email;
                 string VendorFax = myDeserializedClass.VendorData.vendor_fax;
-                string VendorIsActive = myDeserializedClass.VendorData.is_active;
 
 
                 //*****  Instantiate customer we are inserting/updating; check if it already exists before updating/inserting ***** 
@@ -91,7 +90,6 @@ namespace QuantifyWebAPI.Controllers
                 Vendor.PhoneNumber = VendorPhone;
                 Vendor.EmailAddress = VendorEmail;
                 Vendor.FaxNumber = VendorFax;
-                if (VendorIsActive == "A") { Vendor.IsActive = true; } else { Vendor.IsActive = false; }
 
                 //***** Validate and save the Customer record ***** 
                 VendorResponse = VendorValidateAndSave(Vendor);

@@ -27,7 +27,6 @@ namespace QuantifyWebAPI.Classes
         public string customer_phone { get; set; }
         public string customer_email { get; set; }
         public string customer_fax { get; set; }
-        public string is_active { get; set; }
         public List<Address> Addresses { get; set; }
     }
 

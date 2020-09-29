@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 
 // Quantify API References
 using Avontus.Core;
+using Avontus.Rental.Utility;
 using Avontus.Rental.Library;
 using Avontus.Rental.Library.Accounting;
 using Avontus.Rental.Library.Accounting.XeroAccounting;

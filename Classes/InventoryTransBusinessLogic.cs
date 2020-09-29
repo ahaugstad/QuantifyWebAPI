@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 
 // Quantify API References
 using Avontus.Core;
+using Avontus.Rental.Library.Utility;
 using Avontus.Rental.Library;
 using Avontus.Rental.Library.Accounting;
 using Avontus.Rental.Library.Accounting.XeroAccounting;
@@ -56,14 +57,20 @@ namespace QuantifyWebAPI.Controllers
             //      will loop through these and compare VersionStamp against appropriate record in Versions table *****
             MovementCollection all_inventory_trans = MovementCollection.GetMovementCollection(MovementType.TransferNewToRent);
             //TODO: ADH 9/23/2020 - Identify if we need to consider consumable adjustments or if those aren't a thing
-            StockedProductAdjustmentCollection all_adjustments = StockedProductAdjustmentCollection.GetStockedProductAdjustmentCollection(ProductType.Product); 
-
+            StockedProductAdjustmentCollection all_adjustments = StockedProductAdjustmentCollection.GetStockedProductAdjustmentCollection(ProductType.Product);
+            VersionStampList myStockedProductVersions = VersionStampList.GetVersionList(VersionStampList.DataObjectName.StockedProduct);
+            
             //***** Get DataTable Data Structure for Version Control Stored Procedure *****
             DataTable dt = MySqlHelper.GetVersionTableStructure();
 
             //***** Create Dictionaries to optimize lookups/version compares *****
             Dictionary<string, Movement> myTransfersDictionary = new Dictionary<string, Movement>();
-            Dictionary<string, StockedProductAdjustment> myAdjustmentsDictionary = new Dictionary<string, StockedProductAdjustment>();
+            Dictionary<Guid, StockedProductAdjustment> myAdjustmentsDictionary = new Dictionary<Guid, StockedProductAdjustment>();
+            Dictionary<Guid, byte[]> myVersionsDictionary = new Dictionary<Guid, byte[]>();
+            foreach (var versionListItem in myStockedProductVersions)
+            {
+                myVersionsDictionary.Add(versionListItem.Key, versionListItem.Value);
+            }
 
             //***** Loop through Inventory Transfers *****
             foreach (Movement myTransfer in all_inventory_trans)
@@ -82,16 +89,25 @@ namespace QuantifyWebAPI.Controllers
             }
 
             //***** Loop through all Adjustments *****
-            //StockedProductAdjustmentCollection all_adjustments = StockedProductAdjustmentCollection.GetStockedProductAdjustmentCollection(ProductType.Product);
-            //foreach (StockedProductAdjustment myAdjustment in all_adjustments)
-            //{
-            //    //***** Need to use log entry list object for versioning of adjustments *****
-            //    LogEntryList logAdjustments = LogEntryList.GetLogEntryList(myAdjustment.StockedProductID);
-            //    if (logAdjustments.Count > 0)
-            //    {
-            //        //Do something
-            //    }
-            //}
+            foreach (StockedProductAdjustment myAdjustment in all_adjustments)
+            {
+                Guid myAdjustmentID = myAdjustment.StockedProductID;
+
+                if (myVersionsDictionary.ContainsKey(myAdjustmentID))
+                {
+                    string myAdjustmentNumber = myAdjustmentID.ToString();
+                    string timestampVersion = "0x" + String.Join("", myVersionsDictionary[myAdjustmentID].Select(b => Convert.ToString(b, 16)));
+
+                    //***** Add record to data table to be written to Version table in SQL *****
+                    dt = MySqlHelper.CreateVersionDataRow(dt, "Adjustment", myAdjustmentNumber, timestampVersion.ToString());
+
+                    //***** Build Dictionary *****
+                    if (!myAdjustmentsDictionary.ContainsKey(myAdjustmentID))
+                    {
+                        myAdjustmentsDictionary.Add(myAdjustmentID, myAdjustment);
+                    }
+                }
+            }
 
             //***** Call data access layer *****
             DAL myDAL = new DAL();
@@ -112,35 +128,83 @@ namespace QuantifyWebAPI.Controllers
                     string myProcessStatus = "A";
                     InventoryTransData myInventoryTransData = new InventoryTransData();
 
-                    //***** Initalize fields and classes to be used to build data profile *****
-                    string myInventoryTransID = myRow["QuantifyID"].ToString();
-                    Movement myTransfer = myTransfersDictionary[myInventoryTransID];
-                    MovementProductList myInventoryTransProducts = MovementProductList.GetMovementProductList(myTransfer.MovementID);
-                    
-                    //***** Build header data profile *****              
-                    myInventoryTransData.inventory_trans_id = myInventoryTransID;
-                    myInventoryTransData.transaction_type = myTransfer.TypeOfMovement.ToDescription();
-                    switch (myTransfer.TypeOfMovement)
+                    if (myRow["Entity"].ToString() == "InventoryTrans")
                     {
-                        case MovementType.TransferNewToRent:
-                            myInventoryTransData.from_warehouse = ((int)Warehouse.New).ToString();
-                            myInventoryTransData.to_warehouse = ((int)Warehouse.Available).ToString();
-                            myInventoryTransData.transaction_type = "M";
-                            break;
-                            //TODO: ADH 9/25/2020 - Include adjustments handling when applicable
-                            //myInventoryTransData.transaction_type = "A";
-                    }
+                        //***** Initalize fields and classes to be used to build data profile *****
+                        string myInventoryTransID = myRow["QuantifyID"].ToString();
+                        Movement myTransfer = myTransfersDictionary[myInventoryTransID];
+                        MovementProductList myInventoryTransProducts = MovementProductList.GetMovementProductList(myTransfer.MovementID);
 
-                    //***** Build line item data profile *****
-                    foreach (MovementProductListItem inventoryTransProductListItem in myInventoryTransProducts)
+                        //***** Build header data profile *****              
+                        myInventoryTransData.inventory_trans_id = myInventoryTransID;
+                        myInventoryTransData.transaction_type = "M";  // M = Material Transfer in WebApps
+                        myInventoryTransData.from_warehouse = ((int)Warehouse.New).ToString();
+                        myInventoryTransData.to_warehouse = ((int)Warehouse.Available).ToString();
+
+                        //***** Build line item data profile *****
+                        foreach (MovementProductListItem inventoryTransProductListItem in myInventoryTransProducts)
+                        {
+                            Product myProduct = Product.GetProduct(inventoryTransProductListItem.BaseProductID);
+                            InventoryTransLine myTransLine = new InventoryTransLine();
+                            myTransLine.part_number = inventoryTransProductListItem.PartNumber;
+                            //myTransLine.serial_number = myProduct.SerialNumber;
+                            myTransLine.quantity = inventoryTransProductListItem.Quantity.ToString();
+                            myTransLine.received_quantity = inventoryTransProductListItem.ReceivedQuantity.ToString();
+                            myTransLine.comment = inventoryTransProductListItem.Comment;
+                            myInventoryTransData.Lines.Add(myTransLine);
+                        }
+                    }
+                    else if (myRow["Entity"].ToString() == "Adjustment")
                     {
-                        Product myProduct = Product.GetProduct(inventoryTransProductListItem.BaseProductID);
+                        //TODO: ADH 9/28/2020 - Implement Adjustments data population
+                        //***** Initalize fields and classes to be used to build data profile *****
+                        Guid myAdjustmentID = Guid.Parse(myRow["QuantifyID"].ToString());
+                        string myAdjustmentNumber = myAdjustmentID.ToString();
+                        //string myAdjustmentDate = DateTime.Now.ToString();
+                        StockedProductAdjustment myAdjustment = myAdjustmentsDictionary[myAdjustmentID];
+
+                        //***** Build data profile - will be separate adjustment transactions sent across for each item *****
+                        //TODO: ADH 9/29/2020 - BUSINESS DECISION: What should we use for our inventory transaction id, since we won't have a Movement Number for these? 
+                        // Should we just let WebApps increment, since now analogue in Quantify?
+                        //myInventoryTransData.inventory_trans_id = myAdjustmentNumber;
+                        myInventoryTransData.transaction_type = "A";  // A = Adjustment in WebApps
                         InventoryTransLine myTransLine = new InventoryTransLine();
-                        myTransLine.part_number = inventoryTransProductListItem.PartNumber;
-                        //myTransLine.serial_number = myProduct.SerialNumber;
-                        myTransLine.quantity = inventoryTransProductListItem.Quantity.ToString();
-                        myTransLine.received_quantity = inventoryTransProductListItem.ReceivedQuantity.ToString();
-                        myTransLine.comment = inventoryTransProductListItem.Comment;
+                        myTransLine.part_number = myAdjustment.PartNumber;
+                        myTransLine.comment = myAdjustment.Comment;
+
+                        //***** Evaluate and assign from and to warehouses and quantities based on where quantity was previously vs. where it is now
+                        //TODO: ADH 9/29/2020 - Need to verify the below does what is intended, and if this is best way to evaluate per business
+                        if (myAdjustment.QtyNewOriginal != null)
+                        {
+                            myInventoryTransData.from_warehouse = ((int)Warehouse.New).ToString();
+                            myTransLine.quantity = myAdjustment.QtyNewOriginal.ToString();
+                        }
+                        else if (myAdjustment.QtyForRentOriginal != null)
+                        {
+                            myInventoryTransData.from_warehouse = ((int)Warehouse.Available).ToString();
+                            myTransLine.quantity = myAdjustment.QtyForRentOriginal.ToString();
+                        }
+                        else
+                        {
+                            myProcessStatus = "E1";
+                            myErrorText = "Stocked Product does not have any initial new or available quantities - unable to integrate.";
+                        }
+
+                        if (myAdjustment.QuantityNew != null)
+                        {
+                            myInventoryTransData.to_warehouse = ((int)Warehouse.New).ToString();
+                            myTransLine.received_quantity = myAdjustment.QuantityNew.ToString();
+                        }
+                        else if (myAdjustment.QuantityForRent != null)
+                        {
+                            myInventoryTransData.to_warehouse = ((int)Warehouse.Available).ToString();
+                            myTransLine.received_quantity = myAdjustment.QuantityForRent.ToString();
+                        }
+                        else
+                        {
+                            myProcessStatus = "E1";
+                            myErrorText = "Stocked Product does not have any current new or available quantities - unable to integrate.";
+                        }
                         myInventoryTransData.Lines.Add(myTransLine);
                     }
 
