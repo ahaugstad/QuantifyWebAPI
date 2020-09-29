@@ -248,11 +248,11 @@ namespace QuantifyWebAPI.Controllers
             //***** Package as class, serialize to JSON and write to audit log table *****
             myInventoryTransactions.entity = "InventoryTrans";
             myInventoryTransactions.InventoryTrans = myInventoryTransData;
-            string myJsonObject2 = JsonConvert.SerializeObject(myInventoryTransactions);
+            string myJsonObject = JsonConvert.SerializeObject(myInventoryTransactions);
 
             //***** Create audit log datarow ******   
             DataTable auditLog = MySqlHelper.GetAuditLogTableStructure();
-            auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "InventoryTrans", myInventoryTransData.inventory_trans_id, myJsonObject2, "", myProcessStatus, myErrorText);
+            auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "InventoryTrans", myInventoryTransData.inventory_trans_id, myJsonObject, "", myProcessStatus, myErrorText);
 
             //***** Create audit log record for Boomi to go pick up *****
             DAL myDAL = new DAL();
