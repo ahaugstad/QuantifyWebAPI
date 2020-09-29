@@ -41,10 +41,12 @@ namespace QuantifyWebAPI.Controllers
         RaygunClient myRaygunClient = new RaygunClient();
         SQLHelper MySqlHelper = new SQLHelper();
         QuantifyHelper QuantHelper;
+        string initializationMode;
 
-        public PurchaseOrderBusinessLogic(QuantifyCredentials QuantCreds)
+        public PurchaseOrderBusinessLogic(QuantifyCredentials QuantCreds, string InitializationMode)
         {
             QuantHelper = new QuantifyHelper(QuantCreds);
+            initializationMode = InitializationMode;
         }
 
         public bool GetIDsToProcess(string connectionString)
@@ -99,43 +101,46 @@ namespace QuantifyWebAPI.Controllers
             DAL myDAL = new DAL();
             DataTable myChangedRecords = myDAL.GetChangedObjects(dt, connectionString);
 
-
-            if (myChangedRecords.Rows.Count > 0)
+            //***** If in Initialization Mode bypass Data integrations other than Version Controll *****
+            if (initializationMode != "1")
             {
-                PurchaseOrderRootClass myPurchaseOrders = new PurchaseOrderRootClass();
 
-                //***** Create Audit Log and XRef table structures *****
-                DataTable auditLog = MySqlHelper.GetAuditLogTableStructure();
-
-                foreach (DataRow myRow in myChangedRecords.Rows)
+                if (myChangedRecords.Rows.Count > 0)
                 {
-                    //***** Initialize error tracking fields and data package *****
-                    var myErrorText = "";
-                    string myProcessStatus = "A";
-                    PurchaseOrderData myPurchaseOrderData = new PurchaseOrderData();
+                    PurchaseOrderRootClass myPurchaseOrders = new PurchaseOrderRootClass();
 
-                    //***** Initalize fields and classes to be used to build data profile *****
-                    string myPurchaseID = myRow["QuantifyID"].ToString();
-                    Movement myPurchase = myPurchasesDictionary[myPurchaseID];
-                    Order myOrder = Order.GetOrder(myPurchase.OrderID);
-                    BusinessPartner myVendor = BusinessPartner.GetBusinessPartnerByNumber(myPurchase.MovementBusinessPartnerNumber);
-                    MovementProductList myPurchaseProducts = MovementProductList.GetMovementProductList(myPurchase.MovementID);
-                    
-                    //***** Build header data profile *****                   
-                    myPurchaseOrderData.transaction_number = myPurchase.MovementNumber;
-                    myPurchaseOrderData.vendor_number = myVendor.AccountingID;
-                    //TODO: ADH 9/25/2020 - Uncomment this line and delete following ~10 lines when Russ finishes converting MovementNumber numbering
-                    //myPurchaseOrderData.order_number = myPurchase.MovementNumber;
+                    //***** Create Audit Log and XRef table structures *****
+                    DataTable auditLog = MySqlHelper.GetAuditLogTableStructure();
 
-                    //***** Use ReferenceNumber instead of BackOrderNumber for PO Number if we are doing direct purchase of consumables *****
-                    if (myPurchase.TypeOfMovement == MovementType.PurchaseConsumables)
+                    foreach (DataRow myRow in myChangedRecords.Rows)
                     {
-                        myPurchaseOrderData.order_number = myPurchase.BusinessPartnerNumber;
-                    }
-                    else
-                    {
-                        myPurchaseOrderData.order_number = myPurchase.BackOrderNumber;
-                    }
+                        //***** Initialize error tracking fields and data package *****
+                        var myErrorText = "";
+                        string myProcessStatus = "A";
+                        PurchaseOrderData myPurchaseOrderData = new PurchaseOrderData();
+
+                        //***** Initalize fields and classes to be used to build data profile *****
+                        string myPurchaseID = myRow["QuantifyID"].ToString();
+                        Movement myPurchase = myPurchasesDictionary[myPurchaseID];
+                        Order myOrder = Order.GetOrder(myPurchase.OrderID);
+                        BusinessPartner myVendor = BusinessPartner.GetBusinessPartnerByNumber(myPurchase.MovementBusinessPartnerNumber);
+                        MovementProductList myPurchaseProducts = MovementProductList.GetMovementProductList(myPurchase.MovementID);
+
+                        //***** Build header data profile *****                   
+                        myPurchaseOrderData.transaction_number = myPurchase.MovementNumber;
+                        myPurchaseOrderData.vendor_number = myVendor.AccountingID;
+                        //TODO: ADH 9/25/2020 - Uncomment this line and delete following ~10 lines when Russ finishes converting MovementNumber numbering
+                        //myPurchaseOrderData.order_number = myPurchase.MovementNumber;
+
+                        //***** Use ReferenceNumber instead of BackOrderNumber for PO Number if we are doing direct purchase of consumables *****
+                        if (myPurchase.TypeOfMovement == MovementType.PurchaseConsumables)
+                        {
+                            myPurchaseOrderData.order_number = myPurchase.BusinessPartnerNumber;
+                        }
+                        else
+                        {
+                            myPurchaseOrderData.order_number = myPurchase.BackOrderNumber;
+                        }
 
                     //***** Assign warehouse based on type of movement *****
                     switch (myPurchase.TypeOfMovement)
@@ -208,26 +213,27 @@ namespace QuantifyWebAPI.Controllers
                         myPurchaseOrderData.Lines.Add(myPurchaseOrderLine);
                     }
 
-                    //***** Package as class, serialize to JSON and write to audit log table *****
-                    myPurchaseOrders.entity = "PurchaseOrder";
-                    myPurchaseOrders.PurchaseOrder = myPurchaseOrderData;
-                    string myJsonObject = JsonConvert.SerializeObject(myPurchaseOrders);
+                        //***** Package as class, serialize to JSON and write to audit log table *****
+                        myPurchaseOrders.entity = "PurchaseOrder";
+                        myPurchaseOrders.PurchaseOrder = myPurchaseOrderData;
+                        string myJsonObject = JsonConvert.SerializeObject(myPurchaseOrders);
 
-                    //***** Create audit log datarow ******                 
-                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "PurchaseOrder", myPurchaseOrderData.transaction_number, myJsonObject, "", myProcessStatus, myErrorText);
-                }
+                        //***** Create audit log datarow ******                 
+                        auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "PurchaseOrder", myPurchaseOrderData.transaction_number, myJsonObject, "", myProcessStatus, myErrorText);
+                    }
 
-                //***** Create audit log record for Boomi to go pick up *****
-                DataTable myReturnResult = myDAL.InsertAuditLog(auditLog, connectionString);
+                    //***** Create audit log record for Boomi to go pick up *****
+                    DataTable myReturnResult = myDAL.InsertAuditLog(auditLog, connectionString);
 
-                string result = myReturnResult.Rows[0][0].ToString();
-                if (result.ToLower() == "success")
-                {
-                    success = true;
-                }
-                else
-                {
-                    success = false;
+                    string result = myReturnResult.Rows[0][0].ToString();
+                    if (result.ToLower() == "success")
+                    {
+                        success = true;
+                    }
+                    else
+                    {
+                        success = false;
+                    }
                 }
             }
             return success;

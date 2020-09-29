@@ -41,10 +41,12 @@ namespace QuantifyWebAPI.Controllers
         RaygunClient myRaygunClient = new RaygunClient();
         SQLHelper MySqlHelper = new SQLHelper();
         QuantifyHelper QuantHelper;
+        string initializationMode;
 
-        public SalesOrderBusinessLogic(QuantifyCredentials QuantCreds)
+        public SalesOrderBusinessLogic(QuantifyCredentials QuantCreds, string InitializationMode)
         {
             QuantHelper = new QuantifyHelper(QuantCreds);
+            initializationMode = InitializationMode;
         }
 
         public bool GetIDsToProcess(string connectionString)
@@ -118,125 +120,129 @@ namespace QuantifyWebAPI.Controllers
             DAL myDAL = new DAL();
             DataTable myChangedRecords = myDAL.GetChangedObjects(dt, connectionString);
 
-            //***** Loop through changed records and write to log table to be processed by Boomi *****
-            if (myChangedRecords.Rows.Count > 0)
+            //***** If in Initialization Mode bypass Data integrations other than Version Controll *****
+            if (initializationMode != "1")
             {
-                SalesOrderRootClass mySalesOrders = new SalesOrderRootClass();
-
-                //***** Create Audit Log and XRef table structures *****            
-                DataTable auditLog = MySqlHelper.GetAuditLogTableStructure();
-
-                foreach (DataRow myRow in myChangedRecords.Rows)
+                //***** Loop through changed records and write to log table to be processed by Boomi *****
+                if (myChangedRecords.Rows.Count > 0)
                 {
-                    //***** Initialize error tracking fields and data package *****
-                    var myErrorText = "";
-                    string myProcessStatus = "A";
-                    SalesOrderData mySalesOrderData = new SalesOrderData();
+                    SalesOrderRootClass mySalesOrders = new SalesOrderRootClass();
 
-                    //***** Process Sales Orders *****
-                    if (myRow["Entity"].ToString() == "SalesOrder")
+                    //***** Create Audit Log and XRef table structures *****            
+                    DataTable auditLog = MySqlHelper.GetAuditLogTableStructure();
+
+                    foreach (DataRow myRow in myChangedRecords.Rows)
                     {
-                        //***** Initalize fields and classes to be used to build data profile *****
-                        string mySalesID = myRow["QuantifyID"].ToString();
-                        Movement mySale = mySalesDictionary[mySalesID];
-                        BusinessPartner myCustomer = BusinessPartner.GetBusinessPartnerByNumber(mySale.MovementBusinessPartnerNumber);
-                        MovementProductList mySaleProducts = MovementProductList.GetMovementProductList(mySale.MovementID);
+                        //***** Initialize error tracking fields and data package *****
+                        var myErrorText = "";
+                        string myProcessStatus = "A";
+                        SalesOrderData mySalesOrderData = new SalesOrderData();
 
-                        //***** Build header data profile *****
-                        mySalesOrderData.transaction_number = mySale.MovementNumber;
-                        mySalesOrderData.customer_number = myCustomer.AccountingID;
-                        mySalesOrderData.reference_number = mySale.BusinessPartnerNumber;  
+                        //***** Process Sales Orders *****
+                        if (myRow["Entity"].ToString() == "SalesOrder")
+                        {
+                            //***** Initalize fields and classes to be used to build data profile *****
+                            string mySalesID = myRow["QuantifyID"].ToString();
+                            Movement mySale = mySalesDictionary[mySalesID];
+                            BusinessPartner myCustomer = BusinessPartner.GetBusinessPartnerByNumber(mySale.MovementBusinessPartnerNumber);
+                            MovementProductList mySaleProducts = MovementProductList.GetMovementProductList(mySale.MovementID);
 
-                        //***** Evaluate jobsite and confirm one has been selected. If one hasn't, log it as error *****
-                        if (mySale.JobSite != null)
-                        {
-                            mySalesOrderData.job_number = mySale.JobSite.Number;
-                            mySalesOrderData.branch_office = mySale.JobSite.ParentBranchOrLaydown.Number;
-                        }
-                        else
-                        {
-                            myErrorText = "Jobsite is blank. Please provide a Jobsite to integrate this order.";
-                            myProcessStatus = "E1";
+                            //***** Build header data profile *****
+                            mySalesOrderData.transaction_number = mySale.MovementNumber;
+                            mySalesOrderData.customer_number = myCustomer.AccountingID;
+                            mySalesOrderData.reference_number = mySale.BusinessPartnerNumber;
+
+                            //***** Evaluate jobsite and confirm one has been selected. If one hasn't, log it as error *****
+                            if (mySale.JobSite != null)
+                            {
+                                mySalesOrderData.job_number = mySale.JobSite.Number;
+                                mySalesOrderData.branch_office = mySale.JobSite.ParentBranchOrLaydown.Number;
+                            }
+                            else
+                            {
+                                myErrorText = "Jobsite is blank. Please provide a Jobsite to integrate this order.";
+                                myProcessStatus = "E1";
+                            }
+
+                            //***** Assign warehouse based on type of movement *****
+                            switch (mySale.TypeOfMovement)
+                            {
+                                case MovementType.SellNew:
+                                    mySalesOrderData.from_warehouse = ((int)Warehouse.New).ToString();
+                                    break;
+                                case MovementType.SellForRent:
+                                    mySalesOrderData.from_warehouse = ((int)Warehouse.Available).ToString();
+                                    break;
+                                case MovementType.SellConsumables:
+                                    mySalesOrderData.from_warehouse = ((int)Warehouse.Consumable).ToString();
+                                    break;
+                            }
+
+                            //***** Build line item data profile *****
+                            foreach (MovementProductListItem saleProductListItem in mySaleProducts)
+                            {
+                                Product myProduct = Product.GetProduct(saleProductListItem.BaseProductID);
+                                SalesOrderLine mySalesOrderLine = new SalesOrderLine();
+                                mySalesOrderLine.part_number = saleProductListItem.PartNumber;
+                                mySalesOrderLine.quantity = saleProductListItem.Quantity.ToString();
+                                mySalesOrderLine.price_ea = saleProductListItem.SellPrice.ToString();
+                                mySalesOrderLine.unit_of_measure = myProduct.UnitOfMeasureName;
+                                mySalesOrderData.Lines.Add(mySalesOrderLine);
+                            }
                         }
 
-                        //***** Assign warehouse based on type of movement *****
-                        switch (mySale.TypeOfMovement)
+                        //***** Process Return Orders *****
+                        else if (myRow["Entity"].ToString() == "ReturnOrder")
                         {
-                            case MovementType.SellNew:
-                                mySalesOrderData.from_warehouse = ((int)Warehouse.New).ToString();
-                                break;
-                            case MovementType.SellForRent:
-                                mySalesOrderData.from_warehouse = ((int)Warehouse.Available).ToString();
-                                break;
-                            case MovementType.SellConsumables:
-                                mySalesOrderData.from_warehouse = ((int)Warehouse.Consumable).ToString();
-                                break;
-                        }
+                            //***** Initalize fields and classes to be used to build data profile *****
+                            string myReturnID = myRow["QuantifyID"].ToString();
+                            Shipment myReturn = myReturnsDictionary[myReturnID];
+                            BusinessPartner myCustomer = BusinessPartner.GetBusinessPartner(myReturn.FromStockingLocation.BusinessPartnerID);
+                            ShipmentProductList myReturnProducts = ShipmentProductList.GetShipmentProductList(myReturn.ShipmentID, ShipmentStatusType.Completed);
 
-                        //***** Build line item data profile *****
-                        foreach (MovementProductListItem saleProductListItem in mySaleProducts)
-                        {
-                            Product myProduct = Product.GetProduct(saleProductListItem.BaseProductID);
-                            SalesOrderLine mySalesOrderLine = new SalesOrderLine();
-                            mySalesOrderLine.part_number = saleProductListItem.PartNumber;
-                            mySalesOrderLine.quantity = saleProductListItem.Quantity.ToString();
-                            mySalesOrderLine.price_ea = saleProductListItem.SellPrice.ToString();
-                            mySalesOrderLine.unit_of_measure = myProduct.UnitOfMeasureName;
-                            mySalesOrderData.Lines.Add(mySalesOrderLine);
+                            //***** Build header data profile *****
+                            mySalesOrderData.transaction_number = myReturn.ShipmentNumber;
+                            mySalesOrderData.customer_number = myCustomer.PartnerNumber;
+                            //mySalesOrderData.reference_number = mySale.BusinessPartnerNumber;
+                            mySalesOrderData.branch_office = myReturn.FromStockingLocation.ParentBranchOrLaydown.Number;
+                            mySalesOrderData.job_number = myReturn.FromStockingLocation.Number;
+                            //TODO: ADH 9/23/20 - Identify if this is appropriate warehouse: seems like only option is to return available (since at that point it's used?)
+                            mySalesOrderData.from_warehouse = ((int)Warehouse.Available).ToString();
+
+                            //***** Build line item data profile *****
+                            foreach (ShipmentProductListItem returnProductListItem in myReturnProducts)
+                            {
+                                Product myProduct = Product.GetProduct(returnProductListItem.BaseProductID);
+                                SalesOrderLine mySalesOrderLine = new SalesOrderLine();
+                                mySalesOrderLine.part_number = returnProductListItem.PartNumber;
+                                mySalesOrderLine.quantity = returnProductListItem.OutOfServiceQuantity.ToString();
+                                //TODO: ADH 9/23/20 - Confirm this is actually the sell price
+                                mySalesOrderLine.price_ea = returnProductListItem.Sell.ToString();
+                                mySalesOrderLine.unit_of_measure = myProduct.UnitOfMeasureName;
+                                mySalesOrderData.Lines.Add(mySalesOrderLine);
+                            }
                         }
+                        //***** Package as class, serialize to JSON and write to audit log table *****
+                        mySalesOrders.entity = "SalesOrder";
+                        mySalesOrders.SalesOrder = mySalesOrderData;
+                        string myJsonObject = JsonConvert.SerializeObject(mySalesOrders);
+
+                        //***** Create audit log datarow ******                 
+                        auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "SalesOrder", mySalesOrderData.transaction_number, myJsonObject, "", myProcessStatus, myErrorText);
                     }
 
-                    //***** Process Return Orders *****
-                    else if (myRow["Entity"].ToString() == "ReturnOrder")
+                    //***** Create audit log record for Boomi to go pick up *****
+                    DataTable myReturnResult = myDAL.InsertAuditLog(auditLog, connectionString);
+
+                    string result = myReturnResult.Rows[0][0].ToString();
+                    if (result.ToLower() == "success")
                     {
-                        //***** Initalize fields and classes to be used to build data profile *****
-                        string myReturnID = myRow["QuantifyID"].ToString();
-                        Shipment myReturn = myReturnsDictionary[myReturnID];
-                        BusinessPartner myCustomer = BusinessPartner.GetBusinessPartner(myReturn.FromStockingLocation.BusinessPartnerID);
-                        ShipmentProductList myReturnProducts = ShipmentProductList.GetShipmentProductList(myReturn.ShipmentID,ShipmentStatusType.Completed);
-
-                        //***** Build header data profile *****
-                        mySalesOrderData.transaction_number = myReturn.ShipmentNumber;
-                        mySalesOrderData.customer_number = myCustomer.PartnerNumber;
-                        //mySalesOrderData.reference_number = mySale.BusinessPartnerNumber;
-                        mySalesOrderData.branch_office = myReturn.FromStockingLocation.ParentBranchOrLaydown.Number;
-                        mySalesOrderData.job_number = myReturn.FromStockingLocation.Number;
-                        //TODO: ADH 9/23/20 - Identify if this is appropriate warehouse: seems like only option is to return available (since at that point it's used?)
-                        mySalesOrderData.from_warehouse = ((int)Warehouse.Available).ToString();
-
-                        //***** Build line item data profile *****
-                        foreach (ShipmentProductListItem returnProductListItem in myReturnProducts)
-                        {
-                            Product myProduct = Product.GetProduct(returnProductListItem.BaseProductID);
-                            SalesOrderLine mySalesOrderLine = new SalesOrderLine();
-                            mySalesOrderLine.part_number = returnProductListItem.PartNumber;
-                            mySalesOrderLine.quantity = returnProductListItem.OutOfServiceQuantity.ToString();
-                            //TODO: ADH 9/23/20 - Confirm this is actually the sell price
-                            mySalesOrderLine.price_ea = returnProductListItem.Sell.ToString();
-                            mySalesOrderLine.unit_of_measure = myProduct.UnitOfMeasureName;
-                            mySalesOrderData.Lines.Add(mySalesOrderLine);
-                        }
+                        success = true;
                     }
-                    //***** Package as class, serialize to JSON and write to audit log table *****
-                    mySalesOrders.entity = "SalesOrder";
-                    mySalesOrders.SalesOrder = mySalesOrderData;
-                    string myJsonObject = JsonConvert.SerializeObject(mySalesOrders);
-
-                    //***** Create audit log datarow ******                 
-                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "SalesOrder", mySalesOrderData.transaction_number, myJsonObject, "", myProcessStatus, myErrorText);
-                }
-
-                //***** Create audit log record for Boomi to go pick up *****
-                DataTable myReturnResult = myDAL.InsertAuditLog(auditLog, connectionString);
-
-                string result = myReturnResult.Rows[0][0].ToString();
-                if (result.ToLower() == "success")
-                {
-                    success = true;
-                }
-                else
-                {
-                    success = false;
+                    else
+                    {
+                        success = false;
+                    }
                 }
             }
             return success;

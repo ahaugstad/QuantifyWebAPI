@@ -41,10 +41,12 @@ namespace QuantifyWebAPI.Controllers
         RaygunClient myRaygunClient = new RaygunClient();
         SQLHelper MySqlHelper = new SQLHelper();
         QuantifyHelper QuantHelper;
+        string initializationMode;
 
-        public InventoryTransBusinessLogic(QuantifyCredentials QuantCreds)
+        public InventoryTransBusinessLogic(QuantifyCredentials QuantCreds, string InitializationMode)
         {
             QuantHelper = new QuantifyHelper(QuantCreds);
+            initializationMode = InitializationMode;
         }
 
         public bool GetIDsToProcess(string connectionString)
@@ -113,13 +115,15 @@ namespace QuantifyWebAPI.Controllers
             DAL myDAL = new DAL();
             DataTable myChangedRecords = myDAL.GetChangedObjects(dt, connectionString);
 
-
-            if (myChangedRecords.Rows.Count > 0)
+            //***** If in Initialization Mode bypass Data integrations other than Version Controll *****
+            if (initializationMode != "1")
             {
-                InventoryTransRootClass myInventoryTransactions = new InventoryTransRootClass();
+                if (myChangedRecords.Rows.Count > 0)
+                {
+                    InventoryTransRootClass myInventoryTransactions = new InventoryTransRootClass();
 
-                //***** Create Audit Log and XRef table structures *****            
-                DataTable auditLog = MySqlHelper.GetAuditLogTableStructure();
+                    //***** Create Audit Log and XRef table structures *****            
+                    DataTable auditLog = MySqlHelper.GetAuditLogTableStructure();
 
                 //***** Create Separate Dictionaries for New and Available Adjustments
                 Dictionary<Guid, StockedProductAdjustment> myNewAdjustmentsDictionary = new Dictionary<Guid, StockedProductAdjustment>();
@@ -140,11 +144,11 @@ namespace QuantifyWebAPI.Controllers
                         Movement myTransfer = myTransfersDictionary[myInventoryTransID];
                         MovementProductList myInventoryTransProducts = MovementProductList.GetMovementProductList(myTransfer.MovementID);
 
-                        //***** Build header data profile *****              
-                        myInventoryTransData.inventory_trans_id = myInventoryTransID;
-                        myInventoryTransData.transaction_type = "M";  // M = Material Transfer in WebApps
-                        myInventoryTransData.from_warehouse = ((int)Warehouse.New).ToString();
-                        myInventoryTransData.to_warehouse = ((int)Warehouse.Available).ToString();
+                            //***** Build header data profile *****              
+                            myInventoryTransData.inventory_trans_id = myInventoryTransID;
+                            myInventoryTransData.transaction_type = "M";  // M = Material Transfer in WebApps
+                            myInventoryTransData.from_warehouse = ((int)Warehouse.New).ToString();
+                            myInventoryTransData.to_warehouse = ((int)Warehouse.Available).ToString();
 
                         //***** Build line item data profile *****
                         foreach (MovementProductListItem inventoryTransProductListItem in myInventoryTransProducts)

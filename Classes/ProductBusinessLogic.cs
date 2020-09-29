@@ -41,10 +41,12 @@ namespace QuantifyWebAPI.Controllers
         RaygunClient myRaygunClient = new RaygunClient();
         SQLHelper MySqlHelper = new SQLHelper();
         QuantifyHelper QuantHelper;
+        string initializationMode;
 
-        public ProductBusinessLogic(QuantifyCredentials QuantCreds)
+        public ProductBusinessLogic(QuantifyCredentials QuantCreds, string InitializationMode)
         {
             QuantHelper = new QuantifyHelper(QuantCreds);
+            initializationMode = InitializationMode;
         }
 
         // GET: api/Jobs/3
@@ -105,64 +107,67 @@ namespace QuantifyWebAPI.Controllers
             DAL myDAL = new DAL();
             DataTable myChangedRecords = myDAL.GetChangedObjects(dt, connectionString);
 
-
-            if (myChangedRecords.Rows.Count > 0)
+            //***** If in Initialization Mode bypass Data integrations other than Version Controll *****
+            if (initializationMode != "1")
             {
-                ProductRootClass myProducts = new ProductRootClass();
-
-                //***** Create Audit Log and XRef table structures *****            
-                DataTable auditLog = MySqlHelper.GetAuditLogTableStructure();
-                DataTable productXRef =  MySqlHelper.GetXRefTableStructure();
-
-                foreach (DataRow myRow in myChangedRecords.Rows)
+                if (myChangedRecords.Rows.Count > 0)
                 {
-                    //***** Initialize error tracking fields and data package *****
-                    var myErrorText = "";
-                    string myProcessStatus = "A";
-                    string myProductID = myRow["QuantifyID"].ToString();
-                    ProductData myProductData = new ProductData();
+                    ProductRootClass myProducts = new ProductRootClass();
 
-                    //***** Check if duplicate product ID and log error if so *****
-                    if (myErrorDictionary.ContainsKey(myProductID)) { myErrorText = myErrorDictionary[myProductID]; }
+                    //***** Create Audit Log and XRef table structures *****            
+                    DataTable auditLog = MySqlHelper.GetAuditLogTableStructure();
+                    DataTable productXRef = MySqlHelper.GetXRefTableStructure();
 
-                    //***** Initialize classes to use in building data profile
-                    ProductListItem myProductListItem = myProductsDictionary[myProductID];
-                    Product myProduct = Product.GetProduct(myProductListItem.ProductID);
-                    ProductCategory myProductCategory = ProductCategory.GetProductCategory(myProduct.ProductCategoryID, myProduct.ProductType);
+                    foreach (DataRow myRow in myChangedRecords.Rows)
+                    {
+                        //***** Initialize error tracking fields and data package *****
+                        var myErrorText = "";
+                        string myProcessStatus = "A";
+                        string myProductID = myRow["QuantifyID"].ToString();
+                        ProductData myProductData = new ProductData();
 
-                    //***** Build data profile *****
-                    myProductData.catalog = myProduct.ProductType.ToDescription();
-                    myProductData.category = myProductCategory.RevenueCode;
-                    myProductData.list_price = myProduct.DefaultList.ToString();
-                    myProductData.unit_cost = myProduct.DefaultCost.ToString();
-                    myProductData.product_id = myProductID;
-                    myProductData.description = myProduct.Description;
+                        //***** Check if duplicate product ID and log error if so *****
+                        if (myErrorDictionary.ContainsKey(myProductID)) { myErrorText = myErrorDictionary[myProductID]; }
 
-                    //***** Package as class, serialize to JSON and write to data table to get mass inserted into SQL *****
-                    myProducts.entity = "Product";
-                    myProducts.Product = myProductData;
-                    string myJsonObject = JsonConvert.SerializeObject(myProducts);
+                        //***** Initialize classes to use in building data profile
+                        ProductListItem myProductListItem = myProductsDictionary[myProductID];
+                        Product myProduct = Product.GetProduct(myProductListItem.ProductID);
+                        ProductCategory myProductCategory = ProductCategory.GetProductCategory(myProduct.ProductCategoryID, myProduct.ProductType);
 
-                    //***** Create audit log datarow ******                 
-                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Product", myProductData.product_id, myJsonObject, "", myProcessStatus, myErrorText);
+                        //***** Build data profile *****
+                        myProductData.catalog = myProduct.ProductType.ToDescription();
+                        myProductData.category = myProductCategory.RevenueCode;
+                        myProductData.list_price = myProduct.DefaultList.ToString();
+                        myProductData.unit_cost = myProduct.DefaultCost.ToString();
+                        myProductData.product_id = myProductID;
+                        myProductData.description = myProduct.Description;
 
-                    //****** Create XRef datarow *****
-                    productXRef = MySqlHelper.CreateXRefDataRow(productXRef, myProductData.product_id, myProduct.PartNumber, "");
-                }
+                        //***** Package as class, serialize to JSON and write to data table to get mass inserted into SQL *****
+                        myProducts.entity = "Product";
+                        myProducts.Product = myProductData;
+                        string myJsonObject = JsonConvert.SerializeObject(myProducts);
 
-                //***** Insert to Audit Log and XRef tables for Boomi to reference *****
-                DataTable myReturnResultAudit = myDAL.InsertAuditLog(auditLog, connectionString);
-                DataTable myReturnResultXRef = myDAL.InsertProductXRef(productXRef, connectionString);
+                        //***** Create audit log datarow ******                 
+                        auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Product", myProductData.product_id, myJsonObject, "", myProcessStatus, myErrorText);
 
-                string resultAudit = myReturnResultAudit.Rows[0][0].ToString();
-                string resultXRef = myReturnResultXRef.Rows[0][0].ToString();
-                if (resultAudit.ToLower() == "success" && resultXRef.ToLower() == "success")
-                {
-                    success = true;
-                }
-                else
-                {
-                    success = false;
+                        //****** Create XRef datarow *****
+                        productXRef = MySqlHelper.CreateXRefDataRow(productXRef, myProductData.product_id, myProduct.PartNumber, "");
+                    }
+
+                    //***** Insert to Audit Log and XRef tables for Boomi to reference *****
+                    DataTable myReturnResultAudit = myDAL.InsertAuditLog(auditLog, connectionString);
+                    DataTable myReturnResultXRef = myDAL.InsertProductXRef(productXRef, connectionString);
+
+                    string resultAudit = myReturnResultAudit.Rows[0][0].ToString();
+                    string resultXRef = myReturnResultXRef.Rows[0][0].ToString();
+                    if (resultAudit.ToLower() == "success" && resultXRef.ToLower() == "success")
+                    {
+                        success = true;
+                    }
+                    else
+                    {
+                        success = false;
+                    }
                 }
             }
             return success;

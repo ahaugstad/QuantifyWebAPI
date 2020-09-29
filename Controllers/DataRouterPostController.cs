@@ -37,6 +37,8 @@ namespace QuantifyWebAPI.Controllers
     {
         BoomiHelper BoomiHelper = new BoomiHelper();
 
+        String InitializationMode = ConfigurationManager.AppSettings["InitializationMode"];
+
         String StrVersionDBConn = ConfigurationManager.AppSettings["QuantifyPersistanceLayerDBConn"];
         RaygunClient myRaygunClient = new RaygunClient();
 
@@ -56,27 +58,27 @@ namespace QuantifyWebAPI.Controllers
         public void PingInitialization()
         {
             ////***** Run Jobs *****
-            //JobBusinessLogic myJobResponse = new JobBusinessLogic(myQuantifyCredentials);
+            //JobBusinessLogic myJobResponse = new JobBusinessLogic(myQuantifyCredentials, InitializationMode);
             //myJobResponse.GetIDsToProcess(StrVersionDBConn);
 
             ////***** Run Products *****
-            //ProductBusinessLogic myProductResponse = new ProductBusinessLogic(myQuantifyCredentials);
+            //ProductBusinessLogic myProductResponse = new ProductBusinessLogic(myQuantifyCredentials, InitializationMode);
             //myProductResponse.GetIDsToProcess(StrVersionDBConn);
 
             //***** Run Purchase Order Transactions *****
-            PurchaseOrderBusinessLogic myPurchaseOrderResponse = new PurchaseOrderBusinessLogic(myQuantifyCredentials);
+            PurchaseOrderBusinessLogic myPurchaseOrderResponse = new PurchaseOrderBusinessLogic(myQuantifyCredentials, InitializationMode);
             myPurchaseOrderResponse.GetIDsToProcess(StrVersionDBConn);
 
             //***** Run Sales Order Transactions *****
-            //SalesOrderBusinessLogic mySalesOrderResponse = new SalesOrderBusinessLogic(myQuantifyCredentials);
+            //SalesOrderBusinessLogic mySalesOrderResponse = new SalesOrderBusinessLogic(myQuantifyCredentials, InitializationMode);
             //mySalesOrderResponse.GetIDsToProcess(StrVersionDBConn);
 
             ////*****Run Inventory Transactions *****
-            //InventoryTransBusinessLogic myInventoryTransResponse = new InventoryTransBusinessLogic(myQuantifyCredentials);
+            //InventoryTransBusinessLogic myInventoryTransResponse = new InventoryTransBusinessLogic(myQuantifyCredentials, InitializationMode);
             //myInventoryTransResponse.GetIDsToProcess(StrVersionDBConn);
 
             ////***** Run Invoice Transactions *****
-            //InvoiceBusinessLogic myInvoiceResponse = new InvoiceBusinessLogic(myQuantifyCredentials);
+            //InvoiceBusinessLogic myInvoiceResponse = new InvoiceBusinessLogic(myQuantifyCredentials, InitializationMode);
             //myInvoiceResponse.GetIDsToProcess(StrVersionDBConn);
 
             //***** Call Boomi to kick off processing *****
@@ -136,8 +138,12 @@ namespace QuantifyWebAPI.Controllers
                 switch (RequestType)
                 {
                     case "Customer":
-                        CustomerBusinessLogic myCustomerResponse = new CustomerBusinessLogic(myQuantifyCredentials);
+                        CustomerBusinessLogic myCustomerResponse = new CustomerBusinessLogic(myQuantifyCredentials, InitializationMode);
                         myResponse = myCustomerResponse.UpsertCustomerData(jsonResult);
+                        break;
+                    case "Vendor":
+                        VendorBusinessLogic myVendorResponse = new VendorBusinessLogic(myQuantifyCredentials, InitializationMode);
+                        myResponse = myVendorResponse.UpsertVendorData(jsonResult);
                         break;
 
                     default:
