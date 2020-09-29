@@ -399,6 +399,7 @@ namespace QuantifyWebAPI.Controllers
                 //***** Invoices *****
                 InvoiceCollection invoices = InvoiceCollection.GetInvoiceCollection(InvoiceExportStatus.All);
                 Invoice myInvoice = Invoice.GetInvoice(Guid.Empty,true);
+                
                 var invoiceVersionStamp = myInvoice.ModifyDate;
 
                 //***** Orders (VersionStamp on List but not Collection) *****

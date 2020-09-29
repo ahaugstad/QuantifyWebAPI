@@ -79,7 +79,7 @@ namespace QuantifyWebAPI.Controllers
                 if (Vendor.PartnerNumber == "")
                 {
                     //***** Create new customer ***** 
-                    Vendor = BusinessPartner.NewBusinessPartner(PartnerTypes.Customer);
+                    Vendor = BusinessPartner.NewBusinessPartner(PartnerTypes.Vendor);
                 }
                 else
                 {
