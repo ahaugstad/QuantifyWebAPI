@@ -94,29 +94,29 @@ namespace QuantifyWebAPI.Controllers
                 Vendor.EmailAddress = VendorEmail;
                 Vendor.FaxNumber = VendorFax;
 
-                //***** Validate and save the Customer record ***** 
+                //***** Validate and save the Vendor record ***** 
                 VendorResponse = VendorValidateAndSave(Vendor);
 
-                //***** Verify we have successfully saved Customer record's non-address fields before moving on to addresses - if not, skip and return errors
+                //***** Verify we have successfully saved Vendor record's non-address fields before moving on to addresses - if not, skip and return errors
                 if (VendorResponse.status != "Error")
                 {
-                    //***** Update appropriate address information for Customer based on address type provided ***** 
+                    //***** Update appropriate address information for Vendor based on address type provided ***** 
                     foreach (QuantifyWebAPI.Classes.Address myAddress in myDeserializedClass.VendorData.Addresses)
                     {
                         //***** Get state object for updating State ID below *****
                         State state = State.GetState(myAddress.state);
 
-                        //***** Re-fetch customer record each time we update address data ***** 
+                        //***** Re-fetch Vendor record each time we update address data ***** 
                         Vendor = BusinessPartner.GetBusinessPartnerByAccountingID(myDeserializedClass.VendorData.vendor_id);
-                        if (myAddress.addressTypeCode == "Business" || myAddress.addressTypeCode == null || myAddress.addressTypeCode == "")
+                        if (myAddress.addressTypeCode == "Shipping" || myAddress.addressTypeCode == null || myAddress.addressTypeCode == "")
                         {
-                            Vendor.Addresses.GetAddressByType(AddressTypes.Business).Street = myAddress.address1;
-                            Vendor.Addresses.GetAddressByType(AddressTypes.Business).Street1 = myAddress.address2;
-                            Vendor.Addresses.GetAddressByType(AddressTypes.Business).City = myAddress.city;
-                            Vendor.Addresses.GetAddressByType(AddressTypes.Business).StateID = state.StateID;
-                            Vendor.Addresses.GetAddressByType(AddressTypes.Business).StateName = myAddress.state.ToUpper();
-                            Vendor.Addresses.GetAddressByType(AddressTypes.Business).PostalCode = myAddress.zip;
-                            Vendor.Addresses.GetAddressByType(AddressTypes.Business).Country = myAddress.country;
+                            Vendor.Addresses.GetAddressByType(AddressTypes.Shipping).Street = myAddress.address1;
+                            Vendor.Addresses.GetAddressByType(AddressTypes.Shipping).Street1 = myAddress.address2;
+                            Vendor.Addresses.GetAddressByType(AddressTypes.Shipping).City = myAddress.city;
+                            Vendor.Addresses.GetAddressByType(AddressTypes.Shipping).StateID = state.StateID;
+                            Vendor.Addresses.GetAddressByType(AddressTypes.Shipping).StateName = myAddress.state.ToUpper();
+                            Vendor.Addresses.GetAddressByType(AddressTypes.Shipping).PostalCode = myAddress.zip;
+                            Vendor.Addresses.GetAddressByType(AddressTypes.Shipping).Country = myAddress.country;
                         }
                         else if (myAddress.addressTypeCode == "Billing")
                         {
@@ -128,18 +128,18 @@ namespace QuantifyWebAPI.Controllers
                             Vendor.Addresses.GetAddressByType(AddressTypes.Billing).PostalCode = myAddress.zip;
                             Vendor.Addresses.GetAddressByType(AddressTypes.Billing).Country = myAddress.country;
                         }
-                        else if (myAddress.addressTypeCode == "Shipping")
+                        else if (myAddress.addressTypeCode == "Business")
                         {
-                            Vendor.Addresses.GetAddressByType(AddressTypes.Shipping).Street = myAddress.address1;
-                            Vendor.Addresses.GetAddressByType(AddressTypes.Shipping).Street1 = myAddress.address2;
-                            Vendor.Addresses.GetAddressByType(AddressTypes.Shipping).City = myAddress.city;
+                            Vendor.Addresses.GetAddressByType(AddressTypes.Business).Street = myAddress.address1;
+                            Vendor.Addresses.GetAddressByType(AddressTypes.Business).Street1 = myAddress.address2;
+                            Vendor.Addresses.GetAddressByType(AddressTypes.Business).City = myAddress.city;
                             Vendor.Addresses.GetAddressByType(AddressTypes.Business).StateID = state.StateID;
-                            Vendor.Addresses.GetAddressByType(AddressTypes.Shipping).StateName = myAddress.state.ToUpper();
-                            Vendor.Addresses.GetAddressByType(AddressTypes.Shipping).PostalCode = myAddress.zip;
-                            Vendor.Addresses.GetAddressByType(AddressTypes.Shipping).Country = myAddress.country;
+                            Vendor.Addresses.GetAddressByType(AddressTypes.Business).StateName = myAddress.state.ToUpper();
+                            Vendor.Addresses.GetAddressByType(AddressTypes.Business).PostalCode = myAddress.zip;
+                            Vendor.Addresses.GetAddressByType(AddressTypes.Business).Country = myAddress.country;
                         }
 
-                        //***** Validate and save the Customer record ***** 
+                        //***** Validate and save the Vendor record ***** 
                         VendorResponse = VendorValidateAndSave(Vendor);
                         if (VendorResponse.status == "Error") { break; }
                     }
@@ -169,7 +169,7 @@ namespace QuantifyWebAPI.Controllers
         }
 
 
-        //***** Validates customer record. If it validates, it saves and commits the changes. It if has errors, logs those to be passed back to Boomi. ***** 
+        //***** Validates Vendor record. If it validates, it saves and commits the changes. It if has errors, logs those to be passed back to Boomi. ***** 
         public VendorResponseObj VendorValidateAndSave(BusinessPartner parmVendor)
         {
             //***** Create response object ***** 
