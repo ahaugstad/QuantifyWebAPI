@@ -140,7 +140,7 @@ namespace QuantifyWebAPI.Controllers
                     //***** Assign warehouse based on type of movement *****
                     switch (myPurchase.TypeOfMovement)
                     {
-                        //TODO: ADH 9/23/2020 - BUSINESS QUESTION: How do we handle Cancelled backorders?
+                        //TODO: ADH 9/23/2020 - WEBAPPS QUESTION: Can we close out a PO with open quantities? If so, just have this option close the PO
                         case MovementType.BackOrderCancelled:
                             myPurchaseOrderData.to_warehouse = ((int)Warehouse.Available).ToString();
                             break;
@@ -150,7 +150,7 @@ namespace QuantifyWebAPI.Controllers
                         case MovementType.BackOrderCompletedWithBackOrder:
                             myPurchaseOrderData.to_warehouse = ((int)Warehouse.Available).ToString();
                             break;
-                        //TODO: ADH 9/23/2020 - BUSINESS QUESTION: How do we handle Cancelled backorders?
+                        //TODO: ADH 9/23/2020 - WEBAPPS QUESTION: Can we close out a PO with open quantities? If so, just have this option close the PO
                         case MovementType.NewBackOrderCancelled:
                             myPurchaseOrderData.to_warehouse = ((int)Warehouse.New).ToString();
                             break;
@@ -184,13 +184,8 @@ namespace QuantifyWebAPI.Controllers
                     }
                     myPurchaseOrderData.notes = myPurchase.Notes;
 
-                    //TODO: ADH 9/24/2020 - BUSINESS DECISION: Identify how we are going to handle this 'entered_by' functionality, since it only gets populated after receiving
+                    //TODO: ADH 9/24/2020 - Possibly discuss this more during testing
                     myPurchaseOrderData.entered_by = "QuantifyInt";
-                    //if (myPurchase.MovementNumber == "MOV-0000126")
-                    //{
-                    //    LogEntryList logEntryList = LogEntryList.GetLogEntryList(myPurchase.MovementID);
-                    //    myPurchaseOrderData.entered_by = logEntryList[0].UserName;
-                    //}
                     
                     //***** Build line item data profile *****
                     foreach (MovementProductListItem purchaseProductListItem in myPurchaseProducts)
