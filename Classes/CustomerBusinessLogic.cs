@@ -38,9 +38,11 @@ namespace QuantifyWebAPI.Controllers
     {
         RaygunClient myRaygunClient = new RaygunClient();
         QuantifyHelper QuantHelper;
-        public CustomerBusinessLogic(QuantifyCredentials QuantCreds)
+        string initializationMode;
+        public CustomerBusinessLogic(QuantifyCredentials QuantCreds, string InitializationMode)
         {
             QuantHelper = new QuantifyHelper(QuantCreds);
+            initializationMode = InitializationMode;
         }
 
         public string UpsertCustomerData(JObject jsonResult)

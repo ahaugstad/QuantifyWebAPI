@@ -41,10 +41,12 @@ namespace QuantifyWebAPI.Controllers
         RaygunClient myRaygunClient = new RaygunClient();
         SQLHelper MySqlHelper = new SQLHelper();
         QuantifyHelper QuantHelper;
+        string initializationMode;
 
-        public InvoiceBusinessLogic(QuantifyCredentials QuantCreds)
+        public InvoiceBusinessLogic(QuantifyCredentials QuantCreds, string InitializationMode)
         {
             QuantHelper = new QuantifyHelper(QuantCreds);
+            initializationMode = InitializationMode;
         }
 
         public bool GetIDsToProcess(string connectionString)
@@ -81,81 +83,85 @@ namespace QuantifyWebAPI.Controllers
             DAL myDAL = new DAL();
             DataTable myChangedRecords = myDAL.GetChangedObjects(dt, connectionString);
 
-
-            if (myChangedRecords.Rows.Count > 0)
+            //***** If in Initialization Mode bypass Data integrations other than Version Controll *****
+            if (initializationMode != "1")
             {
-                InvoiceRootClass myInvoices = new InvoiceRootClass();
 
-                //***** Create Audit Log and XRef table structures *****            
-                DataTable auditLog = MySqlHelper.GetAuditLogTableStructure();
-
-                foreach (DataRow myRow in myChangedRecords.Rows)
+                if (myChangedRecords.Rows.Count > 0)
                 {
-                    //***** Initialize error tracking fields and data package *****
-                    var myErrorText = "";
-                    string myProcessStatus = "A";
-                    InvoiceData myInvoiceData = new InvoiceData();
+                    InvoiceRootClass myInvoices = new InvoiceRootClass();
 
-                    //***** Initalize fields and classes to be used to build data profile *****
-                    string myInvoiceID = myRow["QuantifyID"].ToString();
-                    InvoiceListItem myInvoiceListItem = myInvoicesDictionary[myInvoiceID];
-                    Invoice myInvoice = Invoice.GetInvoice(myInvoiceListItem.InvoiceID, true);
-                    InvoiceProductChargeCollection myInvoiceProductCharges = InvoiceProductChargeCollection.GetInvoiceProductChargeCollection(myInvoice.InvoiceID);
-                    
-                    //***** Build header data profile *****
-                    myInvoiceData.invoice_id = myInvoiceID;
-                    myInvoiceData.customer_number = myInvoice.Customer.PartnerNumber;
-                    myInvoiceData.job_number = myInvoice.JobSite.Number;
-                    myInvoiceData.branch_office = myInvoice.JobSite.ParentBranchOrLaydown.Number;
-                    myInvoiceData.invoice_date = myInvoice.InvoiceDateTime.ToShortDateString();
-                    myInvoiceData.invoice_total = myInvoice.TotalInvoice.ToString();
+                    //***** Create Audit Log and XRef table structures *****            
+                    DataTable auditLog = MySqlHelper.GetAuditLogTableStructure();
 
-                    //***** Assign warehouse based on type of movement *****
-                    //switch (myInvoice.TypeOfMovement)
-                    //{
-                    //    case MovementType.SellNew:
-                    //        myInvoiceData.from_warehouse = ((int)Warehouse.New).ToString();
-                    //        break;
-                    //    case MovementType.SellForRent:
-                    //        myInvoiceData.from_warehouse = ((int)Warehouse.Available).ToString();
-                    //        break;
-                    //    case MovementType.SellConsumables:
-                    //        myInvoiceData.from_warehouse = ((int)Warehouse.Consumable).ToString(); 
-                    //        break;
-                    //}
-                    
-                    //***** Build line item data profile *****
-                    foreach (InvoiceProductCharge invoiceProductCharge in myInvoiceProductCharges)
+                    foreach (DataRow myRow in myChangedRecords.Rows)
                     {
-                        //Product myProduct = Product.GetProduct(InvoiceProductListItem.BaseProductID);
-                        //InvoiceLine myInvoiceLine = new InvoiceLine();
-                        //myInvoiceLine.part_number = InvoiceProductListItem.PartNumber;
-                        //myInvoiceLine.quantity = InvoiceProductListItem.Quantity.ToString();
-                        //myInvoiceLine.price_ea = InvoiceProductListItem.SellPrice.ToString();
-                        //myInvoiceLine.unit_of_measure = myProduct.UnitOfMeasureName;
-                        //myInvoiceData.Lines.Add(myInvoiceLine);
+                        //***** Initialize error tracking fields and data package *****
+                        var myErrorText = "";
+                        string myProcessStatus = "A";
+                        InvoiceData myInvoiceData = new InvoiceData();
+
+                        //***** Initalize fields and classes to be used to build data profile *****
+                        string myInvoiceID = myRow["QuantifyID"].ToString();
+                        InvoiceListItem myInvoiceListItem = myInvoicesDictionary[myInvoiceID];
+                        Invoice myInvoice = Invoice.GetInvoice(myInvoiceListItem.InvoiceID, true);
+                        InvoiceProductChargeCollection myInvoiceProductCharges = InvoiceProductChargeCollection.GetInvoiceProductChargeCollection(myInvoice.InvoiceID);
+
+                        //***** Build header data profile *****
+                        myInvoiceData.invoice_id = myInvoiceID;
+                        myInvoiceData.customer_number = myInvoice.Customer.PartnerNumber;
+                        myInvoiceData.job_number = myInvoice.JobSite.Number;
+                        myInvoiceData.branch_office = myInvoice.JobSite.ParentBranchOrLaydown.Number;
+                        myInvoiceData.invoice_date = myInvoice.InvoiceDateTime.ToShortDateString();
+                        myInvoiceData.invoice_total = myInvoice.TotalInvoice.ToString();
+
+                        //***** Assign warehouse based on type of movement *****
+                        //switch (myInvoice.TypeOfMovement)
+                        //{
+                        //    case MovementType.SellNew:
+                        //        myInvoiceData.from_warehouse = ((int)Warehouse.New).ToString();
+                        //        break;
+                        //    case MovementType.SellForRent:
+                        //        myInvoiceData.from_warehouse = ((int)Warehouse.Available).ToString();
+                        //        break;
+                        //    case MovementType.SellConsumables:
+                        //        myInvoiceData.from_warehouse = ((int)Warehouse.Consumable).ToString(); 
+                        //        break;
+                        //}
+
+                        //***** Build line item data profile *****
+                        foreach (InvoiceProductCharge invoiceProductCharge in myInvoiceProductCharges)
+                        {
+                            //Product myProduct = Product.GetProduct(InvoiceProductListItem.BaseProductID);
+                            //InvoiceLine myInvoiceLine = new InvoiceLine();
+                            //myInvoiceLine.part_number = InvoiceProductListItem.PartNumber;
+                            //myInvoiceLine.quantity = InvoiceProductListItem.Quantity.ToString();
+                            //myInvoiceLine.price_ea = InvoiceProductListItem.SellPrice.ToString();
+                            //myInvoiceLine.unit_of_measure = myProduct.UnitOfMeasureName;
+                            //myInvoiceData.Lines.Add(myInvoiceLine);
+                        }
+
+                        //***** Package as class, serialize to JSON and write to audit log table *****
+                        myInvoices.entity = "Invoice";
+                        myInvoices.Invoice = myInvoiceData;
+                        string myJsonObject = JsonConvert.SerializeObject(myInvoices);
+
+                        //***** Create audit log datarow ******                 
+                        auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Invoice", myInvoiceData.invoice_id, myJsonObject, "", myProcessStatus, myErrorText);
                     }
 
-                    //***** Package as class, serialize to JSON and write to audit log table *****
-                    myInvoices.entity = "Invoice";
-                    myInvoices.Invoice = myInvoiceData;
-                    string myJsonObject = JsonConvert.SerializeObject(myInvoices);
+                    //***** Create audit log record for Boomi to go pick up *****
+                    DataTable myReturnResult = myDAL.InsertAuditLog(auditLog, connectionString);
 
-                    //***** Create audit log datarow ******                 
-                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Invoice", myInvoiceData.invoice_id, myJsonObject, "", myProcessStatus, myErrorText);
-                }
-
-                //***** Create audit log record for Boomi to go pick up *****
-                DataTable myReturnResult = myDAL.InsertAuditLog(auditLog, connectionString);
-
-                string result = myReturnResult.Rows[0][0].ToString();
-                if (result.ToLower() == "success")
-                {
-                    success = true;
-                }
-                else
-                {
-                    success = false;
+                    string result = myReturnResult.Rows[0][0].ToString();
+                    if (result.ToLower() == "success")
+                    {
+                        success = true;
+                    }
+                    else
+                    {
+                        success = false;
+                    }
                 }
             }
             return success;

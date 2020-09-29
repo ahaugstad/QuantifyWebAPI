@@ -41,10 +41,12 @@ namespace QuantifyWebAPI.Controllers
         RaygunClient myRaygunClient = new RaygunClient();
         SQLHelper MySqlHelper = new SQLHelper();
         QuantifyHelper QuantHelper;
+        string initializationMode;
 
-        public PurchaseOrderBusinessLogic(QuantifyCredentials QuantCreds)
+        public PurchaseOrderBusinessLogic(QuantifyCredentials QuantCreds, string InitializationMode)
         {
             QuantHelper = new QuantifyHelper(QuantCreds);
+            initializationMode = InitializationMode;
         }
 
         public bool GetIDsToProcess(string connectionString)
@@ -99,140 +101,144 @@ namespace QuantifyWebAPI.Controllers
             DAL myDAL = new DAL();
             DataTable myChangedRecords = myDAL.GetChangedObjects(dt, connectionString);
 
-
-            if (myChangedRecords.Rows.Count > 0)
+            //***** If in Initialization Mode bypass Data integrations other than Version Controll *****
+            if (initializationMode != "1")
             {
-                PurchaseOrderRootClass myPurchaseOrders = new PurchaseOrderRootClass();
 
-                //***** Create Audit Log and XRef table structures *****
-                DataTable auditLog = MySqlHelper.GetAuditLogTableStructure();
-
-                foreach (DataRow myRow in myChangedRecords.Rows)
+                if (myChangedRecords.Rows.Count > 0)
                 {
-                    //***** Initialize error tracking fields and data package *****
-                    var myErrorText = "";
-                    string myProcessStatus = "A";
-                    PurchaseOrderData myPurchaseOrderData = new PurchaseOrderData();
+                    PurchaseOrderRootClass myPurchaseOrders = new PurchaseOrderRootClass();
 
-                    //***** Initalize fields and classes to be used to build data profile *****
-                    string myPurchaseID = myRow["QuantifyID"].ToString();
-                    Movement myPurchase = myPurchasesDictionary[myPurchaseID];
-                    Order myOrder = Order.GetOrder(myPurchase.OrderID);
-                    BusinessPartner myVendor = BusinessPartner.GetBusinessPartnerByNumber(myPurchase.MovementBusinessPartnerNumber);
-                    MovementProductList myPurchaseProducts = MovementProductList.GetMovementProductList(myPurchase.MovementID);
-                    
-                    //***** Build header data profile *****                   
-                    myPurchaseOrderData.transaction_number = myPurchase.MovementNumber;
-                    myPurchaseOrderData.vendor_number = myVendor.AccountingID;
-                    //TODO: ADH 9/25/2020 - Uncomment this line and delete following ~10 lines when Russ finishes converting MovementNumber numbering
-                    //myPurchaseOrderData.order_number = myPurchase.MovementNumber;
+                    //***** Create Audit Log and XRef table structures *****
+                    DataTable auditLog = MySqlHelper.GetAuditLogTableStructure();
 
-                    //***** Use ReferenceNumber instead of BackOrderNumber for PO Number if we are doing direct purchase of consumables *****
-                    if (myPurchase.TypeOfMovement == MovementType.PurchaseConsumables)
+                    foreach (DataRow myRow in myChangedRecords.Rows)
                     {
-                        myPurchaseOrderData.order_number = myPurchase.BusinessPartnerNumber;
+                        //***** Initialize error tracking fields and data package *****
+                        var myErrorText = "";
+                        string myProcessStatus = "A";
+                        PurchaseOrderData myPurchaseOrderData = new PurchaseOrderData();
+
+                        //***** Initalize fields and classes to be used to build data profile *****
+                        string myPurchaseID = myRow["QuantifyID"].ToString();
+                        Movement myPurchase = myPurchasesDictionary[myPurchaseID];
+                        Order myOrder = Order.GetOrder(myPurchase.OrderID);
+                        BusinessPartner myVendor = BusinessPartner.GetBusinessPartnerByNumber(myPurchase.MovementBusinessPartnerNumber);
+                        MovementProductList myPurchaseProducts = MovementProductList.GetMovementProductList(myPurchase.MovementID);
+
+                        //***** Build header data profile *****                   
+                        myPurchaseOrderData.transaction_number = myPurchase.MovementNumber;
+                        myPurchaseOrderData.vendor_number = myVendor.AccountingID;
+                        //TODO: ADH 9/25/2020 - Uncomment this line and delete following ~10 lines when Russ finishes converting MovementNumber numbering
+                        //myPurchaseOrderData.order_number = myPurchase.MovementNumber;
+
+                        //***** Use ReferenceNumber instead of BackOrderNumber for PO Number if we are doing direct purchase of consumables *****
+                        if (myPurchase.TypeOfMovement == MovementType.PurchaseConsumables)
+                        {
+                            myPurchaseOrderData.order_number = myPurchase.BusinessPartnerNumber;
+                        }
+                        else
+                        {
+                            myPurchaseOrderData.order_number = myPurchase.BackOrderNumber;
+                        }
+
+                        //***** Assign warehouse based on type of movement *****
+                        switch (myPurchase.TypeOfMovement)
+                        {
+                            //TODO: ADH 9/23/2020 - BUSINESS QUESTION: How do we handle Cancelled backorders?
+                            case MovementType.BackOrderCancelled:
+                                myPurchaseOrderData.to_warehouse = ((int)Warehouse.Available).ToString();
+                                break;
+                            case MovementType.BackOrderCompleted:
+                                myPurchaseOrderData.to_warehouse = ((int)Warehouse.Available).ToString();
+                                break;
+                            case MovementType.BackOrderCompletedWithBackOrder:
+                                myPurchaseOrderData.to_warehouse = ((int)Warehouse.Available).ToString();
+                                break;
+                            //TODO: ADH 9/23/2020 - BUSINESS QUESTION: How do we handle Cancelled backorders?
+                            case MovementType.NewBackOrderCancelled:
+                                myPurchaseOrderData.to_warehouse = ((int)Warehouse.New).ToString();
+                                break;
+                            case MovementType.NewBackOrderCompleted:
+                                myPurchaseOrderData.to_warehouse = ((int)Warehouse.New).ToString();
+                                break;
+                            case MovementType.NewBackOrderCompletedWithBackOrder:
+                                myPurchaseOrderData.to_warehouse = ((int)Warehouse.New).ToString();
+                                break;
+                            case MovementType.NewOrderCompletedWithBackOrder:
+                                myPurchaseOrderData.to_warehouse = ((int)Warehouse.New).ToString();
+                                break;
+                            case MovementType.NewOrderCompleted:
+                                myPurchaseOrderData.to_warehouse = ((int)Warehouse.New).ToString();
+                                break;
+                            case MovementType.OrderCompletedWithBackOrder:
+                                myPurchaseOrderData.to_warehouse = ((int)Warehouse.Available).ToString();
+                                break;
+                            case MovementType.OrderCompleted:
+                                myPurchaseOrderData.to_warehouse = ((int)Warehouse.Available).ToString();
+                                break;
+                            case MovementType.NewOrdered:
+                                myPurchaseOrderData.to_warehouse = ((int)Warehouse.New).ToString();
+                                break;
+                            case MovementType.Ordered:
+                                myPurchaseOrderData.to_warehouse = ((int)Warehouse.Available).ToString();
+                                break;
+                            case MovementType.PurchaseConsumables:
+                                myPurchaseOrderData.to_warehouse = ((int)Warehouse.Consumable).ToString();
+                                break;
+                        }
+                        myPurchaseOrderData.notes = myPurchase.Notes;
+
+                        //TODO: ADH 9/24/2020 - BUSINESS DECISION: Identify how we are going to handle this 'entered_by' functionality, since it only gets populated after receiving
+                        myPurchaseOrderData.entered_by = "QuantifyInt";
+                        //if (myPurchase.MovementNumber == "MOV-0000126")
+                        //{
+                        //    LogEntryList logEntryList = LogEntryList.GetLogEntryList(myPurchase.MovementID);
+                        //    myPurchaseOrderData.entered_by = logEntryList[0].UserName;
+                        //}
+
+                        //***** Build line item data profile *****
+                        foreach (MovementProductListItem purchaseProductListItem in myPurchaseProducts)
+                        {
+                            Product myProduct = Product.GetProduct(purchaseProductListItem.BaseProductID);
+                            PurchaseOrderLine myPurchaseOrderLine = new PurchaseOrderLine();
+                            myPurchaseOrderLine.part_number = purchaseProductListItem.PartNumber;
+                            myPurchaseOrderLine.quantity = purchaseProductListItem.Quantity.ToString();
+                            //***** Only set received quantity if we are doing direct purchase of consumables *****
+                            if (myPurchase.TypeOfMovement == MovementType.PurchaseConsumables)
+                            {
+                                myPurchaseOrderLine.received_quantity = purchaseProductListItem.Quantity.ToString();
+                            }
+                            else if (myPurchase.TypeOfMovement != MovementType.NewOrdered && myPurchase.TypeOfMovement != MovementType.Ordered)
+                            {
+                                myPurchaseOrderLine.received_quantity = purchaseProductListItem.ReceivedQuantity.ToString();
+                            }
+                            myPurchaseOrderLine.cost = purchaseProductListItem.PurchasePrice.ToString();
+                            myPurchaseOrderLine.unit_of_measure = myProduct.UnitOfMeasureName;
+                            myPurchaseOrderData.Lines.Add(myPurchaseOrderLine);
+                        }
+
+                        //***** Package as class, serialize to JSON and write to audit log table *****
+                        myPurchaseOrders.entity = "PurchaseOrder";
+                        myPurchaseOrders.PurchaseOrder = myPurchaseOrderData;
+                        string myJsonObject = JsonConvert.SerializeObject(myPurchaseOrders);
+
+                        //***** Create audit log datarow ******                 
+                        auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "PurchaseOrder", myPurchaseOrderData.transaction_number, myJsonObject, "", myProcessStatus, myErrorText);
+                    }
+
+                    //***** Create audit log record for Boomi to go pick up *****
+                    DataTable myReturnResult = myDAL.InsertAuditLog(auditLog, connectionString);
+
+                    string result = myReturnResult.Rows[0][0].ToString();
+                    if (result.ToLower() == "success")
+                    {
+                        success = true;
                     }
                     else
                     {
-                        myPurchaseOrderData.order_number = myPurchase.BackOrderNumber;
+                        success = false;
                     }
-
-                    //***** Assign warehouse based on type of movement *****
-                    switch (myPurchase.TypeOfMovement)
-                    {
-                        //TODO: ADH 9/23/2020 - BUSINESS QUESTION: How do we handle Cancelled backorders?
-                        case MovementType.BackOrderCancelled:
-                            myPurchaseOrderData.to_warehouse = ((int)Warehouse.Available).ToString();
-                            break;
-                        case MovementType.BackOrderCompleted:
-                            myPurchaseOrderData.to_warehouse = ((int)Warehouse.Available).ToString();
-                            break;
-                        case MovementType.BackOrderCompletedWithBackOrder:
-                            myPurchaseOrderData.to_warehouse = ((int)Warehouse.Available).ToString();
-                            break;
-                        //TODO: ADH 9/23/2020 - BUSINESS QUESTION: How do we handle Cancelled backorders?
-                        case MovementType.NewBackOrderCancelled:
-                            myPurchaseOrderData.to_warehouse = ((int)Warehouse.New).ToString();
-                            break;
-                        case MovementType.NewBackOrderCompleted:
-                            myPurchaseOrderData.to_warehouse = ((int)Warehouse.New).ToString();
-                            break;
-                        case MovementType.NewBackOrderCompletedWithBackOrder:
-                            myPurchaseOrderData.to_warehouse = ((int)Warehouse.New).ToString();
-                            break;
-                        case MovementType.NewOrderCompletedWithBackOrder:
-                            myPurchaseOrderData.to_warehouse = ((int)Warehouse.New).ToString();
-                            break;
-                        case MovementType.NewOrderCompleted:
-                            myPurchaseOrderData.to_warehouse = ((int)Warehouse.New).ToString();
-                            break;
-                        case MovementType.OrderCompletedWithBackOrder:
-                            myPurchaseOrderData.to_warehouse = ((int)Warehouse.Available).ToString();
-                            break;
-                        case MovementType.OrderCompleted:
-                            myPurchaseOrderData.to_warehouse = ((int)Warehouse.Available).ToString();
-                            break;
-                        case MovementType.NewOrdered:
-                            myPurchaseOrderData.to_warehouse = ((int)Warehouse.New).ToString();
-                            break;
-                        case MovementType.Ordered:
-                            myPurchaseOrderData.to_warehouse = ((int)Warehouse.Available).ToString();
-                            break;
-                        case MovementType.PurchaseConsumables:
-                            myPurchaseOrderData.to_warehouse = ((int)Warehouse.Consumable).ToString(); 
-                            break;
-                    }
-                    myPurchaseOrderData.notes = myPurchase.Notes;
-
-                    //TODO: ADH 9/24/2020 - BUSINESS DECISION: Identify how we are going to handle this 'entered_by' functionality, since it only gets populated after receiving
-                    myPurchaseOrderData.entered_by = "QuantifyInt";
-                    //if (myPurchase.MovementNumber == "MOV-0000126")
-                    //{
-                    //    LogEntryList logEntryList = LogEntryList.GetLogEntryList(myPurchase.MovementID);
-                    //    myPurchaseOrderData.entered_by = logEntryList[0].UserName;
-                    //}
-                    
-                    //***** Build line item data profile *****
-                    foreach (MovementProductListItem purchaseProductListItem in myPurchaseProducts)
-                    {
-                        Product myProduct = Product.GetProduct(purchaseProductListItem.BaseProductID);
-                        PurchaseOrderLine myPurchaseOrderLine = new PurchaseOrderLine();
-                        myPurchaseOrderLine.part_number = purchaseProductListItem.PartNumber;   
-                        myPurchaseOrderLine.quantity = purchaseProductListItem.Quantity.ToString();
-                        //***** Only set received quantity if we are doing direct purchase of consumables *****
-                        if (myPurchase.TypeOfMovement == MovementType.PurchaseConsumables)
-                        {
-                            myPurchaseOrderLine.received_quantity = purchaseProductListItem.Quantity.ToString();
-                        }
-                        else if (myPurchase.TypeOfMovement != MovementType.NewOrdered && myPurchase.TypeOfMovement != MovementType.Ordered)
-                        {
-                            myPurchaseOrderLine.received_quantity = purchaseProductListItem.ReceivedQuantity.ToString();
-                        }
-                        myPurchaseOrderLine.cost = purchaseProductListItem.PurchasePrice.ToString();
-                        myPurchaseOrderLine.unit_of_measure = myProduct.UnitOfMeasureName;
-                        myPurchaseOrderData.Lines.Add(myPurchaseOrderLine);
-                    }
-
-                    //***** Package as class, serialize to JSON and write to audit log table *****
-                    myPurchaseOrders.entity = "PurchaseOrder";
-                    myPurchaseOrders.PurchaseOrder = myPurchaseOrderData;
-                    string myJsonObject = JsonConvert.SerializeObject(myPurchaseOrders);
-
-                    //***** Create audit log datarow ******                 
-                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "PurchaseOrder", myPurchaseOrderData.transaction_number, myJsonObject, "", myProcessStatus, myErrorText);
-                }
-
-                //***** Create audit log record for Boomi to go pick up *****
-                DataTable myReturnResult = myDAL.InsertAuditLog(auditLog, connectionString);
-
-                string result = myReturnResult.Rows[0][0].ToString();
-                if (result.ToLower() == "success")
-                {
-                    success = true;
-                }
-                else
-                {
-                    success = false;
                 }
             }
             return success;
