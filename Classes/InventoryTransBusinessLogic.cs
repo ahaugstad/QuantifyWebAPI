@@ -156,10 +156,7 @@ namespace QuantifyWebAPI.Controllers
                                 Product myProduct = Product.GetProduct(inventoryTransProductListItem.BaseProductID);
                                 InventoryTransLine myTransLine = new InventoryTransLine();
                                 myTransLine.part_number = inventoryTransProductListItem.PartNumber;
-                                //myTransLine.serial_number = myProduct.SerialNumber;
                                 myTransLine.quantity = inventoryTransProductListItem.Quantity.ToString();
-                                myTransLine.received_quantity = inventoryTransProductListItem.ReceivedQuantity.ToString();
-                                myTransLine.comment = inventoryTransProductListItem.Comment;
                                 myInventoryTransData.Lines.Add(myTransLine);
                             }
                             //***** Package as class, serialize to JSON and write to audit log table *****
@@ -169,6 +166,9 @@ namespace QuantifyWebAPI.Controllers
 
                             //***** Create audit log datarow ******                 
                             auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "InventoryTrans", myInventoryTransData.inventory_trans_id, myJsonObject, "", myProcessStatus, myErrorText);
+
+                            //***** Create audit log record for Boomi to go pick up *****
+                            DataTable myReturnResult = myDAL.InsertAuditLog(auditLog, connectionString);
                         }
 
                         //***** Populate Adjustment Dictionaries to loop through later *****
@@ -178,7 +178,8 @@ namespace QuantifyWebAPI.Controllers
                             Guid myAdjustmentID = Guid.Parse(myRow["QuantifyID"].ToString());
                             StockedProductAdjustment myAdjustment = myAdjustmentsDictionary[myAdjustmentID];
 
-                            if (myAdjustment.QtyNewOriginal != myAdjustment.QuantityNew)
+                            //if (myAdjustment.QtyNewOriginal != myAdjustment.QuantityNew)
+                            if (myAdjustment.QuantityNew != null)
                             {
                                 //***** Build Dictionary *****
                                 if (!myNewAdjustmentsDictionary.ContainsKey(myAdjustmentID))
@@ -186,7 +187,8 @@ namespace QuantifyWebAPI.Controllers
                                     myNewAdjustmentsDictionary.Add(myAdjustmentID, myAdjustment);
                                 }
                             }
-                            else if (myAdjustment.QtyForRentOriginal != myAdjustment.QuantityForRent)
+                            //else if (myAdjustment.QtyForRentOriginal != myAdjustment.QuantityForRent)
+                            if (myAdjustment.QuantityForRent != null)
                             {
                                 //***** Build Dictionary *****
                                 if (!myAvailableAdjustmentsDictionary.ContainsKey(myAdjustmentID))
@@ -207,56 +209,67 @@ namespace QuantifyWebAPI.Controllers
 
         public void CreateAdjustmentTransaction(string newOrAvailable, InventoryTransRootClass myInventoryTransactions, Dictionary<Guid, StockedProductAdjustment> myAdjustmentsDictionary, string connectionString)
         {
-            //TODO: ADH 9/29/2020 - Need to verify the below does what is intended, and if this is best way to evaluate per business
-            //***** Initialize error tracking fields and data package *****
-            var myErrorText = "";
-            string myProcessStatus = "A";
-            InventoryTransData myInventoryTransData = new InventoryTransData();
+            //***** Skip if we did not get any adjustments to integrate *****
+            if (myAdjustmentsDictionary.Count > 0)
+            {
+                //TODO: ADH 9/29/2020 - Need to verify the below does what is intended, and if this is best way to evaluate per business
+                //***** Initialize error tracking fields and data package *****
+                var myErrorText = "";
+                string myProcessStatus = "A";
+                var myAdjustmentID = DateTime.Now.ToString() + " | " + newOrAvailable;
+                InventoryTransData myInventoryTransData = new InventoryTransData();
 
-            //***** Build header of Available Adjustments data package
-            myInventoryTransData.transaction_type = "A";  // A = Adjustment in WebApps
-            if (newOrAvailable == "New")
-            {
-                myInventoryTransData.to_warehouse = ((int)Warehouse.New).ToString();
-                myInventoryTransData.from_warehouse = ((int)Warehouse.New).ToString();
-            }
-            else if (newOrAvailable == "Available")
-            {
-                myInventoryTransData.to_warehouse = ((int)Warehouse.Available).ToString();
-                myInventoryTransData.from_warehouse = ((int)Warehouse.Available).ToString();
-            }
-            
-            foreach (StockedProductAdjustment myAdjustment in myAdjustmentsDictionary.Values)
-            {
-                //***** Build lines of Available Adjustments data package *****
-                InventoryTransLine myTransLine = new InventoryTransLine();
-                myTransLine.part_number = myAdjustment.PartNumber;
-                myTransLine.comment = myAdjustment.Comment;
+                //***** Build header of Available Adjustments data package
+                myInventoryTransData.transaction_type = "A";  // A = Adjustment in WebApps
                 if (newOrAvailable == "New")
                 {
-                    myTransLine.quantity = myAdjustment.QtyNewOriginal.ToString();
-                    myTransLine.received_quantity = myAdjustment.QuantityNew.ToString();
+                    myInventoryTransData.to_warehouse = ((int)Warehouse.New).ToString();
+                    myInventoryTransData.from_warehouse = ((int)Warehouse.New).ToString();
+                    
                 }
                 else if (newOrAvailable == "Available")
                 {
-                    myTransLine.quantity = myAdjustment.QtyNewOriginal.ToString();
-                    myTransLine.received_quantity = myAdjustment.QuantityNew.ToString();
+                    myInventoryTransData.to_warehouse = ((int)Warehouse.Available).ToString();
+                    myInventoryTransData.from_warehouse = ((int)Warehouse.Available).ToString();
                 }
-                myInventoryTransData.Lines.Add(myTransLine);
+
+                foreach (StockedProductAdjustment myAdjustment in myAdjustmentsDictionary.Values)
+                {
+                    //***** Build lines of Available Adjustments data package *****
+                    InventoryTransLine myTransLine = new InventoryTransLine();
+                    myTransLine.part_number = myAdjustment.PartNumber;
+                    if (newOrAvailable == "New")
+                    {
+                        //TODO: ADH 9/30/2020 - Identify which of these approaches is appropriate
+                        myTransLine.quantity = "3";
+                        //myTransLine.quantity = myAdjustment.ChangeQuantity.ToString();
+                        //var qtyChanged = myAdjustment.QuantityNew - myAdjustment.QtyNewOriginal;
+                        //myTransLine.quantity = qtyChanged.ToString();
+                    }
+                    else if (newOrAvailable == "Available")
+                    {
+                        //TODO: ADH 9/30/2020 - Identify which of these approaches is appropriate
+                        myTransLine.quantity = "-3";
+                        //myTransLine.quantity = myAdjustment.ChangeQuantity.ToString();
+                        //var qtyChanged = myAdjustment.QuantityForRent - myAdjustment.QtyForRentOriginal;
+                        //myTransLine.quantity = qtyChanged.ToString();
+                    }
+                    myInventoryTransData.Lines.Add(myTransLine);
+                }
+
+                //***** Package as class, serialize to JSON and write to audit log table *****
+                myInventoryTransactions.entity = "InventoryTrans";
+                myInventoryTransactions.InventoryTrans = myInventoryTransData;
+                string myJsonObject = JsonConvert.SerializeObject(myInventoryTransactions);
+
+                //***** Create audit log datarow ******   
+                DataTable auditLog = MySqlHelper.GetAuditLogTableStructure();
+                auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "InventoryTrans", myAdjustmentID, myJsonObject, "", myProcessStatus, myErrorText);
+
+                //***** Create audit log record for Boomi to go pick up *****
+                DAL myDAL = new DAL();
+                DataTable myReturnResult = myDAL.InsertAuditLog(auditLog, connectionString);
             }
-
-            //***** Package as class, serialize to JSON and write to audit log table *****
-            myInventoryTransactions.entity = "InventoryTrans";
-            myInventoryTransactions.InventoryTrans = myInventoryTransData;
-            string myJsonObject = JsonConvert.SerializeObject(myInventoryTransactions);
-
-            //***** Create audit log datarow ******   
-            DataTable auditLog = MySqlHelper.GetAuditLogTableStructure();
-            auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "InventoryTrans", myInventoryTransData.inventory_trans_id, myJsonObject, "", myProcessStatus, myErrorText);
-
-            //***** Create audit log record for Boomi to go pick up *****
-            DAL myDAL = new DAL();
-            DataTable myReturnResult = myDAL.InsertAuditLog(auditLog, connectionString);
         }
     }
 }

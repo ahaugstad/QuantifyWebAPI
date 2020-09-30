@@ -40,8 +40,6 @@ namespace QuantifyWebAPI.Classes
     {
         public string part_number { get; set; }
         public string quantity { get; set; }
-        public string received_quantity { get; set; }
-        public string comment { get; set; }
     }
     
 }

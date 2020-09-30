@@ -103,7 +103,7 @@ namespace QuantifyWebAPI.Controllers
 
             //***** If in Initialization Mode bypass Data integrations other than Version Controll *****
             if (initializationMode != "1")
-            {
+            { 
 
                 if (myChangedRecords.Rows.Count > 0)
                 {
@@ -129,18 +129,7 @@ namespace QuantifyWebAPI.Controllers
                         //***** Build header data profile *****                   
                         myPurchaseOrderData.transaction_number = myPurchase.MovementNumber;
                         myPurchaseOrderData.vendor_number = myVendor.AccountingID;
-                        //TODO: ADH 9/25/2020 - Uncomment this line and delete following ~10 lines when Russ finishes converting MovementNumber numbering
-                        //myPurchaseOrderData.order_number = myPurchase.MovementNumber;
-
-                        //***** Use ReferenceNumber instead of BackOrderNumber for PO Number if we are doing direct purchase of consumables *****
-                        if (myPurchase.TypeOfMovement == MovementType.PurchaseConsumables)
-                        {
-                            myPurchaseOrderData.order_number = myPurchase.BusinessPartnerNumber;
-                        }
-                        else
-                        {
-                            myPurchaseOrderData.order_number = myPurchase.BackOrderNumber;
-                        }
+                        myPurchaseOrderData.order_number = myPurchase.MovementNumber;
 
                     //***** Assign warehouse based on type of movement *****
                     switch (myPurchase.TypeOfMovement)

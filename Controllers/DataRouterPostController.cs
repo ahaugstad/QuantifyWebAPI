@@ -57,32 +57,32 @@ namespace QuantifyWebAPI.Controllers
         [HttpGet]
         public void PingInitialization()
         {
-            //***** Run Jobs *****
-            JobBusinessLogic myJobResponse = new JobBusinessLogic(myQuantifyCredentials, InitializationMode);
-            myJobResponse.GetIDsToProcess(StrVersionDBConn);
+            ////***** Run Jobs *****
+            //JobBusinessLogic myJobResponse = new JobBusinessLogic(myQuantifyCredentials, InitializationMode);
+            //myJobResponse.GetIDsToProcess(StrVersionDBConn);
 
-            //***** Run Products *****
-            ProductBusinessLogic myProductResponse = new ProductBusinessLogic(myQuantifyCredentials, InitializationMode);
-            myProductResponse.GetIDsToProcess(StrVersionDBConn);
+            ////***** Run Products *****
+            //ProductBusinessLogic myProductResponse = new ProductBusinessLogic(myQuantifyCredentials, InitializationMode);
+            //myProductResponse.GetIDsToProcess(StrVersionDBConn);
 
             //*****Run Purchase Order Transactions*****
             PurchaseOrderBusinessLogic myPurchaseOrderResponse = new PurchaseOrderBusinessLogic(myQuantifyCredentials, InitializationMode);
             myPurchaseOrderResponse.GetIDsToProcess(StrVersionDBConn);
 
-            //*****Run Sales Order Transactions*****
-            SalesOrderBusinessLogic mySalesOrderResponse = new SalesOrderBusinessLogic(myQuantifyCredentials, InitializationMode);
-            mySalesOrderResponse.GetIDsToProcess(StrVersionDBConn);
+            ////*****Run Sales Order Transactions*****
+            //SalesOrderBusinessLogic mySalesOrderResponse = new SalesOrderBusinessLogic(myQuantifyCredentials, InitializationMode);
+            //mySalesOrderResponse.GetIDsToProcess(StrVersionDBConn);
 
-            //*****Run Inventory Transactions *****
-            InventoryTransBusinessLogic myInventoryTransResponse = new InventoryTransBusinessLogic(myQuantifyCredentials, InitializationMode);
-            myInventoryTransResponse.GetIDsToProcess(StrVersionDBConn);
+            ////*****Run Inventory Transactions *****
+            //InventoryTransBusinessLogic myInventoryTransResponse = new InventoryTransBusinessLogic(myQuantifyCredentials, InitializationMode);
+            //myInventoryTransResponse.GetIDsToProcess(StrVersionDBConn);
 
             ////***** Run Invoice Transactions *****
             //InvoiceBusinessLogic myInvoiceResponse = new InvoiceBusinessLogic(myQuantifyCredentials, InitializationMode);
             //myInvoiceResponse.GetIDsToProcess(StrVersionDBConn);
 
             //***** Call Boomi to kick off processing *****
-            BoomiHelper.PostBoomiAPI();
+            //BoomiHelper.PostBoomiAPI();
         }
 
         [HttpGet]
