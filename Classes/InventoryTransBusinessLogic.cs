@@ -94,7 +94,7 @@ namespace QuantifyWebAPI.Controllers
             foreach (StockedProductAdjustment myAdjustment in all_adjustments)
             {
                 Guid myAdjustmentID = myAdjustment.StockedProductID;
-
+                
                 if (myVersionsDictionary.ContainsKey(myAdjustmentID))
                 {
                     string myAdjustmentNumber = myAdjustmentID.ToString();
@@ -200,14 +200,15 @@ namespace QuantifyWebAPI.Controllers
                     }
 
                     //***** Create both New and Available Adjustments consolidated transactions *****
-                    CreateAdjustmentTransaction("New", myInventoryTransactions, myNewAdjustmentsDictionary, connectionString);
-                    CreateAdjustmentTransaction("Available", myInventoryTransactions, myAvailableAdjustmentsDictionary, connectionString);
+                    LogEntryList myStockedProductLogs = LogEntryList.GetLogEntryList(LogEntry.ChildTypes.StockedProduct);
+                    CreateAdjustmentTransaction("New", myInventoryTransactions, myNewAdjustmentsDictionary, connectionString, myStockedProductLogs);
+                    CreateAdjustmentTransaction("Available", myInventoryTransactions, myAvailableAdjustmentsDictionary, connectionString, myStockedProductLogs);
                 }
             }
             return success;
         }
 
-        public void CreateAdjustmentTransaction(string newOrAvailable, InventoryTransRootClass myInventoryTransactions, Dictionary<Guid, StockedProductAdjustment> myAdjustmentsDictionary, string connectionString)
+        public void CreateAdjustmentTransaction(string newOrAvailable, InventoryTransRootClass myInventoryTransactions, Dictionary<Guid, StockedProductAdjustment> myAdjustmentsDictionary, string connectionString, LogEntryList myStockedProductLogs)
         {
             //***** Skip if we did not get any adjustments to integrate *****
             if (myAdjustmentsDictionary.Count > 0)
@@ -224,8 +225,7 @@ namespace QuantifyWebAPI.Controllers
                 if (newOrAvailable == "New")
                 {
                     myInventoryTransData.to_warehouse = ((int)Warehouse.New).ToString();
-                    myInventoryTransData.from_warehouse = ((int)Warehouse.New).ToString();
-                    
+                    myInventoryTransData.from_warehouse = ((int)Warehouse.New).ToString();   
                 }
                 else if (newOrAvailable == "Available")
                 {
@@ -235,24 +235,40 @@ namespace QuantifyWebAPI.Controllers
 
                 foreach (StockedProductAdjustment myAdjustment in myAdjustmentsDictionary.Values)
                 {
+                    //***** Get list of log entries for adjustment's stocking location (this is needed to obtain previous quantity) *****
+                    
+                    string[] separatorString = { " - " };
+
                     //***** Build lines of Available Adjustments data package *****
                     InventoryTransLine myTransLine = new InventoryTransLine();
                     myTransLine.part_number = myAdjustment.PartNumber;
                     if (newOrAvailable == "New")
                     {
-                        //TODO: ADH 9/30/2020 - Identify which of these approaches is appropriate
-                        myTransLine.quantity = "3";
-                        //myTransLine.quantity = myAdjustment.ChangeQuantity.ToString();
-                        //var qtyChanged = myAdjustment.QuantityNew - myAdjustment.QtyNewOriginal;
-                        //myTransLine.quantity = qtyChanged.ToString();
+                        //TODO: ADH 10/1/2020 - Identify if First or Last is appropriate here, and convert 'item.ParentName' to 'item.Product-ID' when available
+                        //***** Get most recent log entry for StockedProduct record for "New Part Changed" log type and create TransLine if exists*****
+                        if (myStockedProductLogs.Any(item => item.Name == "New Part Changed" && item.LogDate > DateTime.Now.AddDays(-1) && item.ChildDescription.Split(separatorString, StringSplitOptions.None)[0] == myAdjustment.PartNumber))
+                        {
+                            var myAdjustmentLog = myStockedProductLogs.First(item => item.Name == "New Part Changed" && item.LogDate > DateTime.Now.AddDays(-1) && item.ChildDescription.Split(separatorString, StringSplitOptions.None)[0] == myAdjustment.PartNumber);
+                            myTransLine.quantity = calculateChangedQuantity(myAdjustmentLog).ToString();
+                        }
+                        else
+                        {
+                            continue;
+                        }
                     }
                     else if (newOrAvailable == "Available")
                     {
-                        //TODO: ADH 9/30/2020 - Identify which of these approaches is appropriate
-                        myTransLine.quantity = "-3";
-                        //myTransLine.quantity = myAdjustment.ChangeQuantity.ToString();
-                        //var qtyChanged = myAdjustment.QuantityForRent - myAdjustment.QtyForRentOriginal;
-                        //myTransLine.quantity = qtyChanged.ToString();
+                        //TODO: ADH 10/1/2020 - Identify if First or Last is appropriate here, and convert 'item.ParentName' to 'item.Product-ID' when available
+                        //***** Get most recent log entry for StockedProduct record for "Available Part Changed" log type and create TransLine if exists *****
+                        if (myStockedProductLogs.Any(item => item.Name == "Available Part Changed" && item.LogDate > DateTime.Now.AddDays(-1) && item.ChildDescription.Split(separatorString, StringSplitOptions.None)[0] == myAdjustment.PartNumber))
+                        {
+                            var myAdjustmentLog = myStockedProductLogs.Last(item => item.Name == "Available Part Changed" && item.LogDate > DateTime.Now.AddDays(-1) && item.ChildDescription.Split(separatorString, StringSplitOptions.None)[0] == myAdjustment.PartNumber);
+                            myTransLine.quantity = calculateChangedQuantity(myAdjustmentLog).ToString();
+                        }
+                        else
+                        {
+                            continue;
+                        }
                     }
                     myInventoryTransData.Lines.Add(myTransLine);
                 }
@@ -270,6 +286,31 @@ namespace QuantifyWebAPI.Controllers
                 DAL myDAL = new DAL();
                 DataTable myReturnResult = myDAL.InsertAuditLog(auditLog, connectionString);
             }
+        }
+
+        public double calculateChangedQuantity(LogEntryListItem myAdjustmentLog)
+        {
+            //***** Evaluate values and ensure we are converting blanks and nulls to 0s *****
+            double myNewValue;
+            double myOldValue;
+            if (myAdjustmentLog.NewValue == "" || myAdjustmentLog.NewValue == null)
+            {
+                myNewValue = 0;
+            }
+            else
+            {
+                myNewValue = Double.Parse(myAdjustmentLog.NewValue);
+            }
+            if (myAdjustmentLog.OldValue == "" || myAdjustmentLog.OldValue == null)
+            {
+                myOldValue = 0;
+            }
+            else
+            {
+                myOldValue = Double.Parse(myAdjustmentLog.OldValue);
+            }
+            var changedQuantity = myNewValue - myOldValue;
+            return changedQuantity;
         }
     }
 }

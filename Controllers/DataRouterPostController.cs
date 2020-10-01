@@ -65,9 +65,9 @@ namespace QuantifyWebAPI.Controllers
             //ProductBusinessLogic myProductResponse = new ProductBusinessLogic(myQuantifyCredentials, InitializationMode);
             //myProductResponse.GetIDsToProcess(StrVersionDBConn);
 
-            //*****Run Purchase Order Transactions*****
-            PurchaseOrderBusinessLogic myPurchaseOrderResponse = new PurchaseOrderBusinessLogic(myQuantifyCredentials, InitializationMode);
-            myPurchaseOrderResponse.GetIDsToProcess(StrVersionDBConn);
+            ////*****Run Purchase Order Transactions*****
+            //PurchaseOrderBusinessLogic myPurchaseOrderResponse = new PurchaseOrderBusinessLogic(myQuantifyCredentials, InitializationMode);
+            //myPurchaseOrderResponse.GetIDsToProcess(StrVersionDBConn);
 
             ////*****Run Sales Order Transactions*****
             //SalesOrderBusinessLogic mySalesOrderResponse = new SalesOrderBusinessLogic(myQuantifyCredentials, InitializationMode);
@@ -77,9 +77,9 @@ namespace QuantifyWebAPI.Controllers
             //InventoryTransBusinessLogic myInventoryTransResponse = new InventoryTransBusinessLogic(myQuantifyCredentials, InitializationMode);
             //myInventoryTransResponse.GetIDsToProcess(StrVersionDBConn);
 
-            ////***** Run Invoice Transactions *****
-            //InvoiceBusinessLogic myInvoiceResponse = new InvoiceBusinessLogic(myQuantifyCredentials, InitializationMode);
-            //myInvoiceResponse.GetIDsToProcess(StrVersionDBConn);
+            //***** Run Invoice Transactions *****
+            InvoiceBusinessLogic myInvoiceResponse = new InvoiceBusinessLogic(myQuantifyCredentials, InitializationMode);
+            myInvoiceResponse.GetIDsToProcess(StrVersionDBConn);
 
             //***** Call Boomi to kick off processing *****
             //BoomiHelper.PostBoomiAPI();
