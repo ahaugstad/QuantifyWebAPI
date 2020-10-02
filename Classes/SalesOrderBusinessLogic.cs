@@ -78,8 +78,7 @@ namespace QuantifyWebAPI.Controllers
                 if (
                     mySale.TypeOfMovement == MovementType.SellNew ||
                     mySale.TypeOfMovement == MovementType.SellForRent ||
-                    mySale.TypeOfMovement == MovementType.SellConsumables ||
-                    mySale.TypeOfMovement == MovementType.SellDamaged
+                    mySale.TypeOfMovement == MovementType.SellConsumables
                     )
                 {
                     string mySaleNumber = mySale.MovementNumber;

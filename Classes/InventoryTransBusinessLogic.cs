@@ -236,7 +236,6 @@ namespace QuantifyWebAPI.Controllers
                 foreach (StockedProductAdjustment myAdjustment in myAdjustmentsDictionary.Values)
                 {
                     //***** Get list of log entries for adjustment's stocking location (this is needed to obtain previous quantity) *****
-                    
                     string[] separatorString = { " - " };
 
                     //***** Build lines of Available Adjustments data package *****
