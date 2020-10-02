@@ -34,11 +34,11 @@ namespace QuantifyWebAPI.Classes
 
         public string invoice_id { get; set; }
         public string job_number { get; set; }
-        public string customer_number { get; set; }
-        public string branch_office { get; set; }
         public string invoice_date { get; set; }
         public string rent_subtotal { get; set; }
         public string rent_taxable { get; set; }
+        public string product_subtotal { get; set; }
+        public string product_taxable { get; set; }
         public string sales_tax_code { get; set; }
         public string invoice_total { get; set; }
         public List<InvoiceTransLine> Lines { get; set; }

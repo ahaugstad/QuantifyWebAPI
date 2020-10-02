@@ -108,14 +108,14 @@ namespace QuantifyWebAPI.Controllers
 
                         //***** Build header data profile *****
                         myInvoiceData.invoice_id = myInvoiceID;
-                        myInvoiceData.customer_number = myInvoice.Customer.PartnerNumber;
                         myInvoiceData.job_number = myInvoice.JobSite.Number;
-                        myInvoiceData.branch_office = myInvoice.JobSite.ParentBranchOrLaydown.Number;
                         myInvoiceData.invoice_date = myInvoice.InvoiceDateTime.ToShortDateString();
 
                         //***** Build Invoice totals and footer data profile *****
                         myInvoiceData.rent_subtotal = myInvoice.TotalRent.ToString();
                         myInvoiceData.rent_taxable = myInvoice.RentIsTaxableText;
+                        myInvoiceData.product_subtotal = myInvoice.TotalProductCharge.ToString();
+                        myInvoiceData.product_taxable = myInvoice.ConsumablesAreTaxableText;
                         myInvoiceData.sales_tax_code = myInvoice.JobTax1.ToString();
                         myInvoiceData.invoice_total = myInvoice.TotalInvoice.ToString();
 
@@ -129,22 +129,8 @@ namespace QuantifyWebAPI.Controllers
                             myInvoiceTransLine.description = myInvoiceUnitPrice.InvoiceDescription;
                             //TODO: ADH 10/1/2020 - Verify which of these lines we should use
                             myInvoiceTransLine.cost_code = myInvoiceUnitPrice.CostCode;
-                            myInvoiceTransLine.cost_code = myInvoiceUnitPrice.RevenueCode;
-                            myInvoiceData.Lines.Add(myInvoiceTransLine); 
-                        }
-
-                        //***** Build product charge line item data profile? *****
-                        foreach (InvoiceProductCharge myInvoiceProductCharge in myInvoice.InvoiceProductCharges)
-                        {
-                            //InvoiceTransLine myInvoiceTransLine = new InvoiceTransLine();
-                            ////TODO: ADH 10/1/2020 - Verify which of these lines we should use
-                            //myInvoiceTransLine.amount = myInvoiceUnitPrice.UnitPriceTotal.ToString();
-                            ////myInvoiceTransLine.amount = (Convert.ToDouble(myInvoiceUnitPrice.InvoicePricePerUnit) * myInvoiceUnitPrice.NumberOfUnits).ToString();
-                            //myInvoiceTransLine.description = myInvoiceUnitPrice.InvoiceDescription;
-                            ////TODO: ADH 10/1/2020 - Verify which of these lines we should use
-                            //myInvoiceTransLine.cost_code = myInvoiceUnitPrice.CostCode;
                             //myInvoiceTransLine.cost_code = myInvoiceUnitPrice.RevenueCode;
-                            //myInvoiceData.Lines.Add(myInvoiceTransLine);
+                            myInvoiceData.Lines.Add(myInvoiceTransLine); 
                         }
 
                         //***** Package as class, serialize to JSON and write to audit log table *****

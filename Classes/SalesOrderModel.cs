@@ -34,12 +34,9 @@ namespace QuantifyWebAPI.Classes
 
         public string transaction_number { get; set; }
         public string job_number { get; set; }
-        public string customer_number { get; set; }
-        public string reference_number { get; set; }
-        public string branch_office { get; set; }
         public string from_warehouse { get; set; }
-        public string notes { get; set; }
         public string transaction_date { get; set; }
+        public string order_date { get; set; }
         public List<SalesOrderLine> Lines { get; set; }
     }
 
@@ -48,6 +45,5 @@ namespace QuantifyWebAPI.Classes
         public string part_number { get; set; }
         public string quantity { get; set; }
         public string price_ea { get; set; }
-        public string unit_of_measure { get; set; }
     }
 }

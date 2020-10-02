@@ -148,14 +148,12 @@ namespace QuantifyWebAPI.Controllers
 
                             //***** Build header data profile *****
                             mySalesOrderData.transaction_number = mySale.MovementNumber;
-                            mySalesOrderData.customer_number = myCustomer.AccountingID;
-                            mySalesOrderData.reference_number = mySale.BusinessPartnerNumber;
+                            mySalesOrderData.order_date = mySale.MovementDate;
 
                             //***** Evaluate jobsite and confirm one has been selected. If one hasn't, log it as error *****
                             if (mySale.JobSite != null)
                             {
                                 mySalesOrderData.job_number = mySale.JobSite.Number;
-                                mySalesOrderData.branch_office = mySale.JobSite.ParentBranchOrLaydown.Number;
                             }
                             else
                             {
@@ -185,7 +183,6 @@ namespace QuantifyWebAPI.Controllers
                                 mySalesOrderLine.part_number = saleProductListItem.PartNumber;
                                 mySalesOrderLine.quantity = saleProductListItem.Quantity.ToString();
                                 mySalesOrderLine.price_ea = saleProductListItem.SellPrice.ToString();
-                                mySalesOrderLine.unit_of_measure = myProduct.UnitOfMeasureName;
                                 mySalesOrderData.Lines.Add(mySalesOrderLine);
                             }
                         }
@@ -201,11 +198,8 @@ namespace QuantifyWebAPI.Controllers
 
                             //***** Build header data profile *****
                             mySalesOrderData.transaction_number = myReturn.ShipmentNumber;
-                            mySalesOrderData.customer_number = myCustomer.PartnerNumber;
-                            //mySalesOrderData.reference_number = mySale.BusinessPartnerNumber;
-                            mySalesOrderData.branch_office = myReturn.FromStockingLocation.ParentBranchOrLaydown.Number;
                             mySalesOrderData.job_number = myReturn.FromStockingLocation.Number;
-                            //TODO: ADH 9/23/20 - Identify if this is appropriate warehouse: seems like only option is to return available (since at that point it's used?)
+                            //TODO: ADH 9/23/20 - BUSINESS QUESTION: Is this appropriate warehouse? Seems like only option is to return available (since at that point it's used?)
                             mySalesOrderData.from_warehouse = ((int)Warehouse.Available).ToString();
 
                             //***** Build line item data profile *****
@@ -217,7 +211,6 @@ namespace QuantifyWebAPI.Controllers
                                 mySalesOrderLine.quantity = returnProductListItem.OutOfServiceQuantity.ToString();
                                 //TODO: ADH 9/23/20 - Confirm this is actually the sell price
                                 mySalesOrderLine.price_ea = returnProductListItem.Sell.ToString();
-                                mySalesOrderLine.unit_of_measure = myProduct.UnitOfMeasureName;
                                 mySalesOrderData.Lines.Add(mySalesOrderLine);
                             }
                         }
