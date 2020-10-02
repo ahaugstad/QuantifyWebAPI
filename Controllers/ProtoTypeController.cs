@@ -54,8 +54,6 @@ namespace QuantifyWebAPI.Controllers
 
             try
             {
-                int myint;
-                myint = 1;
                 throw new System.ArgumentException("Parameter cannot be null", "original");
 
             }
@@ -127,7 +125,6 @@ namespace QuantifyWebAPI.Controllers
             // Initialization  
             HttpResponseMessage response = null;
             string myResponse = "";
-            string JSonIn = "";
             try
             {
                 //***** Deserialize JObject to create class we can work with ******
