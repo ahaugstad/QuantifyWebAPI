@@ -105,7 +105,6 @@ namespace QuantifyWebAPI.Controllers
                         string myInvoiceID = myRow["QuantifyID"].ToString();
                         InvoiceListItem myInvoiceListItem = myInvoicesDictionary[myInvoiceID];
                         Invoice myInvoice = Invoice.GetInvoice(myInvoiceListItem.InvoiceID, true);
-                        InvoiceProductChargeCollection myInvoiceProductCharges = InvoiceProductChargeCollection.GetInvoiceProductChargeCollection(myInvoice.InvoiceID);
 
                         //***** Build header data profile *****
                         myInvoiceData.invoice_id = myInvoiceID;
@@ -113,32 +112,39 @@ namespace QuantifyWebAPI.Controllers
                         myInvoiceData.job_number = myInvoice.JobSite.Number;
                         myInvoiceData.branch_office = myInvoice.JobSite.ParentBranchOrLaydown.Number;
                         myInvoiceData.invoice_date = myInvoice.InvoiceDateTime.ToShortDateString();
+
+                        //***** Build Invoice totals and footer data profile *****
+                        myInvoiceData.rent_subtotal = myInvoice.TotalRent.ToString();
+                        myInvoiceData.rent_taxable = myInvoice.RentIsTaxableText;
+                        myInvoiceData.sales_tax_code = myInvoice.JobTax1.ToString();
                         myInvoiceData.invoice_total = myInvoice.TotalInvoice.ToString();
 
-                        //***** Assign warehouse based on type of movement *****
-                        //switch (myInvoice.TypeOfMovement)
-                        //{
-                        //    case MovementType.SellNew:
-                        //        myInvoiceData.from_warehouse = ((int)Warehouse.New).ToString();
-                        //        break;
-                        //    case MovementType.SellForRent:
-                        //        myInvoiceData.from_warehouse = ((int)Warehouse.Available).ToString();
-                        //        break;
-                        //    case MovementType.SellConsumables:
-                        //        myInvoiceData.from_warehouse = ((int)Warehouse.Consumable).ToString(); 
-                        //        break;
-                        //}
-
-                        //***** Build line item data profile *****
-                        foreach (InvoiceProductCharge invoiceProductCharge in myInvoiceProductCharges)
+                        //***** Build non-rental line item data profile *****
+                        foreach (InvoiceUnitPrice myInvoiceUnitPrice in myInvoice.InvoiceUnitPrices)
                         {
-                            //Product myProduct = Product.GetProduct(InvoiceProductListItem.BaseProductID);
-                            //InvoiceLine myInvoiceLine = new InvoiceLine();
-                            //myInvoiceLine.part_number = InvoiceProductListItem.PartNumber;
-                            //myInvoiceLine.quantity = InvoiceProductListItem.Quantity.ToString();
-                            //myInvoiceLine.price_ea = InvoiceProductListItem.SellPrice.ToString();
-                            //myInvoiceLine.unit_of_measure = myProduct.UnitOfMeasureName;
-                            //myInvoiceData.Lines.Add(myInvoiceLine);
+                            InvoiceTransLine myInvoiceTransLine = new InvoiceTransLine();
+                            //TODO: ADH 10/1/2020 - Verify which of these lines we should use
+                            myInvoiceTransLine.amount = myInvoiceUnitPrice.UnitPriceTotal.ToString();
+                            //myInvoiceTransLine.amount = (Convert.ToDouble(myInvoiceUnitPrice.InvoicePricePerUnit) * myInvoiceUnitPrice.NumberOfUnits).ToString();
+                            myInvoiceTransLine.description = myInvoiceUnitPrice.InvoiceDescription;
+                            //TODO: ADH 10/1/2020 - Verify which of these lines we should use
+                            myInvoiceTransLine.cost_code = myInvoiceUnitPrice.CostCode;
+                            myInvoiceTransLine.cost_code = myInvoiceUnitPrice.RevenueCode;
+                            myInvoiceData.Lines.Add(myInvoiceTransLine); 
+                        }
+
+                        //***** Build product charge line item data profile? *****
+                        foreach (InvoiceProductCharge myInvoiceProductCharge in myInvoice.InvoiceProductCharges)
+                        {
+                            //InvoiceTransLine myInvoiceTransLine = new InvoiceTransLine();
+                            ////TODO: ADH 10/1/2020 - Verify which of these lines we should use
+                            //myInvoiceTransLine.amount = myInvoiceUnitPrice.UnitPriceTotal.ToString();
+                            ////myInvoiceTransLine.amount = (Convert.ToDouble(myInvoiceUnitPrice.InvoicePricePerUnit) * myInvoiceUnitPrice.NumberOfUnits).ToString();
+                            //myInvoiceTransLine.description = myInvoiceUnitPrice.InvoiceDescription;
+                            ////TODO: ADH 10/1/2020 - Verify which of these lines we should use
+                            //myInvoiceTransLine.cost_code = myInvoiceUnitPrice.CostCode;
+                            //myInvoiceTransLine.cost_code = myInvoiceUnitPrice.RevenueCode;
+                            //myInvoiceData.Lines.Add(myInvoiceTransLine);
                         }
 
                         //***** Package as class, serialize to JSON and write to audit log table *****

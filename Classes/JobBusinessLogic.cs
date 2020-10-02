@@ -110,6 +110,8 @@ namespace QuantifyWebAPI.Controllers
                         myJobData.job_id = jobsite.Number;
                         myJobData.job_name = jobsite.Description;
                         myJobData.site_name = jobsite.Name;
+                        myJobData.job_start_date = jobsite.StartDate;
+                        myJobData.job_estimated_end_date = jobsite.StopDate;
 
                         //***** Look up shipping address to get individual address fields *****
                         Avontus.Rental.Library.Address jobShippingAddress = jobsite.Addresses.GetAddressByType(AddressTypes.Shipping);
@@ -122,19 +124,25 @@ namespace QuantifyWebAPI.Controllers
                         BusinessPartner jobCustomer = BusinessPartner.GetBusinessPartner(jobsite.BusinessPartnerID);
                         myJobData.customer_id = jobCustomer.AccountingID;
 
-                        //***** Identify if job is sales taxable, and if so, assign a use tax code (mapping to WebApps accordingly will be done in Boomi) *****
+                        //***** If Job has sales/use tax code, assign it (mapping to WebApps accordingly will be done in Boomi) *****
                         if (jobsite.JobTax1ID != null && jobsite.JobTax1ID != Guid.Empty)
                         {
-                            myJobData.sales_taxable = "Y";
                             myJobData.sales_tax_code = jobsite.JobTax1.Name;
                         }
                         else
                         {
-                            myJobData.sales_taxable = "N";
                             myJobData.sales_tax_code = "";
                         }
-                        myJobData.job_start_date = jobsite.StartDate;
-                        myJobData.job_estimated_end_date = jobsite.StopDate;
+
+                        //***** If Job has any taxable boxes checked, map to sales taxable 'Y', else 'N' *****
+                        if (jobsite.ConsumablesTaxable || jobsite.RentIsTaxable || jobsite.ServiceTicketDamageChargeTaxable)
+                        {
+                            myJobData.sales_taxable = "Y";
+                        }
+                        else
+                        {
+                            myJobData.sales_taxable = "N";
+                        }
 
                         //***** Branch office - may need to drill up/down more, depending *****
                         myJobData.department = jobsite.ParentBranchOrLaydown.Number;

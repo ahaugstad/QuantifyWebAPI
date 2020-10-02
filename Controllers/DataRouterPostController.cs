@@ -73,9 +73,9 @@ namespace QuantifyWebAPI.Controllers
             //SalesOrderBusinessLogic mySalesOrderResponse = new SalesOrderBusinessLogic(myQuantifyCredentials, InitializationMode);
             //mySalesOrderResponse.GetIDsToProcess(StrVersionDBConn);
 
-            ////*****Run Inventory Transactions *****
-            //InventoryTransBusinessLogic myInventoryTransResponse = new InventoryTransBusinessLogic(myQuantifyCredentials, InitializationMode);
-            //myInventoryTransResponse.GetIDsToProcess(StrVersionDBConn);
+            //*****Run Inventory Transactions *****
+            InventoryTransBusinessLogic myInventoryTransResponse = new InventoryTransBusinessLogic(myQuantifyCredentials, InitializationMode);
+            myInventoryTransResponse.GetIDsToProcess(StrVersionDBConn);
 
             //***** Run Invoice Transactions *****
             InvoiceBusinessLogic myInvoiceResponse = new InvoiceBusinessLogic(myQuantifyCredentials, InitializationMode);
