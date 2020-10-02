@@ -108,8 +108,8 @@ namespace QuantifyWebAPI.Controllers
             DataTable myChangedRecords = myDAL.GetChangedObjects(dt, connectionString);
 
             //***** If in Initialization Mode bypass Data integrations other than Version Controll *****
-            if (initializationMode != "1")
-            {
+            //if (initializationMode != "1")
+            //{
                 if (myChangedRecords.Rows.Count > 0)
                 {
                     ProductRootClass myProducts = new ProductRootClass();
@@ -169,7 +169,7 @@ namespace QuantifyWebAPI.Controllers
                         success = false;
                     }
                 }
-            }
+            //}
             return success;
         }
     }

@@ -116,21 +116,49 @@ namespace QuantifyWebAPI.Controllers
                         myInvoiceData.rent_taxable = myInvoice.RentIsTaxableText;
                         myInvoiceData.product_subtotal = myInvoice.TotalProductCharge.ToString();
                         myInvoiceData.product_taxable = myInvoice.ConsumablesAreTaxableText;
-                        myInvoiceData.sales_tax_code = myInvoice.JobTax1.ToString();
                         myInvoiceData.invoice_total = myInvoice.TotalInvoice.ToString();
+
+                        //***** Evaluate Job Sales Tax Code - all jobs should have these before integration starts, so throw error if they don't *****
+                        if (myInvoice.JobTax1ID != null && myInvoice.JobTax1ID != Guid.Empty)
+                        {
+                            myInvoiceData.sales_tax_code = myInvoice.JobTax1.ToString();
+                        }
+                        else
+                        {
+                            myErrorText = "Jobsite sales tax code is blank. Please provide a sales tax code on this invoice's associated jobsite to integrate this invoice.";
+                            myProcessStatus = "E1";
+                        }
 
                         //***** Build non-rental line item data profile *****
                         foreach (InvoiceUnitPrice myInvoiceUnitPrice in myInvoice.InvoiceUnitPrices)
                         {
-                            InvoiceTransLine myInvoiceTransLine = new InvoiceTransLine();
-                            //TODO: ADH 10/1/2020 - Verify which of these lines we should use
-                            myInvoiceTransLine.amount = myInvoiceUnitPrice.UnitPriceTotal.ToString();
-                            //myInvoiceTransLine.amount = (Convert.ToDouble(myInvoiceUnitPrice.InvoicePricePerUnit) * myInvoiceUnitPrice.NumberOfUnits).ToString();
-                            myInvoiceTransLine.description = myInvoiceUnitPrice.InvoiceDescription;
-                            //TODO: ADH 10/1/2020 - Verify which of these lines we should use
-                            myInvoiceTransLine.cost_code = myInvoiceUnitPrice.CostCode;
-                            //myInvoiceTransLine.cost_code = myInvoiceUnitPrice.RevenueCode;
-                            myInvoiceData.Lines.Add(myInvoiceTransLine); 
+                            //***** Data structure puts charge types that have values on invoice at the top, and then loops through all other charges, regardless if they have values *****
+                            //***** This if statement breaks out of the loop once we are done evaluating charges that actually have amounts *****
+                            if (myInvoiceUnitPrice.UnitPriceTotal.ToString() != "")
+                            {
+                                InvoiceTransLine myInvoiceTransLine = new InvoiceTransLine();
+                                myInvoiceTransLine.amount = myInvoiceUnitPrice.UnitPriceTotal.ToString();
+                                myInvoiceTransLine.description = myInvoiceUnitPrice.InvoiceDescription;
+                                myInvoiceTransLine.taxable = myInvoiceUnitPrice.TaxableText;
+
+                                //TODO: ADH 10/1/2020 - Verify which of these lines we should use (neither populate for every charge type)
+                                //***** Evaluate Job Sales Tax Code - all jobs should have these before integration starts, so throw error if they don't *****
+                                //myInvoiceTransLine.cost_code = myInvoiceUnitPrice.CostCode;
+                                if (myInvoiceUnitPrice.RevenueCode != null && myInvoiceUnitPrice.RevenueCode != "")
+                                {
+                                    myInvoiceTransLine.cost_code = myInvoiceUnitPrice.RevenueCode;
+                                }
+                                else
+                                {
+                                    myErrorText = "Cost code for non-rental item line is blank. Please ensure every non-rental line has a cost code to integrate this invoice.";
+                                    myProcessStatus = "E1";
+                                }
+                                myInvoiceData.Lines.Add(myInvoiceTransLine);
+                            }
+                            else
+                            {
+                                break;
+                            }
                         }
 
                         //***** Package as class, serialize to JSON and write to audit log table *****

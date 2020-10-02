@@ -148,7 +148,10 @@ namespace QuantifyWebAPI.Controllers
 
                             //***** Build header data profile *****
                             mySalesOrderData.transaction_number = mySale.MovementNumber;
-                            mySalesOrderData.order_date = mySale.MovementDate;
+                            mySalesOrderData.ship_date = mySale.MovementDate;
+                            mySalesOrderData.transaction_date = mySale.CreateDate;
+                            //TODO: ADH 9/24/2020 - Still need to find where this field is in Quantify, if anywhere
+                            mySalesOrderData.entered_by = "QuantifyInt";
 
                             //***** Evaluate jobsite and confirm one has been selected. If one hasn't, log it as error *****
                             if (mySale.JobSite != null)
@@ -182,6 +185,7 @@ namespace QuantifyWebAPI.Controllers
                                 SalesOrderLine mySalesOrderLine = new SalesOrderLine();
                                 mySalesOrderLine.part_number = saleProductListItem.PartNumber;
                                 mySalesOrderLine.quantity = saleProductListItem.Quantity.ToString();
+                                //TODO: ADH 10/2/2020 - BUSINESS QUESTION: Confirm what field we need in price_ea, if any
                                 mySalesOrderLine.price_ea = saleProductListItem.SellPrice.ToString();
                                 mySalesOrderData.Lines.Add(mySalesOrderLine);
                             }
@@ -198,9 +202,13 @@ namespace QuantifyWebAPI.Controllers
 
                             //***** Build header data profile *****
                             mySalesOrderData.transaction_number = myReturn.ShipmentNumber;
+                            mySalesOrderData.ship_date = myReturn.ActualShipDate;
+                            mySalesOrderData.transaction_date = myReturn.CreateDate;
                             mySalesOrderData.job_number = myReturn.FromStockingLocation.Number;
-                            //TODO: ADH 9/23/20 - BUSINESS QUESTION: Is this appropriate warehouse? Seems like only option is to return available (since at that point it's used?)
+                            //TODO: ADH 10/2/2020 - BUSINESS QUESTION: Is this appropriate warehouse? Seems like only option is to return available (since at that point it's used?)
                             mySalesOrderData.from_warehouse = ((int)Warehouse.Available).ToString();
+                            //TODO: ADH 9/24/2020 - Still need to find where this field is in Quantify, if anywhere
+                            mySalesOrderData.entered_by = "QuantifyInt";
 
                             //***** Build line item data profile *****
                             foreach (ShipmentProductListItem returnProductListItem in myReturnProducts)
@@ -209,8 +217,8 @@ namespace QuantifyWebAPI.Controllers
                                 SalesOrderLine mySalesOrderLine = new SalesOrderLine();
                                 mySalesOrderLine.part_number = returnProductListItem.PartNumber;
                                 mySalesOrderLine.quantity = returnProductListItem.OutOfServiceQuantity.ToString();
-                                //TODO: ADH 9/23/20 - Confirm this is actually the sell price
-                                mySalesOrderLine.price_ea = returnProductListItem.Sell.ToString();
+                                //TODO: ADH 10/2/2020 - BUSINESS QUESTION: Confirm what field we need in price_ea, if any
+                                mySalesOrderLine.price_ea = myProduct.DefaultCost.ToString();
                                 mySalesOrderData.Lines.Add(mySalesOrderLine);
                             }
                         }

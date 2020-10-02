@@ -178,7 +178,7 @@ namespace QuantifyWebAPI.Controllers
                     }
                     myPurchaseOrderData.notes = myPurchase.Notes;
 
-                    //TODO: ADH 9/24/2020 - Possibly discuss this more during testing
+                    //TODO: ADH 9/24/2020 - Still need to find where this field is in Quantify, if anywhere
                     myPurchaseOrderData.entered_by = "QuantifyInt";
                     
                     //***** Build line item data profile *****

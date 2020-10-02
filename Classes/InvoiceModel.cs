@@ -47,8 +47,8 @@ namespace QuantifyWebAPI.Classes
     public class InvoiceTransLine
     {
         public string amount { get; set; }
-        public string charge_type { get; set; }
         public string cost_code { get; set; }
         public string description { get; set; }
+        public string taxable { get; set; }
     }
 }
