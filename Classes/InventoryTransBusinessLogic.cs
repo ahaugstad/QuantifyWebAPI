@@ -243,7 +243,7 @@ namespace QuantifyWebAPI.Controllers
                     myTransLine.part_number = myAdjustment.PartNumber;
                     if (newOrAvailable == "New")
                     {
-                        //TODO: ADH 10/1/2020 - Identify if First or Last is appropriate here, and convert 'item.ParentName' to 'item.Product-ID' when available
+                        //TODO: ADH 10/1/2020 - Convert 'item.ParentName' to 'item.Product-ID' when available
                         //***** Get most recent log entry for StockedProduct record for "New Part Changed" log type and create TransLine if exists*****
                         if (myStockedProductLogs.Any(item => item.Name == "New Part Changed" && item.LogDate > DateTime.Now.AddHours(-1) && item.ChildDescription.Split(separatorString, StringSplitOptions.None)[0] == myAdjustment.PartNumber))
                         {
@@ -257,7 +257,7 @@ namespace QuantifyWebAPI.Controllers
                     }
                     else if (newOrAvailable == "Available")
                     {
-                        //TODO: ADH 10/1/2020 - Identify if First or Last is appropriate here, and convert 'item.ParentName' to 'item.Product-ID' when available
+                        //TODO: ADH 10/1/2020 - Convert 'item.ParentName' to 'item.Product-ID' when available
                         //***** Get most recent log entry for StockedProduct record for "Available Part Changed" log type and create TransLine if exists *****
                         if (myStockedProductLogs.Any(item => item.Name == "Available Part Changed" && item.LogDate > DateTime.Now.AddHours(-1) && item.ChildDescription.Split(separatorString, StringSplitOptions.None)[0] == myAdjustment.PartNumber))
                         {

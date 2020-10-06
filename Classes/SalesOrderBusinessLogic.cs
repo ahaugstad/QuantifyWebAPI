@@ -150,7 +150,7 @@ namespace QuantifyWebAPI.Controllers
                             mySalesOrderData.transaction_number = mySale.MovementNumber;
                             mySalesOrderData.ship_date = mySale.MovementDate;
                             mySalesOrderData.transaction_date = mySale.CreateDate;
-                            //TODO: ADH 9/24/2020 - Still need to find where this field is in Quantify, if anywhere
+                            //TODO: ADH 9/24/2020 - Still need to find where Entered By field is in Quantify, if anywhere
                             mySalesOrderData.entered_by = "QuantifyInt";
 
                             //***** Evaluate jobsite and confirm one has been selected. If one hasn't, log it as error *****
@@ -207,7 +207,7 @@ namespace QuantifyWebAPI.Controllers
                             mySalesOrderData.job_number = myReturn.FromStockingLocation.Number;
                             //TODO: ADH 10/2/2020 - BUSINESS QUESTION: Is this appropriate warehouse? Seems like only option is to return available (since at that point it's used?)
                             mySalesOrderData.from_warehouse = ((int)Warehouse.Available).ToString();
-                            //TODO: ADH 9/24/2020 - Still need to find where this field is in Quantify, if anywhere
+                            //TODO: ADH 9/24/2020 - Still need to find where Entered By field is in Quantify, if anywhere
                             mySalesOrderData.entered_by = "QuantifyInt";
 
                             //***** Build line item data profile *****

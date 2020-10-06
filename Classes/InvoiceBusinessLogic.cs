@@ -110,12 +110,6 @@ namespace QuantifyWebAPI.Controllers
                         myInvoiceData.invoice_id = myInvoiceID;
                         myInvoiceData.job_number = myInvoice.JobSite.Number;
                         myInvoiceData.invoice_date = myInvoice.InvoiceDateTime.ToShortDateString();
-
-                        //***** Build Invoice totals and footer data profile *****
-                        myInvoiceData.rent_subtotal = myInvoice.TotalRent.ToString();
-                        myInvoiceData.rent_taxable = myInvoice.RentIsTaxableText;
-                        myInvoiceData.product_subtotal = myInvoice.TotalProductCharge.ToString();
-                        myInvoiceData.product_taxable = myInvoice.ConsumablesAreTaxableText;
                         myInvoiceData.invoice_total = myInvoice.TotalInvoice.ToString();
 
                         //***** Evaluate Job Sales Tax Code - all jobs should have these before integration starts, so throw error if they don't *****
@@ -128,6 +122,24 @@ namespace QuantifyWebAPI.Controllers
                             myErrorText = "Jobsite sales tax code is blank. Please provide a sales tax code on this invoice's associated jobsite to integrate this invoice.";
                             myProcessStatus = "E1";
                         }
+
+                        //***** Build data profile for Rent subtotal line item *****
+                        InvoiceTransLine myInvoiceRentLine = new InvoiceTransLine();
+                        myInvoiceRentLine.amount = myInvoice.TotalRent.ToString();
+                        myInvoiceRentLine.description = "Rent";
+                        myInvoiceRentLine.taxable = myInvoice.RentIsTaxableText;
+                        //TODO: ADH 10/6/2020 - BUSINESS QUESTION: Identify which cost code corresponds to rental lines
+                        myInvoiceRentLine.cost_code = "10";
+                        myInvoiceData.Lines.Add(myInvoiceRentLine);
+
+                        //***** Build data profile for Product subtotal line item *****
+                        InvoiceTransLine myInvoiceProductLine = new InvoiceTransLine();
+                        myInvoiceRentLine.amount = myInvoice.TotalProductCharge.ToString();
+                        myInvoiceRentLine.description = "Product Charge";
+                        myInvoiceRentLine.taxable = myInvoice.ConsumablesAreTaxableText;
+                        //TODO: ADH 10/6/2020 - BUSINESS QUESTION: Identify which cost code corresponds to product charge lines
+                        myInvoiceRentLine.cost_code = "20";
+                        myInvoiceData.Lines.Add(myInvoiceProductLine);
 
                         //***** Build non-rental line item data profile *****
                         foreach (InvoiceUnitPrice myInvoiceUnitPrice in myInvoice.InvoiceUnitPrices)
@@ -142,7 +154,7 @@ namespace QuantifyWebAPI.Controllers
                                 myInvoiceTransLine.taxable = myInvoiceUnitPrice.TaxableText;
 
                                 //TODO: ADH 10/1/2020 - Verify which of these lines we should use (neither populate for every charge type)
-                                //***** Evaluate Job Sales Tax Code - all jobs should have these before integration starts, so throw error if they don't *****
+                                //***** Evaluate line cost code - all lines need cost code associated with them, so throw error if they don't *****
                                 //myInvoiceTransLine.cost_code = myInvoiceUnitPrice.CostCode;
                                 if (myInvoiceUnitPrice.RevenueCode != null && myInvoiceUnitPrice.RevenueCode != "")
                                 {

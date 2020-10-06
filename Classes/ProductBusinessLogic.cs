@@ -52,7 +52,6 @@ namespace QuantifyWebAPI.Controllers
         // GET: api/Jobs/3
         public string Initialize()
         {
-            //TODO: ADH 9/9/2020 - Implement Initial Load of Quantities
             return "value";
         }
 
