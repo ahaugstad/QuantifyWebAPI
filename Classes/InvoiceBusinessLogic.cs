@@ -128,18 +128,22 @@ namespace QuantifyWebAPI.Controllers
                         myInvoiceRentLine.amount = myInvoice.TotalRent.ToString();
                         myInvoiceRentLine.description = "Rent";
                         myInvoiceRentLine.taxable = myInvoice.RentIsTaxableText;
-                        //TODO: ADH 10/6/2020 - BUSINESS QUESTION: Identify which cost code corresponds to rental lines
-                        myInvoiceRentLine.cost_code = "10";
+                        myInvoiceRentLine.cost_code = "Rent";
                         myInvoiceData.Lines.Add(myInvoiceRentLine);
 
+                        //TODO: ADH 10/7/2020 - Loop through these charges and pass individual lines instead of summarizing
                         //***** Build data profile for Product subtotal line item *****
-                        InvoiceTransLine myInvoiceProductLine = new InvoiceTransLine();
-                        myInvoiceRentLine.amount = myInvoice.TotalProductCharge.ToString();
-                        myInvoiceRentLine.description = "Product Charge";
-                        myInvoiceRentLine.taxable = myInvoice.ConsumablesAreTaxableText;
-                        //TODO: ADH 10/6/2020 - BUSINESS QUESTION: Identify which cost code corresponds to product charge lines
-                        myInvoiceRentLine.cost_code = "20";
-                        myInvoiceData.Lines.Add(myInvoiceProductLine);
+                        foreach (InvoiceProductCharge myInvoiceProductCharge in myInvoice.InvoiceProductCharges)
+                        {
+                            //***** Data structure puts charge types that have values on invoice at the top, and then loops through all other charges, regardless if they have values *****
+                            //***** This if statement breaks out of the loop once we are done evaluating charges that actually have amounts *****
+                            InvoiceTransLine myInvoiceProductLine = new InvoiceTransLine();
+                            myInvoiceRentLine.amount = myInvoiceProductCharge.Charge.ToString();
+                            myInvoiceRentLine.description = myInvoiceProductCharge.Description;
+                            myInvoiceRentLine.taxable = myInvoice.ConsumablesAreTaxableText;
+                            myInvoiceRentLine.cost_code = myInvoiceProductCharge.ChargeType.ToDescription();
+                            myInvoiceData.Lines.Add(myInvoiceProductLine);
+                        }
 
                         //***** Build non-rental line item data profile *****
                         foreach (InvoiceUnitPrice myInvoiceUnitPrice in myInvoice.InvoiceUnitPrices)
@@ -152,19 +156,7 @@ namespace QuantifyWebAPI.Controllers
                                 myInvoiceTransLine.amount = myInvoiceUnitPrice.UnitPriceTotal.ToString();
                                 myInvoiceTransLine.description = myInvoiceUnitPrice.InvoiceDescription;
                                 myInvoiceTransLine.taxable = myInvoiceUnitPrice.TaxableText;
-
-                                //TODO: ADH 10/1/2020 - Verify which of these lines we should use (neither populate for every charge type)
-                                //***** Evaluate line cost code - all lines need cost code associated with them, so throw error if they don't *****
-                                //myInvoiceTransLine.cost_code = myInvoiceUnitPrice.CostCode;
-                                if (myInvoiceUnitPrice.RevenueCode != null && myInvoiceUnitPrice.RevenueCode != "")
-                                {
-                                    myInvoiceTransLine.cost_code = myInvoiceUnitPrice.RevenueCode;
-                                }
-                                else
-                                {
-                                    myErrorText = "Cost code for non-rental item line is blank. Please ensure every non-rental line has a cost code to integrate this invoice.";
-                                    myProcessStatus = "E1";
-                                }
+                                myInvoiceTransLine.cost_code = myInvoiceUnitPrice.Category.ToString();
                                 myInvoiceData.Lines.Add(myInvoiceTransLine);
                             }
                             else

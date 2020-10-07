@@ -185,8 +185,6 @@ namespace QuantifyWebAPI.Controllers
                                 SalesOrderLine mySalesOrderLine = new SalesOrderLine();
                                 mySalesOrderLine.part_number = saleProductListItem.PartNumber;
                                 mySalesOrderLine.quantity = saleProductListItem.Quantity.ToString();
-                                //TODO: ADH 10/2/2020 - BUSINESS QUESTION: Confirm what field we need in price_ea, if any
-                                mySalesOrderLine.price_ea = saleProductListItem.SellPrice.ToString();
                                 mySalesOrderData.Lines.Add(mySalesOrderLine);
                             }
                         }
@@ -205,7 +203,6 @@ namespace QuantifyWebAPI.Controllers
                             mySalesOrderData.ship_date = myReturn.ActualShipDate;
                             mySalesOrderData.transaction_date = myReturn.CreateDate;
                             mySalesOrderData.job_number = myReturn.FromStockingLocation.Number;
-                            //TODO: ADH 10/2/2020 - BUSINESS QUESTION: Is this appropriate warehouse? Seems like only option is to return available (since at that point it's used?)
                             mySalesOrderData.from_warehouse = ((int)Warehouse.Available).ToString();
                             //TODO: ADH 9/24/2020 - Still need to find where Entered By field is in Quantify, if anywhere
                             mySalesOrderData.entered_by = "QuantifyInt";
@@ -217,8 +214,6 @@ namespace QuantifyWebAPI.Controllers
                                 SalesOrderLine mySalesOrderLine = new SalesOrderLine();
                                 mySalesOrderLine.part_number = returnProductListItem.PartNumber;
                                 mySalesOrderLine.quantity = returnProductListItem.OutOfServiceQuantity.ToString();
-                                //TODO: ADH 10/2/2020 - BUSINESS QUESTION: Confirm what field we need in price_ea, if any
-                                mySalesOrderLine.price_ea = myProduct.DefaultCost.ToString();
                                 mySalesOrderData.Lines.Add(mySalesOrderLine);
                             }
                         }
