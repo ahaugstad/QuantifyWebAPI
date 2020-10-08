@@ -45,5 +45,6 @@ namespace QuantifyWebAPI.Classes
     {
         public string part_number { get; set; }
         public string quantity { get; set; }
+        public string price_ea { get; set; }
     }
 }

@@ -126,22 +126,47 @@ namespace QuantifyWebAPI.Controllers
                         //***** Build data profile for Rent subtotal line item *****
                         InvoiceTransLine myInvoiceRentLine = new InvoiceTransLine();
                         myInvoiceRentLine.amount = myInvoice.TotalRent.ToString();
-                        myInvoiceRentLine.description = "Rent";
+                        myInvoiceRentLine.description = "Rental Charges";
                         myInvoiceRentLine.taxable = myInvoice.RentIsTaxableText;
-                        myInvoiceRentLine.cost_code = "Rent";
+                        myInvoiceRentLine.cost_code = "10-Rent";
                         myInvoiceData.Lines.Add(myInvoiceRentLine);
 
                         //TODO: ADH 10/7/2020 - Loop through these charges and pass individual lines instead of summarizing
                         //***** Build data profile for Product subtotal line item *****
                         foreach (InvoiceProductCharge myInvoiceProductCharge in myInvoice.InvoiceProductCharges)
                         {
-                            //***** Data structure puts charge types that have values on invoice at the top, and then loops through all other charges, regardless if they have values *****
-                            //***** This if statement breaks out of the loop once we are done evaluating charges that actually have amounts *****
+                            //***** Fill out Invoice Product Charge line *****
                             InvoiceTransLine myInvoiceProductLine = new InvoiceTransLine();
-                            myInvoiceRentLine.amount = myInvoiceProductCharge.Charge.ToString();
-                            myInvoiceRentLine.description = myInvoiceProductCharge.Description;
-                            myInvoiceRentLine.taxable = myInvoice.ConsumablesAreTaxableText;
-                            myInvoiceRentLine.cost_code = myInvoiceProductCharge.ChargeType.ToDescription();
+                            myInvoiceProductLine.amount = myInvoiceProductCharge.Total.ToString();
+                            myInvoiceProductLine.description = myInvoiceProductCharge.Description;
+                            myInvoiceProductLine.taxable = myInvoice.ConsumablesAreTaxableText;
+
+                            //***** Evaluate Charge Type and append on cost code accordingly to send to Boomi; throw error to Raygun if we have an unmapped Charge Type *****
+                            try
+                            {
+                                if (myInvoiceProductCharge.ChargeType.ToDescription() == "MovementSellNew")
+                                {
+                                    myInvoiceProductLine.cost_code = "50-" + myInvoiceProductCharge.ChargeType.ToDescription();
+                                }
+                                else if (myInvoiceProductCharge.ChargeType.ToDescription() == "MovementSellForRent")
+                                {
+                                    myInvoiceProductLine.cost_code = "40-" + myInvoiceProductCharge.ChargeType.ToDescription();
+                                }
+                                else if (myInvoiceProductCharge.ChargeType.ToDescription() == "ConsumableSell")
+                                {
+                                    myInvoiceProductLine.cost_code = "60-" + myInvoiceProductCharge.ChargeType.ToDescription();
+                                }
+                                else
+                                {
+                                    throw new System.ArgumentException("Unknown or unmapped Product Charge Type: ", myInvoiceProductCharge.ChargeType.ToDescription());
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                myRaygunClient.SendInBackground(ex);
+                            }
+
+                            //***** Add Invoice Product Charge line to data package *****
                             myInvoiceData.Lines.Add(myInvoiceProductLine);
                         }
 

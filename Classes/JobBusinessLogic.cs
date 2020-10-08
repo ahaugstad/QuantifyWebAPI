@@ -86,8 +86,6 @@ namespace QuantifyWebAPI.Controllers
             //***** If in Initialization Mode bypass Data integrations other than Version Controll *****
             if (initializationMode != "1")
             {
-
-
                 if (myChangedRecords.Rows.Count > 0)
                 {
                     JobRootClass myJobs = new JobRootClass();
@@ -108,7 +106,14 @@ namespace QuantifyWebAPI.Controllers
 
                         //***** Populate Fields *****
                         myJobData.job_id = jobsite.Number;
-                        myJobData.job_name = jobsite.Description;
+                        if (jobsite.Description != null && jobsite.Description != "")
+                        {
+                            myJobData.job_name = jobsite.Description;
+                        }
+                        else
+                        {
+                            myJobData.job_name = jobsite.Name;
+                        }
                         myJobData.site_name = jobsite.Name;
                         myJobData.job_start_date = jobsite.StartDate;
                         myJobData.job_estimated_end_date = jobsite.StopDate;
@@ -179,7 +184,6 @@ namespace QuantifyWebAPI.Controllers
 
                             //***** Create audit log datarow ******                 
                             auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Job", myJobData.job_id, myJsonObject, "", myProcessStatus, myErrorText);
-
                         }
                     }
 

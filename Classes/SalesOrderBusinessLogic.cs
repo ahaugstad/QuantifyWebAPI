@@ -185,6 +185,7 @@ namespace QuantifyWebAPI.Controllers
                                 SalesOrderLine mySalesOrderLine = new SalesOrderLine();
                                 mySalesOrderLine.part_number = saleProductListItem.PartNumber;
                                 mySalesOrderLine.quantity = saleProductListItem.Quantity.ToString();
+                                mySalesOrderLine.price_ea = saleProductListItem.AverageCost.ToString();
                                 mySalesOrderData.Lines.Add(mySalesOrderLine);
                             }
                         }
@@ -214,6 +215,7 @@ namespace QuantifyWebAPI.Controllers
                                 SalesOrderLine mySalesOrderLine = new SalesOrderLine();
                                 mySalesOrderLine.part_number = returnProductListItem.PartNumber;
                                 mySalesOrderLine.quantity = returnProductListItem.OutOfServiceQuantity.ToString();
+                                mySalesOrderLine.price_ea = returnProductListItem.AverageCost.ToString();
                                 mySalesOrderData.Lines.Add(mySalesOrderLine);
                             }
                         }
