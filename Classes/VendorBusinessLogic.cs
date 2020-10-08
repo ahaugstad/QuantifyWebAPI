@@ -72,18 +72,18 @@ namespace QuantifyWebAPI.Controllers
                 string VendorFax = myDeserializedClass.VendorData.vendor_fax;
 
 
-                //*****  Instantiate customer we are inserting/updating; check if it already exists before updating/inserting ***** 
+                //*****  Instantiate Vendor we are inserting/updating; check if it already exists before updating/inserting ***** 
                 BusinessPartner Vendor = BusinessPartner.GetBusinessPartnerByAccountingID(VendorNumber);
 
                 //****** check to See if Create or Update *****
                 if (Vendor.PartnerNumber == "")
                 {
-                    //***** Create new customer ***** 
+                    //***** Create new Vendor ***** 
                     Vendor = BusinessPartner.NewBusinessPartner(PartnerTypes.Vendor);
                 }
                 else
                 {
-                    //***** Get existing customer ***** 
+                    //***** Get existing Vendor ***** 
                     Vendor = BusinessPartner.GetBusinessPartnerByAccountingID(VendorNumber);
                 }
 
@@ -108,7 +108,17 @@ namespace QuantifyWebAPI.Controllers
 
                         //***** Re-fetch Vendor record each time we update address data ***** 
                         Vendor = BusinessPartner.GetBusinessPartnerByAccountingID(myDeserializedClass.VendorData.vendor_id);
-                        if (myAddress.addressTypeCode == "Shipping" || myAddress.addressTypeCode == null || myAddress.addressTypeCode == "")
+                        if (myAddress.addressTypeCode == "Billing" || myAddress.addressTypeCode == null || myAddress.addressTypeCode == "")
+                        {
+                            Vendor.Addresses.GetAddressByType(AddressTypes.Billing).Street = myAddress.address1;
+                            Vendor.Addresses.GetAddressByType(AddressTypes.Billing).Street1 = myAddress.address2;
+                            Vendor.Addresses.GetAddressByType(AddressTypes.Billing).City = myAddress.city;
+                            Vendor.Addresses.GetAddressByType(AddressTypes.Billing).StateID = state.StateID;
+                            Vendor.Addresses.GetAddressByType(AddressTypes.Billing).StateName = myAddress.state.ToUpper();
+                            Vendor.Addresses.GetAddressByType(AddressTypes.Billing).PostalCode = myAddress.zip;
+                            Vendor.Addresses.GetAddressByType(AddressTypes.Billing).Country = myAddress.country;
+                        }
+                        else if (myAddress.addressTypeCode == "Shipping")
                         {
                             Vendor.Addresses.GetAddressByType(AddressTypes.Shipping).Street = myAddress.address1;
                             Vendor.Addresses.GetAddressByType(AddressTypes.Shipping).Street1 = myAddress.address2;
@@ -117,16 +127,6 @@ namespace QuantifyWebAPI.Controllers
                             Vendor.Addresses.GetAddressByType(AddressTypes.Shipping).StateName = myAddress.state.ToUpper();
                             Vendor.Addresses.GetAddressByType(AddressTypes.Shipping).PostalCode = myAddress.zip;
                             Vendor.Addresses.GetAddressByType(AddressTypes.Shipping).Country = myAddress.country;
-                        }
-                        else if (myAddress.addressTypeCode == "Billing")
-                        {
-                            Vendor.Addresses.GetAddressByType(AddressTypes.Billing).Street = myAddress.address1;
-                            Vendor.Addresses.GetAddressByType(AddressTypes.Billing).Street1 = myAddress.address2;
-                            Vendor.Addresses.GetAddressByType(AddressTypes.Billing).City = myAddress.city;
-                            Vendor.Addresses.GetAddressByType(AddressTypes.Business).StateID = state.StateID;
-                            Vendor.Addresses.GetAddressByType(AddressTypes.Billing).StateName = myAddress.state.ToUpper();
-                            Vendor.Addresses.GetAddressByType(AddressTypes.Billing).PostalCode = myAddress.zip;
-                            Vendor.Addresses.GetAddressByType(AddressTypes.Billing).Country = myAddress.country;
                         }
                         else if (myAddress.addressTypeCode == "Business")
                         {
