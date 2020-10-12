@@ -136,6 +136,7 @@ namespace QuantifyWebAPI.Controllers
                         }
                         else
                         {
+                            //TODO: ADH 10/12/2020 - Write error (E1) if job does not have sales tax code on it
                             myJobData.sales_tax_code = "";
                         }
 

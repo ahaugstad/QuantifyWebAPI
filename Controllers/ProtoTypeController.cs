@@ -416,10 +416,16 @@ namespace QuantifyWebAPI.Controllers
                 StockingLocationList myJobSiteList = StockingLocationList.GetJobsites(false, JobTreeNodeDisplayType.Name, Guid.Empty);
                 //foreach (StockingLocationListItem jobsiteListItem in myJobSiteList)
                 //{
-                    //var jobVersionStampList = jobsiteListItem.VersionStamp;
+                //var jobVersionStampList = jobsiteListItem.VersionStamp;
                 //}
-                
 
+                //***** Adding in Sales Tax Rates *****
+                TaxRate myTaxRate = TaxRate.NewTaxRate();
+                myTaxRate.Name = "Test";
+                myTaxRate.Rate = 5;
+                myTaxRate.RefID = "1234";
+                myTaxRate.Description = "Longer Description";
+                myTaxRate.TaxAgency = "South Dakota";
             }
         }
         #endregion

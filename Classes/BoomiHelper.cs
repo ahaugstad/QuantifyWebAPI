@@ -42,7 +42,9 @@ namespace QuantifyWebAPI.Classes
             try
             {
                 //***** REST API URL for Boomi web service *****
-                string uriString = "http://apimariaasad01.apigroupinc.api:9090/ws/rest/webapps_quantify/api";
+                string uriString = "http://apimariadbap01.apigroupinc.api:9090/ws/rest/webapps_quantify/api";
+                //TODO: ADH 10/12/2020 - When going to prod, use following URL instead to hit load balancer
+                //string uriString = "http://apiboomiprod.apigroupinc.com:9090/ws/rest/webapps_quantify/api";
 
                 //***** Create ping JSON string so that Boomi has an object to get passed - does not matter what it contains *****
                 PingRootClass myPingClass = new PingRootClass();

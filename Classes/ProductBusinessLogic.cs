@@ -87,6 +87,7 @@ namespace QuantifyWebAPI.Controllers
                 //***** Build Dictionary *****
                 try
                 {
+                    //TODO: ADH 10/12/2020 - Need to check if first 15 chars are dupes, because that what will get sent to WebApps (not just total part numbers)
                     if (!myProductsDictionary.ContainsKey(myProductID))
                     {
                         myProductsDictionary.Add(myProductID, productListItem);
@@ -152,7 +153,7 @@ namespace QuantifyWebAPI.Controllers
                         //****** Create XRef datarow *****
                         productXRef = MySqlHelper.CreateXRefDataRow(productXRef, myProductData.product_id, myProduct.PartNumber, "");
                     }
-
+                    
                     //***** Insert to Audit Log and XRef tables for Boomi to reference *****
                     DataTable myReturnResultAudit = myDAL.InsertAuditLog(auditLog, connectionString);
                     DataTable myReturnResultXRef = myDAL.InsertProductXRef(productXRef, connectionString);
