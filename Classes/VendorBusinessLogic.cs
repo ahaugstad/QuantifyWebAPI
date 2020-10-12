@@ -104,6 +104,7 @@ namespace QuantifyWebAPI.Controllers
                     foreach (QuantifyWebAPI.Classes.Address myAddress in myDeserializedClass.VendorData.Addresses)
                     {
                         //***** Get state object for updating State ID below *****
+                        //TODO: ADH 10/12/2020 - Ernie Question: Need to write specific error validation for state not existing. How best to do this and make it 'bubble up'?
                         State state = State.GetState(myAddress.state);
 
                         //***** Re-fetch Vendor record each time we update address data ***** 
@@ -185,6 +186,9 @@ namespace QuantifyWebAPI.Controllers
             }
             catch (DataPortalException ex)
             {
+                //TODO: ADH 10/12/2020 - Ernie Question: Should we write Raygun option to catch DataPortalExceptions and ValidationExceptions uniquely?
+                //TODO: ADH 10/12/2020 - Ernie Question: Best way to pass back ID and then data package, if we want to be able to both quickly look through IDs that failed (and get list) and see full data if desired?
+                //TODO: ADH 10/12/2020 - Ernie Question: Should we pass back Validation broken rules to Raygun, instead of relying on viewing the responses in Boomi?
                 //***** log the error ******
                 myRaygunClient.SendInBackground(ex);
 
