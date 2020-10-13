@@ -51,7 +51,11 @@ namespace QuantifyWebAPI.Classes
             }
             catch (Exception ex)
             {
-                myRaygunClient.SendInBackground(ex);
+                //***** Create Raygun Exception Package *****
+                RaygunExceptionPackage myRaygunValidationPackage = new RaygunExceptionPackage();
+                myRaygunValidationPackage.Tags.Add("Quantify Login");
+                myRaygunValidationPackage.Tags.Add("Connection");
+                myRaygunClient.SendInBackground(ex, myRaygunValidationPackage.Tags);
             }
         }
     }

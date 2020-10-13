@@ -426,6 +426,17 @@ namespace QuantifyWebAPI.Controllers
                 myTaxRate.RefID = "1234";
                 myTaxRate.Description = "Longer Description";
                 myTaxRate.TaxAgency = "South Dakota";
+
+                TaxRate myTaxRate2 = TaxRate.GetTaxRate(myJobSite.JobTax1ID);
+
+                TaxRateCollection myTaxRateCollection = TaxRateCollection.GetTaxRateCollection(ActiveStatus.Active, false, Guid.Empty);
+                foreach (TaxRate myTaxRate3 in myTaxRateCollection)
+                {
+                    if (myTaxRate3.RefID == myTaxRate.RefID)
+                    {
+                        
+                    }
+                }
             }
         }
         #endregion

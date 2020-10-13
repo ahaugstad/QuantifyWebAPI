@@ -103,8 +103,24 @@ namespace QuantifyWebAPI.Controllers
                     foreach (QuantifyWebAPI.Classes.Address myAddress in myDeserializedClass.CustomerData.Addresses)
                     {
                         //***** Get state object for updating State ID below *****
-                        //TODO: ADH 10/12/2020 - Ernie Question: Need to write specific error validation for state not existing. How best to do this and make it 'bubble up'?
-                        State state = State.GetState(myAddress.state);
+                        //TODO: ADH 10/12/2020 - TEST: Below works and new exception looks good in Raygun
+                        State state = State.NewState();
+                        try
+                        {
+                            state = State.GetState(myAddress.state);
+                        }
+                        catch (Avontus.Core.DataPortalException ex)
+                        {
+                            //***** Create Raygun Exception Package *****
+                            RaygunExceptionPackage myRaygunStateErrorPackage = new RaygunExceptionPackage();
+                            myRaygunStateErrorPackage.Tags.Add("Data Portal");
+                            myRaygunStateErrorPackage.Tags.Add("Customer");
+                            myRaygunStateErrorPackage.Tags.Add("Configuration Error");
+                            myRaygunStateErrorPackage.CustomData.Add("WebApps Customer ID: ", customer.AccountingID);
+                            Exception myStateException = new Exception("State code " + myAddress.state + " does not exist in Quantify", ex);
+                            myRaygunClient.SendInBackground(myStateException, myRaygunStateErrorPackage.Tags, myRaygunStateErrorPackage.CustomData);
+                            throw myStateException;
+                        }
 
                         //***** Re-fetch customer record each time we update address data ***** 
                         customer = BusinessPartner.GetBusinessPartnerByAccountingID(myDeserializedClass.CustomerData.customer_id);
@@ -147,16 +163,22 @@ namespace QuantifyWebAPI.Controllers
             }
             catch (SqlException ex)
             {
-                //***** log the error ******
-                myRaygunClient.SendInBackground(ex);
+                //***** Create Raygun Exception Package *****
+                RaygunExceptionPackage myRaygunSQLErrorPackage = new RaygunExceptionPackage();
+                myRaygunSQLErrorPackage.Tags.Add("Generic");
+                myRaygunSQLErrorPackage.Tags.Add("Customer");
+                myRaygunClient.SendInBackground(ex, myRaygunSQLErrorPackage.Tags);
 
                 customerResponse.status = "SQL Exception Error";
                 customerResponse.errorList.Add("Quantify Login error - " + Environment.NewLine + ex.Message.ToString());
             }
             catch (Exception ex)
             {
-                //***** log the error ******
-                myRaygunClient.SendInBackground(ex);
+                //***** Create Raygun Exception Package *****
+                RaygunExceptionPackage myRaygunGenericErrorPackage = new RaygunExceptionPackage();
+                myRaygunGenericErrorPackage.Tags.Add("Generic");
+                myRaygunGenericErrorPackage.Tags.Add("Customer");
+                myRaygunClient.SendInBackground(ex, myRaygunGenericErrorPackage.Tags);
 
                 customerResponse.status = "Error";
                 customerResponse.errorList.Add("Generic error - " + Environment.NewLine + ex.Message.ToString());
@@ -185,11 +207,13 @@ namespace QuantifyWebAPI.Controllers
             }
             catch (DataPortalException ex)
             {
-                //TODO: ADH 10/12/2020 - Ernie Question: Should we write Raygun option to catch DataPortalExceptions and ValidationExceptions uniquely?
-                //TODO: ADH 10/12/2020 - Ernie Question: Best way to pass back ID and then data package, if we want to be able to both quickly look through IDs that failed (and get list) and see full data if desired?
-                //TODO: ADH 10/12/2020 - Ernie Question: Should we pass back Validation broken rules to Raygun, instead of relying on viewing the responses in Boomi?
-                //***** log the error ******
-                myRaygunClient.SendInBackground(ex);
+                //TODO: ADH 10/12/2020 - TEST: All new Raygun exception handling works below
+                //***** Create Raygun Exception Package *****
+                RaygunExceptionPackage myRaygunDataPortalPackage = new RaygunExceptionPackage();
+                myRaygunDataPortalPackage.Tags.Add("Data Portal");
+                myRaygunDataPortalPackage.Tags.Add("Customer");
+                myRaygunDataPortalPackage.CustomData.Add("WebApps Customer ID", parmCustomer.AccountingID);
+                myRaygunClient.SendInBackground(ex, myRaygunDataPortalPackage.Tags, myRaygunDataPortalPackage.CustomData);
 
                 //***** Pass back "Error" for fail ***** 
                 customerResponse.status = "Error";
@@ -207,11 +231,13 @@ namespace QuantifyWebAPI.Controllers
                     //***** Check the rules ***** 
                     foreach (Avontus.Core.Validation.BrokenRule rule in parmCustomer.BrokenRulesCollection)
                     {
-                        //***** Fix rules here, if you'd like ***** 
-                        //if (rule.Property == "Name")
-                        //{
-                        //***** Fix the name here  ***** 
-                        //}
+                        //***** Create Raygun Exception Package *****
+                        RaygunExceptionPackage myRaygunValidationPackage = new RaygunExceptionPackage();
+                        myRaygunValidationPackage.Tags.Add("Validation");
+                        myRaygunValidationPackage.Tags.Add("Customer");
+                        myRaygunValidationPackage.CustomData.Add("WebApps Customer ID", parmCustomer.AccountingID);
+                        Exception myValidationEx = new Exception("Validation error: " + rule.RuleName + " - " + rule.Description);
+                        myRaygunClient.SendInBackground(myValidationEx, myRaygunValidationPackage.Tags, myRaygunValidationPackage.CustomData);
 
                         //***** Log errors and pass back response  ***** 
                         errorList.Add(rule.Severity.ToString() + ": " + rule.Description);

@@ -39,6 +39,8 @@ namespace QuantifyWebAPI.Controllers
 
         String InitializationMode = ConfigurationManager.AppSettings["InitializationMode"];
 
+        String URIString = ConfigurationManager.AppSettings["BoomiURIString"];
+
         String StrVersionDBConn = ConfigurationManager.AppSettings["QuantifyPersistanceLayerDBConn"];
         RaygunClient myRaygunClient = new RaygunClient();
 
@@ -50,7 +52,6 @@ namespace QuantifyWebAPI.Controllers
         {
             string[] MyQuantCredArray = StrQuantifyUser.Split('|');
             myQuantifyCredentials = new QuantifyCredentials(MyQuantCredArray[0], MyQuantCredArray[1]);
-
         }
 
         //***** Boomi pings this method on schedule to kick off our processing of all Quantify-outbound integrations *****
@@ -82,7 +83,8 @@ namespace QuantifyWebAPI.Controllers
             myInvoiceResponse.GetIDsToProcess(StrVersionDBConn);
 
             //***** Call Boomi to kick off processing *****
-            BoomiHelper.PostBoomiAPI();
+            //TODO: ADH 10/12/2020 - Maybe explore putting in code to only process Boomi call when we have record(s) to process?
+            BoomiHelper.PostBoomiAPI(URIString);
         }
 
         [HttpGet]
@@ -156,7 +158,12 @@ namespace QuantifyWebAPI.Controllers
             }
             catch (Exception ex)
             {
-                myRaygunClient.SendInBackground(ex);
+                //***** Create Raygun Exception Package *****
+                RaygunExceptionPackage myRaygunValidationPackage = new RaygunExceptionPackage();
+                myRaygunValidationPackage.Tags.Add("HTTP");
+                myRaygunValidationPackage.Tags.Add("Connection");
+                myRaygunValidationPackage.Tags.Add(RequestType);
+                myRaygunClient.SendInBackground(ex, myRaygunValidationPackage.Tags);
                 HttpResponse = Request.CreateResponse(HttpStatusCode.OK);
                 //TODO: ERC 9/7/2020 - Possibly need to make Response Class
                 HttpResponse.Content = new StringContent("Failed");

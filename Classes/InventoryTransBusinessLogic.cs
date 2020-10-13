@@ -58,7 +58,7 @@ namespace QuantifyWebAPI.Controllers
             //***** Get all transfers and adjustments (will call 'InventoryTrans' as a group)
             //      will loop through these and compare VersionStamp against appropriate record in Versions table *****
             MovementCollection all_inventory_trans = MovementCollection.GetMovementCollection(MovementType.TransferNewToRent);
-            //TODO: ADH 10/7/2020 - Convert to use list or get all StockedProduct records: need to test whatever we decide
+            //TODO: ADH 10/7/2020 - TEST: Performance of large amounts of adjustments in one batch - if bad, potentially switch to using List
             StockedProductAdjustmentCollection all_adjustments = StockedProductAdjustmentCollection.GetStockedProductAdjustmentCollection(ProductType.All);
             VersionStampList myStockedProductVersions = VersionStampList.GetVersionList(VersionStampList.DataObjectName.StockedProduct);
 
@@ -213,7 +213,7 @@ namespace QuantifyWebAPI.Controllers
             //***** Skip if we did not get any adjustments to integrate *****
             if (myAdjustmentsDictionary.Count > 0)
             {
-                //TODO: ADH 9/29/2020 - Need to verify the below does what is intended, and if this is best way to evaluate per business
+                //TODO: ADH 9/29/2020 - TEST: Need to verify the below does what is intended, and if this is best way to evaluate per business
                 //***** Initialize error tracking fields and data package *****
                 var myErrorText = "";
                 string myProcessStatus = "A";

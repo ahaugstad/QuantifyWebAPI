@@ -78,7 +78,8 @@ namespace QuantifyWebAPI.Controllers
             //***** Loop through all products in both product and consumable catalogs *****
             foreach (ProductListItem productListItem in combined_products)
             {
-                string myProductID = productListItem.PartNumber;
+                //TODO: ADH 10/12/2020 - TEST: First 15 chars of string line below works for products
+                string myProductID = productListItem.PartNumber.Substring(0,15);
                 string timestampVersion = "0x" + String.Join("", productListItem.VersionStamp.Select(b => Convert.ToString(b, 16)));
                 
                 //***** Add record to data table to be written to Version table in SQL *****
@@ -87,7 +88,6 @@ namespace QuantifyWebAPI.Controllers
                 //***** Build Dictionary *****
                 try
                 {
-                    //TODO: ADH 10/12/2020 - Need to check if first 15 chars are dupes, because that what will get sent to WebApps (not just total part numbers)
                     if (!myProductsDictionary.ContainsKey(myProductID))
                     {
                         myProductsDictionary.Add(myProductID, productListItem);
@@ -95,11 +95,19 @@ namespace QuantifyWebAPI.Controllers
                     else
                     {
                         myErrorDictionary.Add(myProductID,"Duplicate product id");
+                        Exception myValidationException = new Exception("Duplicate Product ID: " + myProductID);
+                        throw myValidationException;
                     }
                 }
                 catch (Exception ex)
                 {
-                    myRaygunClient.SendInBackground(ex);
+                    //***** Create Raygun Exception Package *****
+                    RaygunExceptionPackage myRaygunValidationPackage = new RaygunExceptionPackage();
+                    myRaygunValidationPackage.Tags.Add("Validation");
+                    myRaygunValidationPackage.Tags.Add("Product");
+                    myRaygunValidationPackage.CustomData.Add("Product ID: ",myProductID);
+                    
+                    myRaygunClient.SendInBackground(ex, myRaygunValidationPackage.Tags, myRaygunValidationPackage.CustomData);
                 }
             }
 

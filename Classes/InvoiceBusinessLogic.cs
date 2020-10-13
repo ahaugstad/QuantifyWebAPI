@@ -131,7 +131,6 @@ namespace QuantifyWebAPI.Controllers
                         myInvoiceRentLine.cost_code = "10-Rent";
                         myInvoiceData.Lines.Add(myInvoiceRentLine);
 
-                        //TODO: ADH 10/7/2020 - Loop through these charges and pass individual lines instead of summarizing
                         //***** Build data profile for Product subtotal line item *****
                         foreach (InvoiceProductCharge myInvoiceProductCharge in myInvoice.InvoiceProductCharges)
                         {
@@ -163,7 +162,12 @@ namespace QuantifyWebAPI.Controllers
                             }
                             catch (Exception ex)
                             {
-                                myRaygunClient.SendInBackground(ex);
+                                //***** Create Raygun Exception Package *****
+                                RaygunExceptionPackage myRaygunValidationPackage = new RaygunExceptionPackage();
+                                myRaygunValidationPackage.Tags.Add("Validation");
+                                myRaygunValidationPackage.Tags.Add("Invoice");
+                                myRaygunValidationPackage.CustomData.Add("Quantify Invoice ID", myInvoice.InvoiceID);
+                                myRaygunClient.SendInBackground(ex, myRaygunValidationPackage.Tags, myRaygunValidationPackage.CustomData);
                             }
 
                             //***** Add Invoice Product Charge line to data package *****

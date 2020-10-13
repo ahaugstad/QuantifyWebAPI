@@ -136,8 +136,9 @@ namespace QuantifyWebAPI.Controllers
                         }
                         else
                         {
-                            //TODO: ADH 10/12/2020 - Write error (E1) if job does not have sales tax code on it
                             myJobData.sales_tax_code = "";
+                            myErrorText = "Jobsite sales tax code is blank. Please provide a sales tax code on this invoice's associated jobsite to integrate this invoice.";
+                            myProcessStatus = "E1";
                         }
 
                         //***** If Job has any taxable boxes checked, map to sales taxable 'Y', else 'N' *****

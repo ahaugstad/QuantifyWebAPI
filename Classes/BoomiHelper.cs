@@ -37,12 +37,12 @@ namespace QuantifyWebAPI.Classes
     public class BoomiHelper
     {
         RaygunClient myRaygunClient = new RaygunClient();
-        public async Task PostBoomiAPI()
+        //TODO: ADH 10/12/2020 - TEST: Putting uriString in web.config still works
+        public async Task PostBoomiAPI(string uriString)
         {
             try
             {
                 //***** REST API URL for Boomi web service *****
-                string uriString = "http://apimariadbap01.apigroupinc.api:9090/ws/rest/webapps_quantify/api";
                 //TODO: ADH 10/12/2020 - When going to prod, use following URL instead to hit load balancer
                 //string uriString = "http://apiboomiprod.apigroupinc.com:9090/ws/rest/webapps_quantify/api";
 
@@ -66,7 +66,11 @@ namespace QuantifyWebAPI.Classes
             }
             catch (Exception ex)
             {
-                myRaygunClient.SendInBackground(ex);
+                //***** Create Raygun Exception Package *****
+                RaygunExceptionPackage myRaygunValidationPackage = new RaygunExceptionPackage();
+                myRaygunValidationPackage.Tags.Add("HTTP");
+                myRaygunValidationPackage.Tags.Add("Connection");
+                myRaygunClient.SendInBackground(ex, myRaygunValidationPackage.Tags, myRaygunValidationPackage.CustomData);
             }
         }
         public void QuantifyLogin()
