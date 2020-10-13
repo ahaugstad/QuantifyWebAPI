@@ -202,6 +202,8 @@
     <Compile Include="Areas\HelpPage\SampleGeneration\SampleDirection.cs" />
     <Compile Include="Areas\HelpPage\SampleGeneration\TextSample.cs" />
     <Compile Include="Areas\HelpPage\XmlDocumentationProvider.cs" />
+    <Compile Include="Classes\TaxCodeBusinessLogic.cs" />
+    <Compile Include="Classes\TaxCodeModel.cs" />
     <Compile Include="Classes\RaygunHelper.cs" />
     <Compile Include="Classes\VendorBusinessLogic.cs" />
     <Compile Include="Classes\InvoiceBusinessLogic.cs" />

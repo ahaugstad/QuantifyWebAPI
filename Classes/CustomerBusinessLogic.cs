@@ -51,7 +51,7 @@ namespace QuantifyWebAPI.Controllers
             string myResponse = "Success";
             
             //***** Instantiate response class for logging successes/errors if fail ***** 
-            CustomerResponseObj customerResponse = new CustomerResponseObj();
+            CustomerResponseObj CustomerResponse = new CustomerResponseObj();
 
             //***** Try to Deserialize to Class object and Process Data *****
             try
@@ -71,33 +71,33 @@ namespace QuantifyWebAPI.Controllers
                 string CustomerFax = myDeserializedClass.CustomerData.customer_fax;
 
 
-                //*****  Instantiate customer we are inserting/updating; check if it already exists before updating/inserting ***** 
-                BusinessPartner customer = BusinessPartner.GetBusinessPartnerByAccountingID(CustomerNumber);
+                //*****  Instantiate Customer we are inserting/updating; check if it already exists before updating/inserting ***** 
+                BusinessPartner Customer = BusinessPartner.GetBusinessPartnerByAccountingID(CustomerNumber);
 
                 //****** check to See if Create or Update *****
-                if (customer.PartnerNumber == "")
+                if (Customer.PartnerNumber == "")
                 {
-                    //***** Create new customer ***** 
-                    customer = BusinessPartner.NewBusinessPartner(PartnerTypes.Customer);
+                    //***** Create new Customer ***** 
+                    Customer = BusinessPartner.NewBusinessPartner(PartnerTypes.Customer);
                 }
                 else
                 {
-                    //***** Get existing customer ***** 
-                    customer = BusinessPartner.GetBusinessPartnerByAccountingID(CustomerNumber);
+                    //***** Get existing Customer ***** 
+                    Customer = BusinessPartner.GetBusinessPartnerByAccountingID(CustomerNumber);
                 }
 
-                //***** Set non-address customer fields ***** 
-                customer.AccountingID = CustomerNumber;
-                customer.Name = CustomerName;
-                customer.PhoneNumber = CustomerPhone;
-                customer.EmailAddress = CustomerEmail;
-                customer.FaxNumber = CustomerFax;
+                //***** Set non-address Customer fields ***** 
+                Customer.AccountingID = CustomerNumber;
+                Customer.Name = CustomerName;
+                Customer.PhoneNumber = CustomerPhone;
+                Customer.EmailAddress = CustomerEmail;
+                Customer.FaxNumber = CustomerFax;
 
                 //***** Validate and save the Customer record ***** 
-                customerResponse = customerValidateAndSave(customer);
+                CustomerResponse = CustomerValidateAndSave(Customer);
 
                 //***** Verify we have successfully saved Customer record's non-address fields before moving on to addresses - if not, skip and return errors
-                if (customerResponse.status != "Error")
+                if (CustomerResponse.status != "Error")
                 {
                     //***** Update appropriate address information for Customer based on address type provided ***** 
                     foreach (QuantifyWebAPI.Classes.Address myAddress in myDeserializedClass.CustomerData.Addresses)
@@ -116,48 +116,48 @@ namespace QuantifyWebAPI.Controllers
                             myRaygunStateErrorPackage.Tags.Add("Data Portal");
                             myRaygunStateErrorPackage.Tags.Add("Customer");
                             myRaygunStateErrorPackage.Tags.Add("Configuration Error");
-                            myRaygunStateErrorPackage.CustomData.Add("WebApps Customer ID: ", customer.AccountingID);
+                            myRaygunStateErrorPackage.CustomData.Add("WebApps Customer ID: ", Customer.AccountingID);
                             Exception myStateException = new Exception("State code " + myAddress.state + " does not exist in Quantify", ex);
                             myRaygunClient.SendInBackground(myStateException, myRaygunStateErrorPackage.Tags, myRaygunStateErrorPackage.CustomData);
                             throw myStateException;
                         }
 
-                        //***** Re-fetch customer record each time we update address data ***** 
-                        customer = BusinessPartner.GetBusinessPartnerByAccountingID(myDeserializedClass.CustomerData.customer_id);
+                        //***** Re-fetch Customer record each time we update address data ***** 
+                        Customer = BusinessPartner.GetBusinessPartnerByAccountingID(myDeserializedClass.CustomerData.customer_id);
                         if (myAddress.addressTypeCode == "Business" || myAddress.addressTypeCode == null || myAddress.addressTypeCode == "")
                         {
-                            customer.Addresses.GetAddressByType(AddressTypes.Business).Street = myAddress.address1;
-                            customer.Addresses.GetAddressByType(AddressTypes.Business).Street1 = myAddress.address2;
-                            customer.Addresses.GetAddressByType(AddressTypes.Business).City = myAddress.city;
-                            customer.Addresses.GetAddressByType(AddressTypes.Business).StateID = state.StateID;
-                            customer.Addresses.GetAddressByType(AddressTypes.Business).StateName = myAddress.state.ToUpper();
-                            customer.Addresses.GetAddressByType(AddressTypes.Business).PostalCode = myAddress.zip;
-                            customer.Addresses.GetAddressByType(AddressTypes.Business).Country = myAddress.country;
+                            Customer.Addresses.GetAddressByType(AddressTypes.Business).Street = myAddress.address1;
+                            Customer.Addresses.GetAddressByType(AddressTypes.Business).Street1 = myAddress.address2;
+                            Customer.Addresses.GetAddressByType(AddressTypes.Business).City = myAddress.city;
+                            Customer.Addresses.GetAddressByType(AddressTypes.Business).StateID = state.StateID;
+                            Customer.Addresses.GetAddressByType(AddressTypes.Business).StateName = myAddress.state.ToUpper();
+                            Customer.Addresses.GetAddressByType(AddressTypes.Business).PostalCode = myAddress.zip;
+                            Customer.Addresses.GetAddressByType(AddressTypes.Business).Country = myAddress.country;
                         }
                         else if (myAddress.addressTypeCode == "Billing")
                         {
-                            customer.Addresses.GetAddressByType(AddressTypes.Billing).Street = myAddress.address1;
-                            customer.Addresses.GetAddressByType(AddressTypes.Billing).Street1 = myAddress.address2;
-                            customer.Addresses.GetAddressByType(AddressTypes.Billing).City = myAddress.city;
-                            customer.Addresses.GetAddressByType(AddressTypes.Business).StateID = state.StateID;
-                            customer.Addresses.GetAddressByType(AddressTypes.Billing).StateName = myAddress.state.ToUpper();
-                            customer.Addresses.GetAddressByType(AddressTypes.Billing).PostalCode = myAddress.zip;
-                            customer.Addresses.GetAddressByType(AddressTypes.Billing).Country = myAddress.country;
+                            Customer.Addresses.GetAddressByType(AddressTypes.Billing).Street = myAddress.address1;
+                            Customer.Addresses.GetAddressByType(AddressTypes.Billing).Street1 = myAddress.address2;
+                            Customer.Addresses.GetAddressByType(AddressTypes.Billing).City = myAddress.city;
+                            Customer.Addresses.GetAddressByType(AddressTypes.Business).StateID = state.StateID;
+                            Customer.Addresses.GetAddressByType(AddressTypes.Billing).StateName = myAddress.state.ToUpper();
+                            Customer.Addresses.GetAddressByType(AddressTypes.Billing).PostalCode = myAddress.zip;
+                            Customer.Addresses.GetAddressByType(AddressTypes.Billing).Country = myAddress.country;
                         }
                         else if (myAddress.addressTypeCode == "Shipping")
                         {
-                            customer.Addresses.GetAddressByType(AddressTypes.Shipping).Street = myAddress.address1;
-                            customer.Addresses.GetAddressByType(AddressTypes.Shipping).Street1 = myAddress.address2;
-                            customer.Addresses.GetAddressByType(AddressTypes.Shipping).City = myAddress.city;
-                            customer.Addresses.GetAddressByType(AddressTypes.Business).StateID = state.StateID;
-                            customer.Addresses.GetAddressByType(AddressTypes.Shipping).StateName = myAddress.state.ToUpper();
-                            customer.Addresses.GetAddressByType(AddressTypes.Shipping).PostalCode = myAddress.zip;
-                            customer.Addresses.GetAddressByType(AddressTypes.Shipping).Country = myAddress.country;
+                            Customer.Addresses.GetAddressByType(AddressTypes.Shipping).Street = myAddress.address1;
+                            Customer.Addresses.GetAddressByType(AddressTypes.Shipping).Street1 = myAddress.address2;
+                            Customer.Addresses.GetAddressByType(AddressTypes.Shipping).City = myAddress.city;
+                            Customer.Addresses.GetAddressByType(AddressTypes.Business).StateID = state.StateID;
+                            Customer.Addresses.GetAddressByType(AddressTypes.Shipping).StateName = myAddress.state.ToUpper();
+                            Customer.Addresses.GetAddressByType(AddressTypes.Shipping).PostalCode = myAddress.zip;
+                            Customer.Addresses.GetAddressByType(AddressTypes.Shipping).Country = myAddress.country;
                         }
 
                         //***** Validate and save the Customer record ***** 
-                        customerResponse = customerValidateAndSave(customer);
-                        if (customerResponse.status == "Error") { break; }
+                        CustomerResponse = CustomerValidateAndSave(Customer);
+                        if (CustomerResponse.status == "Error") { break; }
                     }
                 }
             }
@@ -169,8 +169,8 @@ namespace QuantifyWebAPI.Controllers
                 myRaygunSQLErrorPackage.Tags.Add("Customer");
                 myRaygunClient.SendInBackground(ex, myRaygunSQLErrorPackage.Tags);
 
-                customerResponse.status = "SQL Exception Error";
-                customerResponse.errorList.Add("Quantify Login error - " + Environment.NewLine + ex.Message.ToString());
+                CustomerResponse.status = "SQL Exception Error";
+                CustomerResponse.errorList.Add("Quantify Login error - " + Environment.NewLine + ex.Message.ToString());
             }
             catch (Exception ex)
             {
@@ -180,22 +180,22 @@ namespace QuantifyWebAPI.Controllers
                 myRaygunGenericErrorPackage.Tags.Add("Customer");
                 myRaygunClient.SendInBackground(ex, myRaygunGenericErrorPackage.Tags);
 
-                customerResponse.status = "Error";
-                customerResponse.errorList.Add("Generic error - " + Environment.NewLine + ex.Message.ToString());
+                CustomerResponse.status = "Error";
+                CustomerResponse.errorList.Add("Generic error - " + Environment.NewLine + ex.Message.ToString());
             }
 
             //***** Serialize response class to Json to be passed back *****
-            myResponse = JsonConvert.SerializeObject(customerResponse);
+            myResponse = JsonConvert.SerializeObject(CustomerResponse);
 
             return myResponse;
         }
 
 
-        //***** Validates customer record. If it validates, it saves and commits the changes. It if has errors, logs those to be passed back to Boomi. ***** 
-        public CustomerResponseObj customerValidateAndSave(BusinessPartner parmCustomer)
+        //***** Validates Customer record. If it validates, it saves and commits the changes. It if has errors, logs those to be passed back to Boomi. ***** 
+        public CustomerResponseObj CustomerValidateAndSave(BusinessPartner parmCustomer)
         {
             //***** Create response object ***** 
-            CustomerResponseObj customerResponse = new CustomerResponseObj();
+            CustomerResponseObj CustomerResponse = new CustomerResponseObj();
 
             //***** Create string list for errors ***** 
             List<string> errorList = new List<string>();
@@ -216,7 +216,7 @@ namespace QuantifyWebAPI.Controllers
                 myRaygunClient.SendInBackground(ex, myRaygunDataPortalPackage.Tags, myRaygunDataPortalPackage.CustomData);
 
                 //***** Pass back "Error" for fail ***** 
-                customerResponse.status = "Error";
+                CustomerResponse.status = "Error";
 
                 //***** Get the object back from the data tier ***** 
                 parmCustomer = ex.BusinessObject as BusinessPartner;
@@ -242,10 +242,10 @@ namespace QuantifyWebAPI.Controllers
                         //***** Log errors and pass back response  ***** 
                         errorList.Add(rule.Severity.ToString() + ": " + rule.Description);
                     }
-                    customerResponse.errorList = errorList;
+                    CustomerResponse.errorList = errorList;
                 }
             }
-            return customerResponse;
+            return CustomerResponse;
         }
     }
 }

@@ -149,6 +149,11 @@ namespace QuantifyWebAPI.Controllers
                         myResponse = myVendorResponse.UpsertVendorData(jsonResult);
                         break;
 
+                    case "TaxCode":
+                        TaxCodeBusinessLogic myTaxCodeResponse = new TaxCodeBusinessLogic(myQuantifyCredentials, InitializationMode);
+                        myResponse = myTaxCodeResponse.UpsertTaxCodeData(jsonResult);
+                        break;
+
                     default:
                         throw new System.ArgumentException("Unknown 'Request Type' Submitted in UpsertDataObject", RequestType);
                 }
