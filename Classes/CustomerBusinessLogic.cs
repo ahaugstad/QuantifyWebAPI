@@ -204,6 +204,7 @@ namespace QuantifyWebAPI.Controllers
             {
                 //***** Attempt to save ***** 
                 parmCustomer.Save();
+                CustomerResponse.status = "Success";
             }
             catch (DataPortalException ex)
             {

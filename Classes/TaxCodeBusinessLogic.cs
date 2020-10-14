@@ -142,6 +142,7 @@ namespace QuantifyWebAPI.Controllers
             {
                 //***** Attempt to save ***** 
                 parmTaxCode.Save();
+                TaxCodeResponse.status = "Success";
             }
             catch (DataPortalException ex)
             {
