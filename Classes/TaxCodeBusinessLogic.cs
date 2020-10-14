@@ -78,12 +78,13 @@ namespace QuantifyWebAPI.Controllers
                     if (myTaxCode.RefID == TaxCode)
                     {
                         //***** Update existing TaxCode ***** 
-                        myTaxCode.Name = TaxCodeState + " - " + TaxCodeDescription;
-                        myTaxCode.Rate = Convert.ToDouble(TaxCodeRate) * 100;  // Need to multiple by 100 since WebApps passes in fraction and we need percent;
-                        myTaxCode.RefID = TaxCode;
+                        TaxRate updTaxCode = TaxRate.GetTaxRate(myTaxCode.TaxRateID);
+                        updTaxCode.Name = TaxCodeState + " - " + TaxCodeDescription;
+                        updTaxCode.Rate = Convert.ToDouble(TaxCodeRate) * 100;  // Need to multiple by 100 since WebApps passes in fraction and we need percent;
+                        updTaxCode.RefID = TaxCode;
 
                         //***** Validate and save the TaxCode record ***** 
-                        TaxCodeResponse = TaxCodeValidateAndSave(myTaxCode);
+                        TaxCodeResponse = TaxCodeValidateAndSave(updTaxCode);
                         taxCodeSaved = true;
                         break;
                     }
