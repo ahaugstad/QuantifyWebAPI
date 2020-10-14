@@ -97,6 +97,9 @@ namespace QuantifyWebAPI.Controllers
                     newTaxCode.Name = TaxCodeState + " - " + TaxCodeDescription;
                     newTaxCode.Rate = Convert.ToDouble(TaxCodeRate) * 100;  // Need to multiple by 100 since WebApps passes in fraction and we need percent
                     newTaxCode.RefID = TaxCode;
+
+                    //***** Validate and save the TaxCode record ***** 
+                    TaxCodeResponse = TaxCodeValidateAndSave(newTaxCode);
                 }
             }
             catch (SqlException ex)
