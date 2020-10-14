@@ -59,9 +59,8 @@ namespace QuantifyWebAPI.Controllers
                 //***** Log on to Quantify *****
                 QuantHelper.QuantifyLogin();
 
-                //***** Deserialize JObject to create class we can work with ******
+                //***** Deserialize JObject to create class we can work with *****
                 TaxCodeRootClass myDeserializedClass = jsonResult.ToObject<TaxCodeRootClass>();
-
 
                 //***** Define fields *****
                 string TaxCode = myDeserializedClass.TaxCodeData.tax_code;
@@ -73,35 +72,31 @@ namespace QuantifyWebAPI.Controllers
                 TaxRateCollection myTaxCodeCollection = TaxRateCollection.GetTaxRateCollection(ActiveStatus.Both, false, Guid.Empty);
 
                 //***** Loop through full list of Tax Rates and update matching record if one exists *****
-                TaxRate inputTaxCode = TaxRate.NewTaxRate();
+                bool taxCodeSaved = false;
                 foreach (TaxRate myTaxCode in myTaxCodeCollection)
                 {
                     if (myTaxCode.RefID == TaxCode)
                     {
                         //***** Update existing TaxCode ***** 
                         myTaxCode.Name = TaxCodeState + " - " + TaxCodeDescription;
-                        myTaxCode.Rate = Convert.ToDouble(TaxCodeRate);
+                        myTaxCode.Rate = Convert.ToDouble(TaxCodeRate) * 100;  // Need to multiple by 100 since WebApps passes in fraction and we need percent;
                         myTaxCode.RefID = TaxCode;
 
-                        //***** Assign to TaxCode object for writing to database *****
-                        inputTaxCode = myTaxCode;
-                    }
-                    else
-                    {
-                        continue;
+                        //***** Validate and save the TaxCode record ***** 
+                        TaxCodeResponse = TaxCodeValidateAndSave(myTaxCode);
+                        taxCodeSaved = true;
+                        break;
                     }
                 }
 
                 //***** If no matching record was found, fill out required fields and save new record *****
-                if (inputTaxCode.IsNew)
+                if (!taxCodeSaved)
                 {
-                    inputTaxCode.Name = TaxCodeState + " - " + TaxCodeDescription;
-                    inputTaxCode.Rate = Convert.ToDouble(TaxCodeRate);
-                    inputTaxCode.RefID = TaxCode;
+                    TaxRate newTaxCode = TaxRate.NewTaxRate();
+                    newTaxCode.Name = TaxCodeState + " - " + TaxCodeDescription;
+                    newTaxCode.Rate = Convert.ToDouble(TaxCodeRate) * 100;  // Need to multiple by 100 since WebApps passes in fraction and we need percent
+                    newTaxCode.RefID = TaxCode;
                 }
-
-                //***** Validate and save the TaxCode record ***** 
-                TaxCodeResponse = TaxCodeValidateAndSave(inputTaxCode);
             }
             catch (SqlException ex)
             {
