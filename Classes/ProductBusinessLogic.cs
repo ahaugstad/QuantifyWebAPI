@@ -153,24 +153,28 @@ namespace QuantifyWebAPI.Controllers
                         Product myProduct = Product.GetProduct(myProductListItem.ProductID);
                         ProductCategory myProductCategory = ProductCategory.GetProductCategory(myProduct.ProductCategoryID, myProduct.ProductType);
 
-                        //***** Build data profile *****
-                        myProductData.catalog = myProduct.ProductType.ToDescription();
-                        myProductData.category = myProductCategory.RevenueCode;
-                        myProductData.list_price = myProduct.DefaultList.ToString();
-                        myProductData.unit_cost = myProduct.DefaultCost.ToString();
-                        myProductData.product_id = myProductID;
-                        myProductData.description = myProduct.Description;
+                        //TODO: ADH 10/15/2020 - TEST: 'Waiting' for Product to have a Category before integrating over
+                        if (myProduct.ProductCategoryID != null && myProduct.ProductCategoryID != Guid.Empty)
+                        {
+                            //***** Build data profile *****
+                            myProductData.catalog = myProduct.ProductType.ToDescription();
+                            myProductData.category = myProductCategory.RevenueCode;
+                            myProductData.list_price = myProduct.DefaultList.ToString();
+                            myProductData.unit_cost = myProduct.DefaultCost.ToString();
+                            myProductData.product_id = myProductID;
+                            myProductData.description = myProduct.Description;
 
-                        //***** Package as class, serialize to JSON and write to data table to get mass inserted into SQL *****
-                        myProducts.entity = "Product";
-                        myProducts.Product = myProductData;
-                        string myJsonObject = JsonConvert.SerializeObject(myProducts);
+                            //***** Package as class, serialize to JSON and write to data table to get mass inserted into SQL *****
+                            myProducts.entity = "Product";
+                            myProducts.Product = myProductData;
+                            string myJsonObject = JsonConvert.SerializeObject(myProducts);
 
-                        //***** Create audit log datarow ******                 
-                        auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Product", myProductData.product_id, myJsonObject, "", myProcessStatus, myErrorText);
+                            //***** Create audit log datarow ******                 
+                            auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Product", myProductData.product_id, myJsonObject, "", myProcessStatus, myErrorText);
 
-                        //****** Create XRef datarow *****
-                        productXRef = MySqlHelper.CreateXRefDataRow(productXRef, myProductData.product_id, myProduct.PartNumber, "");
+                            //****** Create XRef datarow *****
+                            productXRef = MySqlHelper.CreateXRefDataRow(productXRef, myProductData.product_id, myProduct.PartNumber, "");
+                        }
                     }
                     
                     //***** Insert to Audit Log and XRef tables for Boomi to reference *****
