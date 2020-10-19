@@ -132,7 +132,8 @@ namespace QuantifyWebAPI.Controllers
                         //***** If Job has sales/use tax code, assign it (mapping to WebApps accordingly will be done in Boomi) *****
                         if (jobsite.JobTax1ID != null && jobsite.JobTax1ID != Guid.Empty)
                         {
-                            myJobData.sales_tax_code = jobsite.JobTax1.Name;
+                            TaxRate taxRate = TaxRate.GetTaxRate(jobsite.JobTax1ID);
+                            myJobData.sales_tax_code = taxRate.RefID;
                         }
                         else
                         {

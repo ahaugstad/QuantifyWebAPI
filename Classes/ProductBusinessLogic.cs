@@ -78,8 +78,16 @@ namespace QuantifyWebAPI.Controllers
             //***** Loop through all products in both product and consumable catalogs *****
             foreach (ProductListItem productListItem in combined_products)
             {
+                string myProductID;
                 //TODO: ADH 10/12/2020 - TEST: First 15 chars of string line below works for products
-                string myProductID = productListItem.PartNumber.Substring(0,15);
+                if (productListItem.PartNumber.Length < 15)
+                {
+                    myProductID = productListItem.PartNumber.Substring(0, productListItem.PartNumber.Length);
+                }
+                else
+                {
+                    myProductID = productListItem.PartNumber.Substring(0, 15);
+                }    
                 string timestampVersion = "0x" + String.Join("", productListItem.VersionStamp.Select(b => Convert.ToString(b, 16)));
                 
                 //***** Add record to data table to be written to Version table in SQL *****
@@ -95,8 +103,6 @@ namespace QuantifyWebAPI.Controllers
                     else
                     {
                         myErrorDictionary.Add(myProductID,"Duplicate product id");
-                        Exception myValidationException = new Exception("Duplicate Product ID: " + myProductID);
-                        throw myValidationException;
                     }
                 }
                 catch (Exception ex)
@@ -134,32 +140,41 @@ namespace QuantifyWebAPI.Controllers
                         string myProductID = myRow["QuantifyID"].ToString();
                         ProductData myProductData = new ProductData();
 
-                        //***** Check if duplicate product ID and log error if so *****
-                        if (myErrorDictionary.ContainsKey(myProductID)) { myErrorText = myErrorDictionary[myProductID]; }
+                        //***** Check if duplicate product ID and log error if so (in both Raygun and Audit Log table) *****
+                        if (myErrorDictionary.ContainsKey(myProductID)) 
+                        { 
+                            myErrorText = myErrorDictionary[myProductID];
+                            Exception myValidationException = new Exception("Duplicate Product ID: " + myProductID);
+                            throw myValidationException;
+                        }
 
                         //***** Initialize classes to use in building data profile
                         ProductListItem myProductListItem = myProductsDictionary[myProductID];
                         Product myProduct = Product.GetProduct(myProductListItem.ProductID);
                         ProductCategory myProductCategory = ProductCategory.GetProductCategory(myProduct.ProductCategoryID, myProduct.ProductType);
 
-                        //***** Build data profile *****
-                        myProductData.catalog = myProduct.ProductType.ToDescription();
-                        myProductData.category = myProductCategory.RevenueCode;
-                        myProductData.list_price = myProduct.DefaultList.ToString();
-                        myProductData.unit_cost = myProduct.DefaultCost.ToString();
-                        myProductData.product_id = myProductID;
-                        myProductData.description = myProduct.Description;
+                        //TODO: ADH 10/15/2020 - TEST: 'Waiting' for Product to have a Category before integrating over
+                        if (myProduct.ProductCategoryID != null && myProduct.ProductCategoryID != Guid.Empty)
+                        {
+                            //***** Build data profile *****
+                            myProductData.catalog = myProduct.ProductType.ToDescription();
+                            myProductData.category = myProductCategory.RevenueCode;
+                            myProductData.list_price = myProduct.DefaultList.ToString();
+                            myProductData.unit_cost = myProduct.DefaultCost.ToString();
+                            myProductData.product_id = myProductID;
+                            myProductData.description = myProduct.Description;
 
-                        //***** Package as class, serialize to JSON and write to data table to get mass inserted into SQL *****
-                        myProducts.entity = "Product";
-                        myProducts.Product = myProductData;
-                        string myJsonObject = JsonConvert.SerializeObject(myProducts);
+                            //***** Package as class, serialize to JSON and write to data table to get mass inserted into SQL *****
+                            myProducts.entity = "Product";
+                            myProducts.Product = myProductData;
+                            string myJsonObject = JsonConvert.SerializeObject(myProducts);
 
-                        //***** Create audit log datarow ******                 
-                        auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Product", myProductData.product_id, myJsonObject, "", myProcessStatus, myErrorText);
+                            //***** Create audit log datarow ******                 
+                            auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Product", myProductData.product_id, myJsonObject, "", myProcessStatus, myErrorText);
 
-                        //****** Create XRef datarow *****
-                        productXRef = MySqlHelper.CreateXRefDataRow(productXRef, myProductData.product_id, myProduct.PartNumber, "");
+                            //****** Create XRef datarow *****
+                            productXRef = MySqlHelper.CreateXRefDataRow(productXRef, myProductData.product_id, myProduct.PartNumber, "");
+                        }
                     }
                     
                     //***** Insert to Audit Log and XRef tables for Boomi to reference *****
