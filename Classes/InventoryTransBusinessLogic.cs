@@ -58,8 +58,9 @@ namespace QuantifyWebAPI.Controllers
             //***** Get all transfers and adjustments (will call 'InventoryTrans' as a group)
             //      will loop through these and compare VersionStamp against appropriate record in Versions table *****
             MovementCollection all_inventory_trans = MovementCollection.GetMovementCollection(MovementType.TransferNewToRent);
-            //TODO: ADH 10/7/2020 - TEST: Performance of large amounts of adjustments in one batch - if bad, potentially switch to using List
-            StockedProductAdjustmentCollection all_adjustments = StockedProductAdjustmentCollection.GetStockedProductAdjustmentCollection(ProductType.All);
+            StockedProductAdjustmentCollection all_adjustments = StockedProductAdjustmentCollection.GetStockedProductAdjustmentCollection(ProductType.Product);
+            //TODO: ADH 10/19/2020 - Figure out how to include consumable adjustments
+            //StockedProductAdjustmentCollection all_consumable_adjustments = StockedProductAdjustmentCollection.GetStockedProductAdjustmentCollection(ProductType.Consumable);
             VersionStampList myStockedProductVersions = VersionStampList.GetVersionList(VersionStampList.DataObjectName.StockedProduct);
 
             //***** Get DataTable Data Structure for Version Control Stored Procedure *****

@@ -98,7 +98,7 @@ namespace QuantifyWebAPI.Controllers
             foreach (ShipmentListItem myReturnListItem in all_returns_list)
             {
                 //***** Evaluate if shipment has Out of Service products - this will determine if we need to integrate a return order or not *****
-                if (myReturnListItem.ShipmentType == ShipmentType.Return)
+                if (myReturnListItem.ShipmentType == ShipmentType.Return || myReturnListItem.ShipmentType == ShipmentType.Delivery)
                 {
                     Shipment myReturn = Shipment.GetShipment(myReturnListItem.ShipmentID, false, false, false);
                     string myReturnNumber = myReturn.ShipmentNumber;
@@ -176,9 +176,6 @@ namespace QuantifyWebAPI.Controllers
                                 case MovementType.SellConsumables:
                                     mySalesOrderData.from_warehouse = ((int)Warehouse.Consumable).ToString();
                                     break;
-                                //case MovementType.ReRentOrdered:
-                                //    mySalesOrderData.from_warehouse = ((int)Warehouse.)
-                                //    break;
                             }
 
                             //***** Build line item data profile *****

@@ -153,8 +153,24 @@ namespace QuantifyWebAPI.Controllers
                         Product myProduct = Product.GetProduct(myProductListItem.ProductID);
                         ProductCategory myProductCategory = ProductCategory.GetProductCategory(myProduct.ProductCategoryID, myProduct.ProductType);
 
-                        //***** Get WebApps Product ID from Products XRef *****
-                        //string myWebAppsProductID = MySqlHelper.GetWebAppsIDXRef()
+                        //***** Get WebApps Product ID from Products XRef and assign as Product ID if it exists *****
+                        DataTable myProductXRefRecord = myDAL.GetWebAppsIDProductsXRef(myProduct.ProductID.ToString(), connectionString);
+                        if (myProductXRefRecord.Rows.Count > 0)
+                        {
+                            string myWebAppsProductID = myProductXRefRecord.Rows[0]["WebAppsItemNumber"].ToString();
+                            if (myWebAppsProductID != null && myWebAppsProductID != "")
+                            {
+                                myProductData.product_id = myWebAppsProductID;
+                            }
+                            else
+                            {
+                                myProductData.product_id = myProductID;
+                            }
+                        }
+                        else
+                        {
+                            myProductData.product_id = myProductID;
+                        }    
 
                         if (myProduct.ProductCategoryID != null && myProduct.ProductCategoryID != Guid.Empty)
                         {
@@ -163,8 +179,6 @@ namespace QuantifyWebAPI.Controllers
                             myProductData.category = myProductCategory.RevenueCode;
                             myProductData.list_price = myProduct.DefaultList.ToString();
                             myProductData.unit_cost = myProduct.DefaultCost.ToString();
-                            //if ()
-                            myProductData.product_id = myProductID;
                             myProductData.description = myProduct.Description;
 
                             //***** Package as class, serialize to JSON and write to data table to get mass inserted into SQL *****
@@ -174,8 +188,6 @@ namespace QuantifyWebAPI.Controllers
 
                             //***** Create audit log datarow *****                 
                             auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Product", myProductData.product_id, myJsonObject, "", myProcessStatus, myErrorText);
-
-                            //***** Create XRef datarow *****
                             productXRef = MySqlHelper.UpsertXRefDataRow(productXRef, myProduct.ProductID.ToString(), myProductData.product_id, myProduct.PartNumber, "");
                         }
                     }
