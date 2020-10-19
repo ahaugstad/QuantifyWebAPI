@@ -148,12 +148,14 @@ namespace QuantifyWebAPI.Controllers
                             throw myValidationException;
                         }
 
-                        //***** Initialize classes to use in building data profile
+                        //***** Initialize classes to use in building data profile *****
                         ProductListItem myProductListItem = myProductsDictionary[myProductID];
                         Product myProduct = Product.GetProduct(myProductListItem.ProductID);
                         ProductCategory myProductCategory = ProductCategory.GetProductCategory(myProduct.ProductCategoryID, myProduct.ProductType);
 
-                        //TODO: ADH 10/15/2020 - TEST: 'Waiting' for Product to have a Category before integrating over
+                        //***** Get WebApps Product ID from Products XRef *****
+                        //string myWebAppsProductID = MySqlHelper.GetWebAppsIDXRef()
+
                         if (myProduct.ProductCategoryID != null && myProduct.ProductCategoryID != Guid.Empty)
                         {
                             //***** Build data profile *****
@@ -161,6 +163,7 @@ namespace QuantifyWebAPI.Controllers
                             myProductData.category = myProductCategory.RevenueCode;
                             myProductData.list_price = myProduct.DefaultList.ToString();
                             myProductData.unit_cost = myProduct.DefaultCost.ToString();
+                            //if ()
                             myProductData.product_id = myProductID;
                             myProductData.description = myProduct.Description;
 
@@ -169,11 +172,11 @@ namespace QuantifyWebAPI.Controllers
                             myProducts.Product = myProductData;
                             string myJsonObject = JsonConvert.SerializeObject(myProducts);
 
-                            //***** Create audit log datarow ******                 
+                            //***** Create audit log datarow *****                 
                             auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Product", myProductData.product_id, myJsonObject, "", myProcessStatus, myErrorText);
 
-                            //****** Create XRef datarow *****
-                            productXRef = MySqlHelper.CreateXRefDataRow(productXRef, myProductData.product_id, myProduct.PartNumber, "");
+                            //***** Create XRef datarow *****
+                            productXRef = MySqlHelper.UpsertXRefDataRow(productXRef, myProduct.ProductID.ToString(), myProductData.product_id, myProduct.PartNumber, "");
                         }
                     }
                     

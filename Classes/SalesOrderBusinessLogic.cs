@@ -176,6 +176,9 @@ namespace QuantifyWebAPI.Controllers
                                 case MovementType.SellConsumables:
                                     mySalesOrderData.from_warehouse = ((int)Warehouse.Consumable).ToString();
                                     break;
+                                case MovementType.ReRentOrdered:
+                                    mySalesOrderData.from_warehouse = ((int)Warehouse.)
+                                    break;
                             }
 
                             //***** Build line item data profile *****

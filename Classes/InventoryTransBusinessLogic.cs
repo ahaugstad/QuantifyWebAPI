@@ -128,6 +128,7 @@ namespace QuantifyWebAPI.Controllers
                     //***** Create Separate Dictionaries for New and Available Adjustments
                     Dictionary<Guid, StockedProductAdjustment> myNewAdjustmentsDictionary = new Dictionary<Guid, StockedProductAdjustment>();
                     Dictionary<Guid, StockedProductAdjustment> myAvailableAdjustmentsDictionary = new Dictionary<Guid, StockedProductAdjustment>();
+                    Dictionary<Guid, StockedProductAdjustment> myConsumablesAdjustmentsDictionary = new Dictionary<Guid, StockedProductAdjustment>();
 
                     foreach (DataRow myRow in myChangedRecords.Rows)
                     {
@@ -178,7 +179,6 @@ namespace QuantifyWebAPI.Controllers
                             Guid myAdjustmentID = Guid.Parse(myRow["QuantifyID"].ToString());
                             StockedProductAdjustment myAdjustment = myAdjustmentsDictionary[myAdjustmentID];
 
-                            //if (myAdjustment.QtyNewOriginal != myAdjustment.QuantityNew)
                             if (myAdjustment.QuantityNew != null)
                             {
                                 //***** Build Dictionary *****
@@ -187,7 +187,6 @@ namespace QuantifyWebAPI.Controllers
                                     myNewAdjustmentsDictionary.Add(myAdjustmentID, myAdjustment);
                                 }
                             }
-                            //else if (myAdjustment.QtyForRentOriginal != myAdjustment.QuantityForRent)
                             if (myAdjustment.QuantityForRent != null)
                             {
                                 //***** Build Dictionary *****
@@ -196,6 +195,14 @@ namespace QuantifyWebAPI.Controllers
                                     myAvailableAdjustmentsDictionary.Add(myAdjustmentID, myAdjustment);
                                 }
                             }
+                            //if (myAdjustment. != null)
+                            //{
+                            //    //***** Build Dictionary *****
+                            //    if (!myAvailableAdjustmentsDictionary.ContainsKey(myAdjustmentID))
+                            //    {
+                            //        myAvailableAdjustmentsDictionary.Add(myAdjustmentID, myAdjustment);
+                            //    }
+                            //}
                         }
                     }
 

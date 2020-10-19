@@ -164,6 +164,7 @@ namespace QuantifyWebAPI.Classes
         public DataTable GetXRefTableStructure()
         {
             DataTable MyDataTable = new DataTable();
+            MyDataTable.Columns.Add("QuantifyGUID", typeof(string));
             MyDataTable.Columns.Add("QuantifyID", typeof(string));
             MyDataTable.Columns.Add("PartNumber", typeof(string));
             MyDataTable.Columns.Add("SerialNumber", typeof(string));
@@ -172,9 +173,10 @@ namespace QuantifyWebAPI.Classes
             return MyDataTable;
         }
 
-        public DataTable CreateXRefDataRow(DataTable TargetDataTable, String QuantifyID, String PartNumber, String SerialNumber)
+        public DataTable UpsertXRefDataRow(DataTable TargetDataTable, String QuantifyGUID, String QuantifyID, String PartNumber, String SerialNumber)
         {
-            DataRow myNewRow = TargetDataTable.NewRow();            
+            DataRow myNewRow = TargetDataTable.NewRow();
+            myNewRow["QuantifyGUID"] = QuantifyGUID;
             myNewRow["QuantifyID"] = QuantifyID;
             myNewRow["PartNumber"] = PartNumber;
             myNewRow["SerialNumber"] = SerialNumber;
