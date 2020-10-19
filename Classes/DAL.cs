@@ -111,7 +111,7 @@ namespace QuantifyWebAPI.Classes
 
         }
 
-        public DataTable InsertProductXRef(DataTable QuantWebAppsProductsXref, String DbConnectionStr)
+        public DataTable UpsertProductXRef(DataTable QuantWebAppsProductsXref, String DbConnectionStr)
         {
             DataTable dt = new DataTable();
 
@@ -126,10 +126,55 @@ namespace QuantifyWebAPI.Classes
                     {
                         cmd.Connection = conn;
                         cmd.CommandType = CommandType.StoredProcedure;
-                        cmd.CommandText = "InsertQuantWebAppsProductsXRef";
+                        cmd.CommandText = "upsertQuantWebAppsProductsXref";
 
                         SqlParameter tvpParam = cmd.Parameters.AddWithValue("@ProductXRefTV", QuantWebAppsProductsXref);
                         tvpParam.SqlDbType = SqlDbType.Structured;
+
+                        using (SqlDataAdapter da = new SqlDataAdapter(cmd))
+                        {
+
+
+                            da.Fill(dt);
+                        }
+
+                    }
+
+                }
+            }
+            catch (Exception ex)
+
+            {
+                //***** log the error ******
+                myRaygunClient.SendInBackground(ex);
+
+                //***** ReThrow Error to bubble it up to calling Class ******
+
+                throw new Exception(
+                    string.Format("There was an error inserting to the Product XRef table."), ex);
+            }
+
+            return dt;
+
+        }
+
+        public DataTable GetWebAppsIDProductsXRef(String QuantifyGUID, String DbConnectionStr)
+        {
+            DataTable dt = new DataTable();
+
+            try
+            {
+
+                using (SqlConnection conn = new SqlConnection(DbConnectionStr))
+                {
+                    conn.Open();
+
+                    using (SqlCommand cmd = new SqlCommand())
+                    {
+                        cmd.Connection = conn;
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.CommandText = "GetWebAppsIDProductsXRef";
+                        cmd.Parameters.AddWithValue("@QuantifyGUID", QuantifyGUID);
 
                         using (SqlDataAdapter da = new SqlDataAdapter(cmd))
                         {

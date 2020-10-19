@@ -182,7 +182,7 @@ namespace QuantifyWebAPI.Controllers
                     
                     //***** Insert to Audit Log and XRef tables for Boomi to reference *****
                     DataTable myReturnResultAudit = myDAL.InsertAuditLog(auditLog, connectionString);
-                    DataTable myReturnResultXRef = myDAL.InsertProductXRef(productXRef, connectionString);
+                    DataTable myReturnResultXRef = myDAL.UpsertProductXRef(productXRef, connectionString);
 
                     string resultAudit = myReturnResultAudit.Rows[0][0].ToString();
                     string resultXRef = myReturnResultXRef.Rows[0][0].ToString();
