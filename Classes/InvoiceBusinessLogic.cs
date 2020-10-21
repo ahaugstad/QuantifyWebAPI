@@ -115,7 +115,7 @@ namespace QuantifyWebAPI.Controllers
                         //***** Evaluate Job Sales Tax Code - all jobs should have these before integration starts, so throw error if they don't *****
                         if (myInvoice.JobTax1ID != null && myInvoice.JobTax1ID != Guid.Empty)
                         {
-                            myInvoiceData.sales_tax_code = myInvoice.JobTax1.ToString();
+                            myInvoiceData.sales_tax_code = myInvoice.JobTax1.RefID.ToString();
                         }
                         else
                         {
@@ -166,7 +166,7 @@ namespace QuantifyWebAPI.Controllers
                                 RaygunExceptionPackage myRaygunValidationPackage = new RaygunExceptionPackage();
                                 myRaygunValidationPackage.Tags.Add("Validation");
                                 myRaygunValidationPackage.Tags.Add("Invoice");
-                                myRaygunValidationPackage.CustomData.Add("Quantify Invoice ID", myInvoice.InvoiceID);
+                                myRaygunValidationPackage.CustomData.Add("Quantify Invoice ID", myInvoice.InvoiceID.ToString());
                                 myRaygunClient.SendInBackground(ex, myRaygunValidationPackage.Tags, myRaygunValidationPackage.CustomData);
                             }
 
