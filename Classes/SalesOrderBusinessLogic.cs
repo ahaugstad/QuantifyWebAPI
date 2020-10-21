@@ -203,18 +203,19 @@ namespace QuantifyWebAPI.Controllers
                             mySalesOrderData.transaction_number = myShipmentSale.ShipmentNumber;
                             mySalesOrderData.ship_date = myShipmentSale.ActualShipDate;
                             mySalesOrderData.transaction_date = myShipmentSale.CreateDate;
-                            mySalesOrderData.from_warehouse = ((int)Warehouse.Available).ToString();
                             //TODO: ADH 9/24/2020 - Still need to find where Entered By field is in Quantify, if anywhere
                             mySalesOrderData.entered_by = "QuantifyInt";
 
-                            //***** Always want jobsite that order needs to be charged to - for Returns, this is FromStockingLocation; for Deliveries, this is ToStockingLocation *****
+                            //***** Evaluate Shipment Type to determine Jobsite and Warehouse to send through *****
                             if (myShipmentSale.ShipmentType == ShipmentType.Return)
                             {
                                 mySalesOrderData.job_number = myShipmentSale.FromStockingLocation.Number;
+                                mySalesOrderData.from_warehouse = ((int)Warehouse.Available).ToString();
                             }
                             else if (myShipmentSale.ShipmentType == ShipmentType.Delivery)
                             {
                                 mySalesOrderData.job_number = myShipmentSale.ToStockingLocation.Number;
+                                mySalesOrderData.from_warehouse = ((int)Warehouse.Consumable).ToString();
                             }
 
                             //***** Build line item data profile *****
