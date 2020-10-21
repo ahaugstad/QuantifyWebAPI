@@ -106,13 +106,13 @@ namespace QuantifyWebAPI.Controllers
 
                         //***** Populate Fields *****
                         myJobData.job_id = jobsite.Number;
-                        if (jobsite.Description != null && jobsite.Description != "")
+                        if (jobsite.Name != null && jobsite.Name != "")
                         {
-                            myJobData.job_name = jobsite.Description;
+                            myJobData.job_name = jobsite.Name;
                         }
                         else
                         {
-                            myJobData.job_name = jobsite.Name;
+                            myJobData.job_name = jobsite.Description;
                         }
                         myJobData.site_name = jobsite.Name;
                         myJobData.job_start_date = jobsite.StartDate;
