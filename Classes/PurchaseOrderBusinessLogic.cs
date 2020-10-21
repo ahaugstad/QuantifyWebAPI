@@ -175,7 +175,10 @@ namespace QuantifyWebAPI.Controllers
                         case MovementType.PurchaseConsumables:
                             myPurchaseOrderData.to_warehouse = ((int)Warehouse.Consumable).ToString(); 
                             break;
-                    }
+                        //case MovementType.ReRentOrdered:
+                        //    myPurchaseOrderData.to_warehouse = "";
+                        //    break;
+                        }
                     myPurchaseOrderData.notes = myPurchase.Notes;
 
                     //TODO: ADH 9/24/2020 - Still need to find where Entered By field is in Quantify, if anywhere

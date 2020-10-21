@@ -280,18 +280,22 @@ namespace QuantifyWebAPI.Controllers
                     myInventoryTransData.Lines.Add(myTransLine);
                 }
 
-                //***** Package as class, serialize to JSON and write to audit log table *****
-                myInventoryTransactions.entity = "InventoryTrans";
-                myInventoryTransactions.InventoryTrans = myInventoryTransData;
-                string myJsonObject = JsonConvert.SerializeObject(myInventoryTransactions);
+                //***** Only create an adjustment package to process if it actually produces results *****
+                if (myInventoryTransData.Lines.Count > 0)
+                {
+                    //***** Package as class, serialize to JSON and write to audit log table *****
+                    myInventoryTransactions.entity = "InventoryTrans";
+                    myInventoryTransactions.InventoryTrans = myInventoryTransData;
+                    string myJsonObject = JsonConvert.SerializeObject(myInventoryTransactions);
 
-                //***** Create audit log datarow ******   
-                DataTable auditLog = MySqlHelper.GetAuditLogTableStructure();
-                auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "InventoryTrans", myAdjustmentID, myJsonObject, "", myProcessStatus, myErrorText);
+                    //***** Create audit log datarow ******   
+                    DataTable auditLog = MySqlHelper.GetAuditLogTableStructure();
+                    auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "InventoryTrans", myAdjustmentID, myJsonObject, "", myProcessStatus, myErrorText);
 
-                //***** Create audit log record for Boomi to go pick up *****
-                DAL myDAL = new DAL();
-                DataTable myReturnResult = myDAL.InsertAuditLog(auditLog, connectionString);
+                    //***** Create audit log record for Boomi to go pick up *****
+                    DAL myDAL = new DAL();
+                    DataTable myReturnResult = myDAL.InsertAuditLog(auditLog, connectionString);
+                } 
             }
         }
 

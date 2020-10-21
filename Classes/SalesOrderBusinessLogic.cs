@@ -58,18 +58,18 @@ namespace QuantifyWebAPI.Controllers
             //***** Get all sales - will loop through this and compare VersionStamp against appropriate record in Versions table *****
             MovementCollection all_sales = MovementCollection.GetMovementCollection(MovementType.All);
 
-            //***** Also need to include shipments that include out of service return orders (will call Returns) *****
+            //***** Also need to include shipments that include out of service return orders and consumable sales (will jointly call Shipment Sales) *****
             //TODO: ADH 9/24/2020 - Change this to be maybe a few days back only after we run initial integration
             DateTime startDate = DateTime.Now.AddDays(-14);
             DateTime endDate = DateTime.Now;
-            ShipmentList all_returns_list = ShipmentList.GetShipmentList(startDate, endDate);
+            ShipmentList all_shipment_sales_list = ShipmentList.GetShipmentList(startDate, endDate);
 
             //***** Get DataTable Data Structure for Version Control Stored Procedure *****
             DataTable dt = MySqlHelper.GetVersionTableStructure();
 
-            //***** Create Dictionaries for Sales and Returns *****
+            //***** Create Dictionaries for Sales and Shipment Sales *****
             Dictionary<string, Movement> mySalesDictionary = new Dictionary<string, Movement>();
-            Dictionary<string, Shipment> myReturnsDictionary = new Dictionary<string, Shipment>();
+            Dictionary<string, Shipment> myShipmentSalesDictionary = new Dictionary<string, Shipment>();
 
             foreach (Movement mySale in all_sales)
             {
@@ -95,22 +95,22 @@ namespace QuantifyWebAPI.Controllers
                 }
             }
 
-            foreach (ShipmentListItem myReturnListItem in all_returns_list)
+            foreach (ShipmentListItem myShipmentSaleListItem in all_shipment_sales_list)
             {
-                //***** Evaluate if shipment has Out of Service products - this will determine if we need to integrate a return order or not *****
-                if (myReturnListItem.ShipmentType == ShipmentType.Return || myReturnListItem.ShipmentType == ShipmentType.Delivery)
+                //***** Exclude shipment types of Transfers for now - only consider Returns and Deliveries *****
+                if (myShipmentSaleListItem.ShipmentType == ShipmentType.Return || myShipmentSaleListItem.ShipmentType == ShipmentType.Delivery)
                 {
-                    Shipment myReturn = Shipment.GetShipment(myReturnListItem.ShipmentID, false, false, false);
-                    string myReturnNumber = myReturn.ShipmentNumber;
-                    string timestampVersion = "0x" + String.Join("", myReturn.VersionStamp.Select(b => Convert.ToString(b, 16)));
+                    Shipment myShipmentSale = Shipment.GetShipment(myShipmentSaleListItem.ShipmentID, false, false, false);
+                    string myShipmentSaleNumber = myShipmentSale.ShipmentNumber;
+                    string timestampVersion = "0x" + String.Join("", myShipmentSale.VersionStamp.Select(b => Convert.ToString(b, 16)));
 
                     //***** Add record to data table to be written to Version table in SQL *****
-                    dt = MySqlHelper.CreateVersionDataRow(dt, "ReturnOrder", myReturnNumber, timestampVersion.ToString());
+                    dt = MySqlHelper.CreateVersionDataRow(dt, "ShipmentSalesOrder", myShipmentSaleNumber, timestampVersion.ToString());
 
                     //***** Build Dictionary *****
-                    if (!myReturnsDictionary.ContainsKey(myReturnNumber))
+                    if (!myShipmentSalesDictionary.ContainsKey(myShipmentSaleNumber))
                     {
-                        myReturnsDictionary.Add(myReturnNumber, myReturn);
+                        myShipmentSalesDictionary.Add(myShipmentSaleNumber, myShipmentSale);
                     }
                 }
             }
@@ -190,42 +190,68 @@ namespace QuantifyWebAPI.Controllers
                             }
                         }
 
-                        //***** Process Return Orders *****
-                        else if (myRow["Entity"].ToString() == "ReturnOrder")
+                        //***** Process Shipment Sales Orders (Sales Orders generated through Rental Deliveries and Rental Returns) *****
+                        else if (myRow["Entity"].ToString() == "ShipmentSalesOrder")
                         {
                             //***** Initalize fields and classes to be used to build data profile *****
-                            string myReturnID = myRow["QuantifyID"].ToString();
-                            Shipment myReturn = myReturnsDictionary[myReturnID];
-                            BusinessPartner myCustomer = BusinessPartner.GetBusinessPartner(myReturn.FromStockingLocation.BusinessPartnerID);
-                            ShipmentProductList myReturnProducts = ShipmentProductList.GetShipmentProductList(myReturn.ShipmentID, ShipmentStatusType.Completed);
+                            string myShipmentSalesID = myRow["QuantifyID"].ToString();
+                            Shipment myShipmentSale = myShipmentSalesDictionary[myShipmentSalesID];
+                            BusinessPartner myCustomer = BusinessPartner.GetBusinessPartner(myShipmentSale.FromStockingLocation.BusinessPartnerID);
+                            ShipmentProductList myShipmentSaleProducts = ShipmentProductList.GetShipmentProductList(myShipmentSale.ShipmentID, ShipmentStatusType.Completed);
 
                             //***** Build header data profile *****
-                            mySalesOrderData.transaction_number = myReturn.ShipmentNumber;
-                            mySalesOrderData.ship_date = myReturn.ActualShipDate;
-                            mySalesOrderData.transaction_date = myReturn.CreateDate;
-                            mySalesOrderData.job_number = myReturn.FromStockingLocation.Number;
+                            mySalesOrderData.transaction_number = myShipmentSale.ShipmentNumber;
+                            mySalesOrderData.ship_date = myShipmentSale.ActualShipDate;
+                            mySalesOrderData.transaction_date = myShipmentSale.CreateDate;
                             mySalesOrderData.from_warehouse = ((int)Warehouse.Available).ToString();
                             //TODO: ADH 9/24/2020 - Still need to find where Entered By field is in Quantify, if anywhere
                             mySalesOrderData.entered_by = "QuantifyInt";
 
-                            //***** Build line item data profile *****
-                            foreach (ShipmentProductListItem returnProductListItem in myReturnProducts)
+                            //***** Always want jobsite that order needs to be charged to - for Returns, this is FromStockingLocation; for Deliveries, this is ToStockingLocation *****
+                            if (myShipmentSale.ShipmentType == ShipmentType.Return)
                             {
-                                Product myProduct = Product.GetProduct(returnProductListItem.BaseProductID);
-                                SalesOrderLine mySalesOrderLine = new SalesOrderLine();
-                                mySalesOrderLine.part_number = returnProductListItem.PartNumber;
-                                mySalesOrderLine.quantity = returnProductListItem.OutOfServiceQuantity.ToString();
-                                mySalesOrderLine.price_ea = returnProductListItem.AverageCost.ToString();
-                                mySalesOrderData.Lines.Add(mySalesOrderLine);
+                                mySalesOrderData.job_number = myShipmentSale.FromStockingLocation.Number;
+                            }
+                            else if (myShipmentSale.ShipmentType == ShipmentType.Delivery)
+                            {
+                                mySalesOrderData.job_number = myShipmentSale.ToStockingLocation.Number;
+                            }
+
+                            //***** Build line item data profile *****
+                            foreach (ShipmentProductListItem shipmentSaleProductListItem in myShipmentSaleProducts)
+                            {
+                                if (shipmentSaleProductListItem.OutOfServiceQuantity != null || shipmentSaleProductListItem.ProductType == ProductType.Consumable)
+                                {
+                                    Product myProduct = Product.GetProduct(shipmentSaleProductListItem.BaseProductID);
+                                    SalesOrderLine mySalesOrderLine = new SalesOrderLine();
+                                    mySalesOrderLine.part_number = shipmentSaleProductListItem.PartNumber;
+                                    mySalesOrderLine.price_ea = shipmentSaleProductListItem.AverageCost.ToString();
+
+                                    //***** If Shipment Return, only consider Out of Service quantities; if Shipment Delivery, only consider Sell quantities *****
+                                    if (myShipmentSale.ShipmentType == ShipmentType.Return)
+                                    {
+                                        mySalesOrderLine.quantity = shipmentSaleProductListItem.OutOfServiceQuantity.ToString();
+                                        mySalesOrderData.Lines.Add(mySalesOrderLine);
+                                    }
+                                    else if (myShipmentSale.ShipmentType == ShipmentType.Delivery)
+                                    {
+                                        mySalesOrderLine.quantity = shipmentSaleProductListItem.SentQuantity.ToString();
+                                        mySalesOrderData.Lines.Add(mySalesOrderLine);
+                                    }
+                                }
                             }
                         }
-                        //***** Package as class, serialize to JSON and write to audit log table *****
-                        mySalesOrders.entity = "SalesOrder";
-                        mySalesOrders.SalesOrder = mySalesOrderData;
-                        string myJsonObject = JsonConvert.SerializeObject(mySalesOrders);
+                        //***** Only create an adjustment package to process if it actually produces results *****
+                        if (mySalesOrderData.Lines.Count > 0)
+                        {
+                            //***** Package as class, serialize to JSON and write to audit log table *****
+                            mySalesOrders.entity = "SalesOrder";
+                            mySalesOrders.SalesOrder = mySalesOrderData;
+                            string myJsonObject = JsonConvert.SerializeObject(mySalesOrders);
 
-                        //***** Create audit log datarow ******                 
-                        auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "SalesOrder", mySalesOrderData.transaction_number, myJsonObject, "", myProcessStatus, myErrorText);
+                            //***** Create audit log datarow ******                 
+                            auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "SalesOrder", mySalesOrderData.transaction_number, myJsonObject, "", myProcessStatus, myErrorText);
+                        }
                     }
 
                     //***** Create audit log record for Boomi to go pick up *****
