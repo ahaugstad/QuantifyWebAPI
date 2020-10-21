@@ -217,7 +217,7 @@ namespace QuantifyWebAPI.Controllers
                                 mySalesOrderData.job_number = myShipmentSale.ToStockingLocation.Number;
                                 mySalesOrderData.from_warehouse = ((int)Warehouse.Consumable).ToString();
                             }
-
+                             
                             //***** Build line item data profile *****
                             foreach (ShipmentProductListItem shipmentSaleProductListItem in myShipmentSaleProducts)
                             {

@@ -143,21 +143,28 @@ namespace QuantifyWebAPI.Controllers
                             //***** Evaluate Charge Type and append on cost code accordingly to send to Boomi; throw error to Raygun if we have an unmapped Charge Type *****
                             try
                             {
-                                if (myInvoiceProductCharge.ChargeType.ToDescription() == "MovementSellNew")
+                                switch (myInvoiceProductCharge.ChargeType.ToDescription())
                                 {
-                                    myInvoiceProductLine.cost_code = "50-" + myInvoiceProductCharge.ChargeType.ToDescription();
-                                }
-                                else if (myInvoiceProductCharge.ChargeType.ToDescription() == "MovementSellForRent")
-                                {
-                                    myInvoiceProductLine.cost_code = "40-" + myInvoiceProductCharge.ChargeType.ToDescription();
-                                }
-                                else if (myInvoiceProductCharge.ChargeType.ToDescription() == "ConsumableSell")
-                                {
-                                    myInvoiceProductLine.cost_code = "60-" + myInvoiceProductCharge.ChargeType.ToDescription();
-                                }
-                                else
-                                {
-                                    throw new System.ArgumentException("Unknown or unmapped Product Charge Type: ", myInvoiceProductCharge.ChargeType.ToDescription());
+                                    case "MovementSellForRent":
+                                        myInvoiceProductLine.cost_code = "40-" + myInvoiceProductCharge.ChargeType.ToDescription();
+                                        break;
+                                    case "MovementSellNew":
+                                        myInvoiceProductLine.cost_code = "50-" + myInvoiceProductCharge.ChargeType.ToDescription();
+                                        break;
+                                    case "ConsumableSell":
+                                        myInvoiceProductLine.cost_code = "60-" + myInvoiceProductCharge.ChargeType.ToDescription();
+                                        break;
+                                    case "SellLostMissing":
+                                        myInvoiceProductLine.cost_code = "40-" + myInvoiceProductCharge.ChargeType.ToDescription();
+                                        break;
+                                    case "SellDamaged":
+                                        myInvoiceProductLine.cost_code = "40-" + myInvoiceProductCharge.ChargeType.ToDescription();
+                                        break;
+                                    case "SellDamagedBeyondRepair":
+                                        myInvoiceProductLine.cost_code = "40-" + myInvoiceProductCharge.ChargeType.ToDescription();
+                                        break;
+                                    default:
+                                        throw new System.ArgumentException("Unknown or unmapped Product Charge Type: ", myInvoiceProductCharge.ChargeType.ToDescription());
                                 }
                             }
                             catch (Exception ex)
