@@ -215,6 +215,7 @@ namespace QuantifyWebAPI.Controllers
 
                         //***** Create audit log datarow ******                 
                         auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "PurchaseOrder", myPurchaseOrderData.transaction_number, myJsonObject, "", myProcessStatus, myErrorText);
+                        processedRecordCount++;
                     }
 
                     //***** Create audit log record for Boomi to go pick up *****

@@ -254,7 +254,8 @@ namespace QuantifyWebAPI.Controllers
                             string myJsonObject = JsonConvert.SerializeObject(mySalesOrders);
 
                             //***** Create audit log datarow ******                 
-                            auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "SalesOrder", mySalesOrderData.transaction_number, myJsonObject, "", myProcessStatus, myErrorText);  
+                            auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "SalesOrder", mySalesOrderData.transaction_number, myJsonObject, "", myProcessStatus, myErrorText);
+                            processedRecordCount++;
                         }
                     }
 

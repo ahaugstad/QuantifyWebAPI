@@ -76,7 +76,7 @@ namespace QuantifyWebAPI.Controllers
                 if(!myJobsDictionary.ContainsKey(myJobsiteNumber))
                 {
                     myJobsDictionary.Add(myJobsiteNumber, jobsite);
-                } 
+                }
             }
 
             //***** Call data access layer *****
@@ -190,6 +190,7 @@ namespace QuantifyWebAPI.Controllers
 
                             //***** Create audit log datarow ******                 
                             auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Job", myJobData.job_id, myJsonObject, "", myProcessStatus, myErrorText);
+                            processedRecordCount++;
                         }
                     }
 

@@ -192,6 +192,7 @@ namespace QuantifyWebAPI.Controllers
                             //***** Create audit log datarow *****                 
                             auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Product", myProductData.product_id, myJsonObject, "", myProcessStatus, myErrorText);
                             productXRef = MySqlHelper.UpsertXRefDataRow(productXRef, myProduct.ProductID.ToString(), myProductData.product_id, myProduct.PartNumber, "");
+                            processedRecordCount++;
                         }
                     }
                     

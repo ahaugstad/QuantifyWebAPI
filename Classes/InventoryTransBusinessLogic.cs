@@ -174,7 +174,7 @@ namespace QuantifyWebAPI.Controllers
 
                             //***** Create audit log record for Boomi to go pick up *****
                             DataTable myReturnResult = myDAL.InsertAuditLog(auditLog, connectionString);
-
+                            processedRecordCount++;
                         }
 
                         //***** Populate Adjustment Dictionaries to loop through later *****
@@ -265,7 +265,8 @@ namespace QuantifyWebAPI.Controllers
                     {
                         //***** Get last time Adjustments ran, for use later on *****
                         DataTable lastAdjustmentRunData = myDAL.GetLastProcessData("InventoryTrans", "AdjustmentNew",connectionString);
-                        DateTime logCheckDate1 = (DateTime)lastAdjustmentRunData.Rows[0]["ProcessStartDate"];
+                        DateTime logCheckDate1 = DateTime.Now.AddMinutes(-50);
+                        if (lastAdjustmentRunData.Rows.Count > 0) { logCheckDate1 = (DateTime)lastAdjustmentRunData.Rows[0]["ProcessStartDate"]; }
                         DateTime logCheckDate2 = DateTime.Now.AddHours(-1);
                         DateTime logCheckDate;
                         if (logCheckDate1 > logCheckDate2) { logCheckDate = logCheckDate1; } else { logCheckDate = logCheckDate2; }
@@ -285,7 +286,8 @@ namespace QuantifyWebAPI.Controllers
                     {
                         //***** Get last time Adjustments ran, for use later on *****
                         DataTable lastAdjustmentRunData = myDAL.GetLastProcessData("InventoryTrans", "AdjustmentAvailable", connectionString);
-                        DateTime logCheckDate1 = (DateTime)lastAdjustmentRunData.Rows[0]["ProcessStartDate"];
+                        DateTime logCheckDate1 = DateTime.Now.AddMinutes(-50);
+                        if (lastAdjustmentRunData.Rows.Count > 0) { logCheckDate1 = (DateTime)lastAdjustmentRunData.Rows[0]["ProcessStartDate"]; }
                         DateTime logCheckDate2 = DateTime.Now.AddHours(-1);
                         DateTime logCheckDate;
                         if (logCheckDate1 > logCheckDate2) { logCheckDate = logCheckDate1; } else { logCheckDate = logCheckDate2; }
