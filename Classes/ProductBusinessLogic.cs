@@ -94,26 +94,13 @@ namespace QuantifyWebAPI.Controllers
                 dt = MySqlHelper.CreateVersionDataRow(dt, "Product", myProductID, timestampVersion);
       
                 //***** Build Dictionary *****
-                try
+                if (!myProductsDictionary.ContainsKey(myProductID))
                 {
-                    if (!myProductsDictionary.ContainsKey(myProductID))
-                    {
-                        myProductsDictionary.Add(myProductID, productListItem);
-                    }
-                    else
-                    {
-                        myErrorDictionary.Add(myProductID,"Duplicate product id");
-                    }
+                    myProductsDictionary.Add(myProductID, productListItem);
                 }
-                catch (Exception ex)
+                else
                 {
-                    //***** Create Raygun Exception Package *****
-                    RaygunExceptionPackage myRaygunValidationPackage = new RaygunExceptionPackage();
-                    myRaygunValidationPackage.Tags.Add("Validation");
-                    myRaygunValidationPackage.Tags.Add("Product");
-                    myRaygunValidationPackage.CustomData.Add("Product ID: ",myProductID);
-                    
-                    myRaygunClient.SendInBackground(ex, myRaygunValidationPackage.Tags, myRaygunValidationPackage.CustomData);
+                    myErrorDictionary.Add(myProductID,"Duplicate product id");
                 }
             }
 
@@ -121,7 +108,7 @@ namespace QuantifyWebAPI.Controllers
             DAL myDAL = new DAL();
             DataTable myChangedRecords = myDAL.GetChangedObjects(dt, connectionString);
 
-            //***** If in Initialization Mode bypass Data integrations other than Version Controll *****
+            //***** If in Initialization Mode, run initial load of all products - different from other data entities *****
             //if (initializationMode != "1")
             //{
                 if (myChangedRecords.Rows.Count > 0)
@@ -140,16 +127,29 @@ namespace QuantifyWebAPI.Controllers
                         string myProductID = myRow["QuantifyID"].ToString();
                         ProductData myProductData = new ProductData();
 
-                        //***** Check if duplicate product ID and log error if so (in both Raygun and Audit Log table) *****
-                        if (myErrorDictionary.ContainsKey(myProductID)) 
-                        { 
-                            myErrorText = myErrorDictionary[myProductID];
-                            Exception myValidationException = new Exception("Duplicate Product ID: " + myProductID);
-                            throw myValidationException;
+                        try
+                        {
+                            //***** Check if duplicate product ID and log error if so (in both Raygun and Audit Log table) *****
+                            if (myErrorDictionary.ContainsKey(myProductID))
+                            {
+                                myErrorText = myErrorDictionary[myProductID];
+                                Exception myValidationException = new Exception("Duplicate Product ID: " + myProductID);
+                                throw myValidationException;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            //***** Create Raygun Exception Package *****
+                            RaygunExceptionPackage myRaygunValidationPackage = new RaygunExceptionPackage();
+                            myRaygunValidationPackage.Tags.Add("Validation");
+                            myRaygunValidationPackage.Tags.Add("Product");
+                            myRaygunValidationPackage.CustomData.Add("Product ID: ", myProductID);
+
+                            myRaygunClient.SendInBackground(ex, myRaygunValidationPackage.Tags, myRaygunValidationPackage.CustomData);
                         }
 
-                        //***** Initialize classes to use in building data profile *****
-                        ProductListItem myProductListItem = myProductsDictionary[myProductID];
+                    //***** Initialize classes to use in building data profile *****
+                    ProductListItem myProductListItem = myProductsDictionary[myProductID];
                         Product myProduct = Product.GetProduct(myProductListItem.ProductID);
                         ProductCategory myProductCategory = ProductCategory.GetProductCategory(myProduct.ProductCategoryID, myProduct.ProductType);
 
