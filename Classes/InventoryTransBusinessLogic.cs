@@ -226,6 +226,7 @@ namespace QuantifyWebAPI.Controllers
 
         public void CreateAdjustmentTransaction(string newOrAvailable, InventoryTransRootClass myInventoryTransactions, Dictionary<Guid, StockedProductAdjustment> myAdjustmentsDictionary, string connectionString, LogEntryList myStockedProductLogs)
         {
+            //TODO: ADH 10/22/2020 - TEST: Adjustments are still working after Product ID change in retrieval method, and that no duplicates are getting sent
             //***** Skip if we did not get any adjustments to integrate *****
             if (myAdjustmentsDictionary.Count > 0)
             {
@@ -235,6 +236,7 @@ namespace QuantifyWebAPI.Controllers
                 //***** Initialize error tracking fields and data package *****
                 var myErrorText = "";
                 string myProcessStatus = "A";
+                DAL myDAL = new DAL();
                 var myAdjustmentID = DateTime.Now.ToString() + " | " + newOrAvailable;
                 InventoryTransData myInventoryTransData = new InventoryTransData();
 
@@ -254,19 +256,24 @@ namespace QuantifyWebAPI.Controllers
                 foreach (StockedProductAdjustment myAdjustment in myAdjustmentsDictionary.Values)
                 {
                     //***** Get list of log entries for adjustment's stocking location (this is needed to obtain previous quantity) *****
-                    string[] separatorString = { " - " };
+                    //string[] separatorString = { " - " };
 
                     //***** Build lines of Available Adjustments data package *****
                     InventoryTransLine myTransLine = new InventoryTransLine();
                     myTransLine.part_number = myAdjustment.PartNumber;
                     if (newOrAvailable == "New")
                     {
-                        //TODO: ADH 10/1/2020 - Convert 'item.ParentName' to 'item.Product-ID' when available
-                        //***** Get most recent log entry for StockedProduct record for "New Part Changed" log type and create TransLine if exists*****
-                        if (myStockedProductLogs.Any(item => item.Name == "New Part Changed" && item.LogDate > DateTime.Now.AddHours(-1) && item.ChildDescription.Split(separatorString, StringSplitOptions.None)[0] == myAdjustment.PartNumber))
-                        {
+                        //***** Get last time Adjustments ran, for use later on *****
+                        DataTable lastAdjustmentRunData = myDAL.GetLastProcessData("InventoryTrans", "AdjustmentNew",connectionString);
+                        DateTime logCheckDate1 = (DateTime)lastAdjustmentRunData.Rows[0]["ProcessStartDate"];
+                        DateTime logCheckDate2 = DateTime.Now.AddHours(-1);
+                        DateTime logCheckDate;
+                        if (logCheckDate1 > logCheckDate2) { logCheckDate = logCheckDate1; } else { logCheckDate = logCheckDate2; }
 
-                            var myAdjustmentLog = myStockedProductLogs.First(item => item.Name == "New Part Changed" && item.LogDate > DateTime.Now.AddHours(-1) && item.ChildDescription.Split(separatorString, StringSplitOptions.None)[0] == myAdjustment.PartNumber);
+                        //***** Get most recent log entry for StockedProduct record for "New Part Changed" log type and create TransLine if exists*****
+                        if (myStockedProductLogs.Any(item => item.Name == "New Part Changed" && item.LogDate > logCheckDate && item.ChildID == myAdjustment.ProductID))
+                        {
+                            var myAdjustmentLog = myStockedProductLogs.First(item => item.Name == "New Part Changed" && item.LogDate > logCheckDate && item.ChildID == myAdjustment.ProductID);
                             myTransLine.quantity = calculateChangedQuantity(myAdjustmentLog).ToString();
                         }
                         else
@@ -276,11 +283,17 @@ namespace QuantifyWebAPI.Controllers
                     }
                     else if (newOrAvailable == "Available")
                     {
-                        //TODO: ADH 10/1/2020 - Convert 'item.ParentName' to 'item.Product-ID' when available
+                        //***** Get last time Adjustments ran, for use later on *****
+                        DataTable lastAdjustmentRunData = myDAL.GetLastProcessData("InventoryTrans", "AdjustmentAvailable", connectionString);
+                        DateTime logCheckDate1 = (DateTime)lastAdjustmentRunData.Rows[0]["ProcessStartDate"];
+                        DateTime logCheckDate2 = DateTime.Now.AddHours(-1);
+                        DateTime logCheckDate;
+                        if (logCheckDate1 > logCheckDate2) { logCheckDate = logCheckDate1; } else { logCheckDate = logCheckDate2; }
+
                         //***** Get most recent log entry for StockedProduct record for "Available Part Changed" log type and create TransLine if exists *****
-                        if (myStockedProductLogs.Any(item => item.Name == "Available Part Changed" && item.LogDate > DateTime.Now.AddHours(-1) && item.ChildDescription.Split(separatorString, StringSplitOptions.None)[0] == myAdjustment.PartNumber))
+                        if (myStockedProductLogs.Any(item => item.Name == "Available Part Changed" && item.LogDate > logCheckDate && item.ChildID == myAdjustment.ProductID))
                         {
-                            var myAdjustmentLog = myStockedProductLogs.Last(item => item.Name == "Available Part Changed" && item.LogDate > DateTime.Now.AddHours(-1) && item.ChildDescription.Split(separatorString, StringSplitOptions.None)[0] == myAdjustment.PartNumber);
+                            var myAdjustmentLog = myStockedProductLogs.Last(item => item.Name == "Available Part Changed" && item.LogDate > logCheckDate && item.ChildID == myAdjustment.ProductID);
                             myTransLine.quantity = calculateChangedQuantity(myAdjustmentLog).ToString();
                         }
                         else
@@ -304,7 +317,6 @@ namespace QuantifyWebAPI.Controllers
                     auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "InventoryTrans", myAdjustmentID, myJsonObject, "", myProcessStatus, myErrorText);
 
                     //***** Create audit log record for Boomi to go pick up, and insert record into class activity log *****
-                    DAL myDAL = new DAL();
                     DataTable myReturnResult = myDAL.InsertAuditLog(auditLog, connectionString);
                     DataTable myActivityLog = myDAL.InsertClassActivityLog("InventoryTrans", "Adjustment" + newOrAvailable, myInventoryTransData.Lines.Count, myStartDate, DateTime.Now, connectionString);
                 } 
