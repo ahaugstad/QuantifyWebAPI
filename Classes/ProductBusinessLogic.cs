@@ -151,48 +151,52 @@ namespace QuantifyWebAPI.Controllers
                             myRaygunClient.SendInBackground(ex, myRaygunValidationPackage.Tags, myRaygunValidationPackage.CustomData);
                         }
 
-                    //***** Initialize classes to use in building data profile *****
-                    ProductListItem myProductListItem = myProductsDictionary[myProductID];
+                        //***** Initialize classes to use in building data profile *****
+                        ProductListItem myProductListItem = myProductsDictionary[myProductID];
                         Product myProduct = Product.GetProduct(myProductListItem.ProductID);
                         ProductCategory myProductCategory = ProductCategory.GetProductCategory(myProduct.ProductCategoryID, myProduct.ProductType);
 
-                        //***** Get WebApps Product ID from Products XRef and assign as Product ID if it exists *****
-                        DataTable myProductXRefRecord = myDAL.GetWebAppsIDProductsXRef(myProduct.ProductID.ToString(), connectionString);
-                        if (myProductXRefRecord.Rows.Count > 0)
+                        //***** Evaluate if Product Category is in list of categories to skip integration for *****
+                        if (!myProductCategory.Name.Contains("Tools & Equipment") && myProductCategory.Name != "Re-Rent Items")
                         {
-                            string myWebAppsProductID = myProductXRefRecord.Rows[0]["WebAppsItemNumber"].ToString();
-                            if (myWebAppsProductID != null && myWebAppsProductID != "")
+                            //***** Get WebApps Product ID from Products XRef and assign as Product ID if it exists *****
+                            DataTable myProductXRefRecord = myDAL.GetWebAppsIDProductsXRef(myProduct.ProductID.ToString(), connectionString);
+                            if (myProductXRefRecord.Rows.Count > 0)
                             {
-                                myProductData.product_id = myWebAppsProductID;
+                                string myWebAppsProductID = myProductXRefRecord.Rows[0]["WebAppsItemNumber"].ToString();
+                                if (myWebAppsProductID != null && myWebAppsProductID != "")
+                                {
+                                    myProductData.product_id = myWebAppsProductID;
+                                }
+                                else
+                                {
+                                    myProductData.product_id = myProductID;
+                                }
                             }
                             else
                             {
                                 myProductData.product_id = myProductID;
                             }
-                        }
-                        else
-                        {
-                            myProductData.product_id = myProductID;
-                        }    
 
-                        if (myProduct.ProductCategoryID != null && myProduct.ProductCategoryID != Guid.Empty)
-                        {
-                            //***** Build data profile *****
-                            myProductData.catalog = myProduct.ProductType.ToDescription();
-                            myProductData.category = myProductCategory.RevenueCode;
-                            myProductData.list_price = myProduct.DefaultList.ToString();
-                            myProductData.unit_cost = myProduct.DefaultCost.ToString();
-                            myProductData.description = myProduct.Description;
+                            if (myProduct.ProductCategoryID != null && myProduct.ProductCategoryID != Guid.Empty)
+                            {
+                                //***** Build data profile *****
+                                myProductData.catalog = myProduct.ProductType.ToDescription();
+                                myProductData.category = myProductCategory.RevenueCode;
+                                myProductData.list_price = myProduct.DefaultList.ToString();
+                                myProductData.unit_cost = myProduct.DefaultCost.ToString();
+                                myProductData.description = myProduct.Description;
 
-                            //***** Package as class, serialize to JSON and write to data table to get mass inserted into SQL *****
-                            myProducts.entity = "Product";
-                            myProducts.Product = myProductData;
-                            string myJsonObject = JsonConvert.SerializeObject(myProducts);
+                                //***** Package as class, serialize to JSON and write to data table to get mass inserted into SQL *****
+                                myProducts.entity = "Product";
+                                myProducts.Product = myProductData;
+                                string myJsonObject = JsonConvert.SerializeObject(myProducts);
 
-                            //***** Create audit log datarow *****                 
-                            auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Product", myProductData.product_id, myJsonObject, "", myProcessStatus, myErrorText);
-                            productXRef = MySqlHelper.UpsertXRefDataRow(productXRef, myProduct.ProductID.ToString(), myProductData.product_id, myProduct.PartNumber, "");
-                            processedRecordCount++;
+                                //***** Create audit log datarow *****                 
+                                auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "Product", myProductData.product_id, myJsonObject, "", myProcessStatus, myErrorText);
+                                productXRef = MySqlHelper.UpsertXRefDataRow(productXRef, myProduct.ProductID.ToString(), myProductData.product_id, myProduct.PartNumber, "");
+                                processedRecordCount++;
+                            }
                         }
                     }
                     
