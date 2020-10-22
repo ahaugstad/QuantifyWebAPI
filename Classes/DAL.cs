@@ -111,6 +111,53 @@ namespace QuantifyWebAPI.Classes
 
         }
 
+        public DataTable InsertClassActivityLog(string ParentSystem, string ChildSystem, int RecordsProcessed, DateTime ProcessStartDate, DateTime ProcessEndDate,  String DbConnectionStr)
+        {
+            DataTable dt = new DataTable();
+
+            try
+            {
+
+                using (SqlConnection conn = new SqlConnection(DbConnectionStr))
+                {
+                    conn.Open();
+
+                    using (SqlCommand cmd = new SqlCommand())
+                    {
+                        cmd.Connection = conn;
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.CommandText = "InsertClassActivityLog";
+                        cmd.Parameters.AddWithValue("@ParentSystem", ParentSystem);
+                        cmd.Parameters.AddWithValue("@ChildSystem", ChildSystem);
+                        cmd.Parameters.AddWithValue("@RecordsProcessed", RecordsProcessed);
+                        cmd.Parameters.AddWithValue("@ProcessStartDate", ProcessStartDate);
+                        cmd.Parameters.AddWithValue("@ProcessEndDate", ProcessEndDate);
+
+                        using (SqlDataAdapter da = new SqlDataAdapter(cmd))
+                        {
+                            da.Fill(dt);
+                        }
+
+                    }
+
+                }
+            }
+            catch (Exception ex)
+
+            {
+                //***** log the error ******
+                myRaygunClient.SendInBackground(ex);
+
+                //***** ReThrow Error to bubble it up to calling Class ******
+                throw new Exception(
+                    string.Format("There was an error inserting to the ClassActivityLog Table."), ex);
+            }
+
+            return dt;
+
+        }
+
+
         public DataTable UpsertProductXRef(DataTable QuantWebAppsProductsXref, String DbConnectionStr)
         {
             DataTable dt = new DataTable();
