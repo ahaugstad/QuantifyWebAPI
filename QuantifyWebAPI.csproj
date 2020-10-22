@@ -48,15 +48,15 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files\Avontus\Quantify Client\Avontus.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Avontus.Quantify.Reports, Version=8.3.1457.125, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Avontus.Quantify.Reports, Version=8.3.1461.125, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files\Avontus\Quantify Client\Avontus.Quantify.Reports.dll</HintPath>
     </Reference>
-    <Reference Include="Avontus.Rental.Library, Version=8.3.1457.125, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Avontus.Rental.Library, Version=8.3.1461.125, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files\Avontus\Quantify Client\Avontus.Rental.Library.dll</HintPath>
     </Reference>
-    <Reference Include="Avontus.Rental.Utility, Version=8.3.1457.125, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Avontus.Rental.Utility, Version=8.3.1461.125, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files\Avontus\Quantify Client\Avontus.Rental.Utility.dll</HintPath>
     </Reference>
@@ -326,6 +326,9 @@
     <None Include="packages.config" />
     <Content Include="Scripts\jquery-3.4.1.slim.min.map" />
     <Content Include="Scripts\jquery-3.4.1.min.map" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

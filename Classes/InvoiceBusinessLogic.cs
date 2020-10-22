@@ -89,6 +89,9 @@ namespace QuantifyWebAPI.Controllers
 
                 if (myChangedRecords.Rows.Count > 0)
                 {
+                    //***** Initialize activity log variables and data model class *****
+                    DateTime myStartDate = DateTime.Now;
+                    int processedRecordCount = 0;
                     InvoiceRootClass myInvoices = new InvoiceRootClass();
 
                     //***** Create Audit Log and XRef table structures *****            
@@ -212,6 +215,9 @@ namespace QuantifyWebAPI.Controllers
 
                     //***** Create audit log record for Boomi to go pick up *****
                     DataTable myReturnResult = myDAL.InsertAuditLog(auditLog, connectionString);
+
+                    //***** Create activity log record for reference *****
+                    DataTable myActivityLog = myDAL.InsertClassActivityLog("Invoices", "", processedRecordCount, myStartDate, DateTime.Now, connectionString);
 
                     string result = myReturnResult.Rows[0][0].ToString();
                     if (result.ToLower() == "success")

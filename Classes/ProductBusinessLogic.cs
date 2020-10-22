@@ -113,6 +113,9 @@ namespace QuantifyWebAPI.Controllers
             //{
                 if (myChangedRecords.Rows.Count > 0)
                 {
+                    //***** Initialize activity log variables and data model class *****
+                    DateTime myStartDate = DateTime.Now;
+                    int processedRecordCount = 0;
                     ProductRootClass myProducts = new ProductRootClass();
 
                     //***** Create Audit Log and XRef table structures *****            
@@ -195,6 +198,9 @@ namespace QuantifyWebAPI.Controllers
                     //***** Insert to Audit Log and XRef tables for Boomi to reference *****
                     DataTable myReturnResultAudit = myDAL.InsertAuditLog(auditLog, connectionString);
                     DataTable myReturnResultXRef = myDAL.UpsertProductXRef(productXRef, connectionString);
+
+                    //***** Create activity log record for reference *****
+                    DataTable myActivityLog = myDAL.InsertClassActivityLog("Products", "", processedRecordCount, myStartDate, DateTime.Now, connectionString);
 
                     string resultAudit = myReturnResultAudit.Rows[0][0].ToString();
                     string resultXRef = myReturnResultXRef.Rows[0][0].ToString();

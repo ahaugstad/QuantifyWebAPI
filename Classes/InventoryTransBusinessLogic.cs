@@ -121,6 +121,9 @@ namespace QuantifyWebAPI.Controllers
             {
                 if (myChangedRecords.Rows.Count > 0)
                 {
+                    //***** Initialize activity log variables and data model class *****
+                    DateTime myStartDate = DateTime.Now;
+                    int processedRecordCount = 0;
                     InventoryTransRootClass myInventoryTransactions = new InventoryTransRootClass();
 
                     //***** Create Audit Log and XRef table structures *****            
@@ -171,6 +174,7 @@ namespace QuantifyWebAPI.Controllers
 
                             //***** Create audit log record for Boomi to go pick up *****
                             DataTable myReturnResult = myDAL.InsertAuditLog(auditLog, connectionString);
+
                         }
 
                         //***** Populate Adjustment Dictionaries to loop through later *****
@@ -211,8 +215,12 @@ namespace QuantifyWebAPI.Controllers
                     LogEntryList myStockedProductLogs = LogEntryList.GetLogEntryList(LogEntry.ChildTypes.StockedProduct);
                     CreateAdjustmentTransaction("New", myInventoryTransactions, myNewAdjustmentsDictionary, connectionString, myStockedProductLogs);
                     CreateAdjustmentTransaction("Available", myInventoryTransactions, myAvailableAdjustmentsDictionary, connectionString, myStockedProductLogs);
+
+                    //***** Create activity log record for reference *****
+                    DataTable myActivityLog = myDAL.InsertClassActivityLog("InventoryTrans", "", processedRecordCount, myStartDate, DateTime.Now, connectionString);
                 }
             }
+            
             return success;
         }
 
@@ -221,7 +229,9 @@ namespace QuantifyWebAPI.Controllers
             //***** Skip if we did not get any adjustments to integrate *****
             if (myAdjustmentsDictionary.Count > 0)
             {
-                //TODO: ADH 9/29/2020 - TEST: Need to verify the below does what is intended, and if this is best way to evaluate per business
+                //***** Begin timer for class activity tracking log table *****
+                DateTime myStartDate = DateTime.Now;
+
                 //***** Initialize error tracking fields and data package *****
                 var myErrorText = "";
                 string myProcessStatus = "A";
@@ -255,6 +265,7 @@ namespace QuantifyWebAPI.Controllers
                         //***** Get most recent log entry for StockedProduct record for "New Part Changed" log type and create TransLine if exists*****
                         if (myStockedProductLogs.Any(item => item.Name == "New Part Changed" && item.LogDate > DateTime.Now.AddHours(-1) && item.ChildDescription.Split(separatorString, StringSplitOptions.None)[0] == myAdjustment.PartNumber))
                         {
+
                             var myAdjustmentLog = myStockedProductLogs.First(item => item.Name == "New Part Changed" && item.LogDate > DateTime.Now.AddHours(-1) && item.ChildDescription.Split(separatorString, StringSplitOptions.None)[0] == myAdjustment.PartNumber);
                             myTransLine.quantity = calculateChangedQuantity(myAdjustmentLog).ToString();
                         }
@@ -292,9 +303,10 @@ namespace QuantifyWebAPI.Controllers
                     DataTable auditLog = MySqlHelper.GetAuditLogTableStructure();
                     auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "InventoryTrans", myAdjustmentID, myJsonObject, "", myProcessStatus, myErrorText);
 
-                    //***** Create audit log record for Boomi to go pick up *****
+                    //***** Create audit log record for Boomi to go pick up, and insert record into class activity log *****
                     DAL myDAL = new DAL();
                     DataTable myReturnResult = myDAL.InsertAuditLog(auditLog, connectionString);
+                    DataTable myActivityLog = myDAL.InsertClassActivityLog("InventoryTrans", "Adjustment" + newOrAvailable, myInventoryTransData.Lines.Count, myStartDate, DateTime.Now, connectionString);
                 } 
             }
         }

@@ -46,7 +46,6 @@ namespace QuantifyWebAPI.Controllers
 
         String StrQuantifyUser = ConfigurationManager.AppSettings["QuantifyCredentials"];        
         QuantifyCredentials myQuantifyCredentials;
-
        
         public DataRouterPostController()
         {
@@ -58,6 +57,9 @@ namespace QuantifyWebAPI.Controllers
         [HttpGet]
         public void PingInitialization()
         {
+            //***** Initialize timer to track full processing time *****
+            DateTime myStartDate = DateTime.Now;
+
             //***** Run Jobs *****
             JobBusinessLogic myJobResponse = new JobBusinessLogic(myQuantifyCredentials, InitializationMode);
             myJobResponse.GetIDsToProcess(StrVersionDBConn);
@@ -81,6 +83,10 @@ namespace QuantifyWebAPI.Controllers
             //***** Run Invoice Transactions *****
             InvoiceBusinessLogic myInvoiceResponse = new InvoiceBusinessLogic(myQuantifyCredentials, InitializationMode);
             myInvoiceResponse.GetIDsToProcess(StrVersionDBConn);
+
+            //***** Create activity log record for reference *****
+            DAL myDAL = new DAL();
+            DataTable myActivityLog = myDAL.InsertClassActivityLog("Full Process", "", -1, myStartDate, DateTime.Now, StrVersionDBConn);
 
             //***** Call Boomi to kick off processing *****
             //TODO: ADH 10/12/2020 - Maybe explore putting in code to only process Boomi call when we have record(s) to process?

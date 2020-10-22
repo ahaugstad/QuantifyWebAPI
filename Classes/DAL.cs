@@ -157,6 +157,49 @@ namespace QuantifyWebAPI.Classes
 
         }
 
+        public DataTable GetLastProcessData(string ParentSystem, string ChildSystem, String DbConnectionStr)
+        {
+            DataTable dt = new DataTable();
+
+            try
+            {
+
+                using (SqlConnection conn = new SqlConnection(DbConnectionStr))
+                {
+                    conn.Open();
+
+                    using (SqlCommand cmd = new SqlCommand())
+                    {
+                        cmd.Connection = conn;
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.CommandText = "GetLastProcessData";
+                        cmd.Parameters.AddWithValue("@ParentSystem", ParentSystem);
+                        cmd.Parameters.AddWithValue("@ChildSystem", ChildSystem);
+
+                        using (SqlDataAdapter da = new SqlDataAdapter(cmd))
+                        {
+                            da.Fill(dt);
+                        }
+
+                    }
+
+                }
+            }
+            catch (Exception ex)
+
+            {
+                //***** log the error ******
+                myRaygunClient.SendInBackground(ex);
+
+                //***** ReThrow Error to bubble it up to calling Class ******
+                throw new Exception(
+                    string.Format("There was an error getting the record for the last process run from the ClassActivityLog Table."), ex);
+            }
+
+            return dt;
+
+        }
+
 
         public DataTable UpsertProductXRef(DataTable QuantWebAppsProductsXref, String DbConnectionStr)
         {

@@ -125,6 +125,9 @@ namespace QuantifyWebAPI.Controllers
                 //***** Loop through changed records and write to log table to be processed by Boomi *****
                 if (myChangedRecords.Rows.Count > 0)
                 {
+                    //***** Initialize activity log variables and data model class *****
+                    DateTime myStartDate = DateTime.Now;
+                    int processedRecordCount = 0;
                     SalesOrderRootClass mySalesOrders = new SalesOrderRootClass();
 
                     //***** Create Audit Log and XRef table structures *****            
@@ -251,12 +254,15 @@ namespace QuantifyWebAPI.Controllers
                             string myJsonObject = JsonConvert.SerializeObject(mySalesOrders);
 
                             //***** Create audit log datarow ******                 
-                            auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "SalesOrder", mySalesOrderData.transaction_number, myJsonObject, "", myProcessStatus, myErrorText);
+                            auditLog = MySqlHelper.CreateAuditLogDataRow(auditLog, "SalesOrder", mySalesOrderData.transaction_number, myJsonObject, "", myProcessStatus, myErrorText);  
                         }
                     }
 
                     //***** Create audit log record for Boomi to go pick up *****
                     DataTable myReturnResult = myDAL.InsertAuditLog(auditLog, connectionString);
+
+                    //***** Create activity log record for reference *****
+                    DataTable myActivityLog = myDAL.InsertClassActivityLog("SalesOrders", "", processedRecordCount, myStartDate, DateTime.Now, connectionString);
 
                     string result = myReturnResult.Rows[0][0].ToString();
                     if (result.ToLower() == "success")
