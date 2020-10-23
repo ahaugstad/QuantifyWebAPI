@@ -41,6 +41,7 @@ namespace QuantifyWebAPI.Controllers
         RaygunClient myRaygunClient = new RaygunClient();
         SQLHelper MySqlHelper = new SQLHelper();
         QuantifyHelper QuantHelper;
+        SharedHelper mySharedHelper = new SharedHelper();
         string initializationMode;
 
         public ProductBusinessLogic(QuantifyCredentials QuantCreds, string InitializationMode)
@@ -160,23 +161,7 @@ namespace QuantifyWebAPI.Controllers
                         if (!myProductCategory.RevenueCode.Contains("TOOL") && myProductCategory.RevenueCode.ToString() != "")
                         {
                             //***** Get WebApps Product ID from Products XRef and assign as Product ID if it exists *****
-                            DataTable myProductXRefRecord = myDAL.GetWebAppsIDProductsXRef(myProduct.ProductID.ToString(), connectionString);
-                            if (myProductXRefRecord.Rows.Count > 0)
-                            {
-                                string myWebAppsProductID = myProductXRefRecord.Rows[0]["WebAppsItemNumber"].ToString();
-                                if (myWebAppsProductID != null && myWebAppsProductID != "")
-                                {
-                                    myProductData.product_id = myWebAppsProductID;
-                                }
-                                else
-                                {
-                                    myProductData.product_id = myProductID;
-                                }
-                            }
-                            else
-                            {
-                                myProductData.product_id = myProductID;
-                            }
+                            myProductData.product_id = mySharedHelper.EvaluateProductXRef(myProduct.ProductID, myProduct.PartNumber, connectionString);
 
                             if (myProduct.ProductCategoryID != null && myProduct.ProductCategoryID != Guid.Empty)
                             {

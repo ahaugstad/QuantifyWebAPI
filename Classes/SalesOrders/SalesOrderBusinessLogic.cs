@@ -40,6 +40,7 @@ namespace QuantifyWebAPI.Controllers
         //***** Initialize Raygun Client and Helper classes
         RaygunClient myRaygunClient = new RaygunClient();
         SQLHelper MySqlHelper = new SQLHelper();
+        SharedHelper mySharedHelper = new SharedHelper();
         QuantifyHelper QuantHelper;
         string initializationMode;
 
@@ -186,7 +187,9 @@ namespace QuantifyWebAPI.Controllers
                             {
                                 Product myProduct = Product.GetProduct(saleProductListItem.BaseProductID);
                                 SalesOrderLine mySalesOrderLine = new SalesOrderLine();
-                                mySalesOrderLine.part_number = saleProductListItem.PartNumber;
+
+                                //***** Get WebApps Product ID from Products XRef and assign as Product ID if it exists *****
+                                mySalesOrderLine.part_number = mySharedHelper.EvaluateProductXRef(myProduct.ProductID, saleProductListItem.PartNumber, connectionString);
                                 mySalesOrderLine.quantity = saleProductListItem.Quantity.ToString();
                                 mySalesOrderLine.price_ea = saleProductListItem.AverageCost.ToString();
                                 mySalesOrderData.Lines.Add(mySalesOrderLine);
@@ -228,7 +231,9 @@ namespace QuantifyWebAPI.Controllers
                                 {
                                     Product myProduct = Product.GetProduct(shipmentSaleProductListItem.BaseProductID);
                                     SalesOrderLine mySalesOrderLine = new SalesOrderLine();
-                                    mySalesOrderLine.part_number = shipmentSaleProductListItem.PartNumber;
+
+                                    //***** Get WebApps Product ID from Products XRef and assign as Product ID if it exists *****
+                                    mySalesOrderLine.part_number = mySharedHelper.EvaluateProductXRef(myProduct.ProductID, shipmentSaleProductListItem.PartNumber, connectionString);
                                     mySalesOrderLine.price_ea = shipmentSaleProductListItem.AverageCost.ToString();
 
                                     //***** If Shipment Return, only consider Out of Service quantities; if Shipment Delivery, only consider Sell quantities *****

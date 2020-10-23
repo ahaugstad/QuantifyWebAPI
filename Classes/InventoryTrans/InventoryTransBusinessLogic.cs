@@ -40,6 +40,7 @@ namespace QuantifyWebAPI.Controllers
         //***** Initialize Raygun Client and Helper classes
         RaygunClient myRaygunClient = new RaygunClient();
         SQLHelper MySqlHelper = new SQLHelper();
+        SharedHelper mySharedHelper = new SharedHelper();
         QuantifyHelper QuantHelper;
         string initializationMode;
 
@@ -160,7 +161,8 @@ namespace QuantifyWebAPI.Controllers
                             {
                                 Product myProduct = Product.GetProduct(inventoryTransProductListItem.BaseProductID);
                                 InventoryTransLine myTransLine = new InventoryTransLine();
-                                myTransLine.part_number = inventoryTransProductListItem.PartNumber;
+                                //***** Get WebApps Product ID from Products XRef and assign as Product ID if it exists *****
+                                myTransLine.part_number = mySharedHelper.EvaluateProductXRef(myProduct.ProductID, inventoryTransProductListItem.PartNumber, connectionString);
                                 myTransLine.quantity = inventoryTransProductListItem.Quantity.ToString();
                                 myInventoryTransData.Lines.Add(myTransLine);
                             }
@@ -260,7 +262,10 @@ namespace QuantifyWebAPI.Controllers
 
                     //***** Build lines of Available Adjustments data package *****
                     InventoryTransLine myTransLine = new InventoryTransLine();
-                    myTransLine.part_number = myAdjustment.PartNumber;
+
+                    //***** Get WebApps Product ID from Products XRef and assign as Product ID if it exists *****
+                    myTransLine.part_number = mySharedHelper.EvaluateProductXRef(myAdjustment.ProductID, myAdjustment.PartNumber, connectionString);
+
                     if (newOrAvailable == "New")
                     {
                         //***** Get last time Adjustments ran, for use later on *****

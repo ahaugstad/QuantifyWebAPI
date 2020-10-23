@@ -40,6 +40,7 @@ namespace QuantifyWebAPI.Controllers
         //***** Initialize Raygun Client and Helper classes
         RaygunClient myRaygunClient = new RaygunClient();
         SQLHelper MySqlHelper = new SQLHelper();
+        SharedHelper mySharedHelper = new SharedHelper();
         QuantifyHelper QuantHelper;
         string initializationMode;
 
@@ -192,8 +193,11 @@ namespace QuantifyWebAPI.Controllers
                     {
                         Product myProduct = Product.GetProduct(purchaseProductListItem.BaseProductID);
                         PurchaseOrderLine myPurchaseOrderLine = new PurchaseOrderLine();
-                        myPurchaseOrderLine.part_number = purchaseProductListItem.PartNumber;   
+
+                        //***** Get WebApps Product ID from Products XRef and assign as Product ID if it exists *****
+                        myPurchaseOrderLine.part_number = mySharedHelper.EvaluateProductXRef(myProduct.ProductID, purchaseProductListItem.PartNumber, connectionString);
                         myPurchaseOrderLine.quantity = purchaseProductListItem.Quantity.ToString();
+
                         //***** Only set received quantity if we are doing direct purchase of consumables *****
                         if (myPurchase.TypeOfMovement == MovementType.PurchaseConsumables)
                         {
