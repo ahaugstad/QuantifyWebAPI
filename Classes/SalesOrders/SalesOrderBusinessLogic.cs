@@ -203,7 +203,7 @@ namespace QuantifyWebAPI.Controllers
                             ShipmentProductList myShipmentSaleProducts = ShipmentProductList.GetShipmentProductList(myShipmentSale.ShipmentID, ShipmentStatusType.Completed);
 
                             //***** Build header data profile *****
-                            mySalesOrderData.transaction_number = myShipmentSale.ShipmentNumber;
+                            mySalesOrderData.transaction_number = myShipmentSale.ShipmentNumber.Substring(4);   //Trim off DEL-, TRN-, RET- for shipment numbers
                             mySalesOrderData.ship_date = myShipmentSale.ActualShipDate;
                             mySalesOrderData.transaction_date = myShipmentSale.CreateDate;
                             //TODO: ADH 9/24/2020 - Still need to find where Entered By field is in Quantify, if anywhere
