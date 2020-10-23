@@ -157,7 +157,7 @@ namespace QuantifyWebAPI.Controllers
                         ProductCategory myProductCategory = ProductCategory.GetProductCategory(myProduct.ProductCategoryID, myProduct.ProductType);
 
                         //***** Evaluate if Product Category is in list of categories to skip integration for *****
-                        if (!myProductCategory.Name.Contains("Tools & Equipment"))
+                        if (!myProductCategory.RevenueCode.Contains("TOOL"))
                         {
                             //***** Get WebApps Product ID from Products XRef and assign as Product ID if it exists *****
                             DataTable myProductXRefRecord = myDAL.GetWebAppsIDProductsXRef(myProduct.ProductID.ToString(), connectionString);
