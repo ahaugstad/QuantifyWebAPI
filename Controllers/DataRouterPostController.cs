@@ -72,6 +72,10 @@ namespace QuantifyWebAPI.Controllers
             PurchaseOrderBusinessLogic myPurchaseOrderResponse = new PurchaseOrderBusinessLogic(myQuantifyCredentials, InitializationMode);
             myPurchaseOrderResponse.GetIDsToProcess(StrVersionDBConn);
 
+            //*****Run Job PO Transactions*****
+            JobPOBusinessLogic myJobPOResponse = new JobPOBusinessLogic(myQuantifyCredentials, InitializationMode);
+            myJobPOResponse.GetIDsToProcess(StrVersionDBConn);
+
             //*****Run Sales Order Transactions*****
             SalesOrderBusinessLogic mySalesOrderResponse = new SalesOrderBusinessLogic(myQuantifyCredentials, InitializationMode);
             mySalesOrderResponse.GetIDsToProcess(StrVersionDBConn);
