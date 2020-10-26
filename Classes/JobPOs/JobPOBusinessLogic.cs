@@ -114,7 +114,7 @@ namespace QuantifyWebAPI.Controllers
                         //***** Build header data profile *****                   
                         myJobPOData.transaction_number = myJobPO.MovementNumber;
                         myJobPOData.vendor_number = myVendor.AccountingID;
-                        myJobPOData.job_number = myJobPO.BackOrderNumber;
+                        myJobPOData.job_number = myJobPO.BackOrderNumber.Substring(0,6);
                         myJobPOData.total = myJobPO.MovementTotal.ToString();
 
                         //TODO: ADH 9/24/2020 - Still need to find where Entered By field is in Quantify, if anywhere

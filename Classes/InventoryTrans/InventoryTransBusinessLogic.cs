@@ -61,9 +61,9 @@ namespace QuantifyWebAPI.Controllers
             MovementCollection all_inventory_trans = MovementCollection.GetMovementCollection(MovementType.TransferNewToRent);
             StockedProductAdjustmentCollection all_adjustments = StockedProductAdjustmentCollection.GetStockedProductAdjustmentCollection(ProductType.Product);
             //TODO: ADH 10/19/2020 - Figure out how to include consumable adjustments
-            //StockedProductAdjustmentCollection all_consumable_adjustments = StockedProductAdjustmentCollection.GetStockedProductAdjustmentCollection(ProductType.Consumable);
+            StockedProductAdjustmentCollection all_consumable_adjustments = StockedProductAdjustmentCollection.GetStockedProductAdjustmentCollection(ProductType.Consumable);
             VersionStampList myStockedProductVersions = VersionStampList.GetVersionList(VersionStampList.DataObjectName.StockedProduct);
-
+            
             //***** Get DataTable Data Structure for Version Control Stored Procedure *****
             DataTable dt = MySqlHelper.GetVersionTableStructure();
 
@@ -92,11 +92,32 @@ namespace QuantifyWebAPI.Controllers
                 }
             }
 
-            //***** Loop through all Adjustments *****
+            //***** Loop through all Product Adjustments *****
             foreach (StockedProductAdjustment myAdjustment in all_adjustments)
             {
                 Guid myAdjustmentID = myAdjustment.StockedProductID;
                 
+                if (myVersionsDictionary.ContainsKey(myAdjustmentID))
+                {
+                    string myAdjustmentNumber = myAdjustmentID.ToString();
+                    string timestampVersion = "0x" + String.Join("", myVersionsDictionary[myAdjustmentID].Select(b => Convert.ToString(b, 16)));
+
+                    //***** Add record to data table to be written to Version table in SQL *****
+                    dt = MySqlHelper.CreateVersionDataRow(dt, "Adjustment", myAdjustmentNumber, timestampVersion.ToString());
+
+                    //***** Build Dictionary *****
+                    if (!myAdjustmentsDictionary.ContainsKey(myAdjustmentID))
+                    {
+                        myAdjustmentsDictionary.Add(myAdjustmentID, myAdjustment);
+                    }
+                }
+            }
+
+            //***** Loop through all Consumable Adjustments *****
+            foreach (StockedProductAdjustment myAdjustment in all_consumable_adjustments)
+            {
+                Guid myAdjustmentID = myAdjustment.StockedProductID;
+
                 if (myVersionsDictionary.ContainsKey(myAdjustmentID))
                 {
                     string myAdjustmentNumber = myAdjustmentID.ToString();
@@ -133,7 +154,7 @@ namespace QuantifyWebAPI.Controllers
                     //***** Create Separate Dictionaries for New and Available Adjustments
                     Dictionary<Guid, StockedProductAdjustment> myNewAdjustmentsDictionary = new Dictionary<Guid, StockedProductAdjustment>();
                     Dictionary<Guid, StockedProductAdjustment> myAvailableAdjustmentsDictionary = new Dictionary<Guid, StockedProductAdjustment>();
-                    Dictionary<Guid, StockedProductAdjustment> myConsumablesAdjustmentsDictionary = new Dictionary<Guid, StockedProductAdjustment>();
+                    Dictionary<Guid, StockedProductAdjustment> myConsumableAdjustmentsDictionary = new Dictionary<Guid, StockedProductAdjustment>();
 
                     foreach (DataRow myRow in myChangedRecords.Rows)
                     {
@@ -185,6 +206,7 @@ namespace QuantifyWebAPI.Controllers
                             //***** Initalize fields and classes to be used to build data profile *****
                             Guid myAdjustmentID = Guid.Parse(myRow["QuantifyID"].ToString());
                             StockedProductAdjustment myAdjustment = myAdjustmentsDictionary[myAdjustmentID];
+                            StockedProduct myStockedProduct = myAdjustmentsDictionary[myAdjustmentID];
 
                             if (myAdjustment.QuantityNew != null)
                             {
@@ -194,7 +216,7 @@ namespace QuantifyWebAPI.Controllers
                                     myNewAdjustmentsDictionary.Add(myAdjustmentID, myAdjustment);
                                 }
                             }
-                            if (myAdjustment.QuantityForRent != null)
+                            if (myAdjustment.QuantityForRent != null && myAdjustment.ProductTypeText == "Product")
                             {
                                 //***** Build Dictionary *****
                                 if (!myAvailableAdjustmentsDictionary.ContainsKey(myAdjustmentID))
@@ -202,14 +224,14 @@ namespace QuantifyWebAPI.Controllers
                                     myAvailableAdjustmentsDictionary.Add(myAdjustmentID, myAdjustment);
                                 }
                             }
-                            //if (myAdjustment. != null)
-                            //{
-                            //    //***** Build Dictionary *****
-                            //    if (!myAvailableAdjustmentsDictionary.ContainsKey(myAdjustmentID))
-                            //    {
-                            //        myAvailableAdjustmentsDictionary.Add(myAdjustmentID, myAdjustment);
-                            //    }
-                            //}
+                            if (myAdjustment.QuantityForRent != null && myAdjustment.ProductTypeText == "Consumable")
+                            {
+                                //***** Build Dictionary *****
+                                if (!myAvailableAdjustmentsDictionary.ContainsKey(myAdjustmentID))
+                                {
+                                    myConsumableAdjustmentsDictionary.Add(myAdjustmentID, myAdjustment);
+                                }
+                            }
                         }
                     }
 
@@ -217,6 +239,7 @@ namespace QuantifyWebAPI.Controllers
                     LogEntryList myStockedProductLogs = LogEntryList.GetLogEntryList(LogEntry.ChildTypes.StockedProduct);
                     CreateAdjustmentTransaction("New", myInventoryTransactions, myNewAdjustmentsDictionary, connectionString, myStockedProductLogs);
                     CreateAdjustmentTransaction("Available", myInventoryTransactions, myAvailableAdjustmentsDictionary, connectionString, myStockedProductLogs);
+                    CreateAdjustmentTransaction("Consumable", myInventoryTransactions, myConsumableAdjustmentsDictionary, connectionString, myStockedProductLogs);
 
                     //***** Create activity log record for reference *****
                     DataTable myActivityLog = myDAL.InsertClassActivityLog("InventoryTrans", "", processedRecordCount, myStartDate, DateTime.Now, connectionString);
@@ -226,7 +249,7 @@ namespace QuantifyWebAPI.Controllers
             return success;
         }
 
-        public void CreateAdjustmentTransaction(string newOrAvailable, InventoryTransRootClass myInventoryTransactions, Dictionary<Guid, StockedProductAdjustment> myAdjustmentsDictionary, string connectionString, LogEntryList myStockedProductLogs)
+        public void CreateAdjustmentTransaction(string productType, InventoryTransRootClass myInventoryTransactions, Dictionary<Guid, StockedProductAdjustment> myAdjustmentsDictionary, string connectionString, LogEntryList myStockedProductLogs)
         {
             //TODO: ADH 10/22/2020 - TEST: Adjustments are still working after Product ID change in retrieval method, and that no duplicates are getting sent
             //***** Skip if we did not get any adjustments to integrate *****
@@ -239,20 +262,25 @@ namespace QuantifyWebAPI.Controllers
                 var myErrorText = "";
                 string myProcessStatus = "A";
                 DAL myDAL = new DAL();
-                var myAdjustmentID = DateTime.Now.ToString() + " | " + newOrAvailable;
+                var myAdjustmentID = DateTime.Now.ToString() + " | " + productType;
                 InventoryTransData myInventoryTransData = new InventoryTransData();
 
                 //***** Build header of Available Adjustments data package
                 myInventoryTransData.transaction_type = "A";  // A = Adjustment in WebApps
-                if (newOrAvailable == "New")
+                if (productType == "New")
                 {
                     myInventoryTransData.to_warehouse = ((int)Warehouse.New).ToString();
                     myInventoryTransData.from_warehouse = ((int)Warehouse.New).ToString();   
                 }
-                else if (newOrAvailable == "Available")
+                else if (productType == "Available")
                 {
                     myInventoryTransData.to_warehouse = ((int)Warehouse.Available).ToString();
                     myInventoryTransData.from_warehouse = ((int)Warehouse.Available).ToString();
+                }
+                else if (productType == "Consumable")
+                {
+                    myInventoryTransData.to_warehouse = ((int)Warehouse.Consumable).ToString();
+                    myInventoryTransData.from_warehouse = ((int)Warehouse.Consumable).ToString();
                 }
 
                 foreach (StockedProductAdjustment myAdjustment in myAdjustmentsDictionary.Values)
@@ -266,7 +294,7 @@ namespace QuantifyWebAPI.Controllers
                     //***** Get WebApps Product ID from Products XRef and assign as Product ID if it exists *****
                     myTransLine.part_number = mySharedHelper.EvaluateProductXRef(myAdjustment.ProductID, myAdjustment.PartNumber, connectionString);
 
-                    if (newOrAvailable == "New")
+                    if (productType == "New")
                     {
                         //***** Get last time Adjustments ran, for use later on *****
                         DataTable lastAdjustmentRunData = myDAL.GetLastProcessData("InventoryTrans", "AdjustmentNew",connectionString);
@@ -287,7 +315,7 @@ namespace QuantifyWebAPI.Controllers
                             continue;
                         }
                     }
-                    else if (newOrAvailable == "Available")
+                    else if (productType == "Available")
                     {
                         //***** Get last time Adjustments ran, for use later on *****
                         DataTable lastAdjustmentRunData = myDAL.GetLastProcessData("InventoryTrans", "AdjustmentAvailable", connectionString);
@@ -301,6 +329,27 @@ namespace QuantifyWebAPI.Controllers
                         if (myStockedProductLogs.Any(item => item.Name == "Available Part Changed" && item.LogDate > logCheckDate && item.ChildID == myAdjustment.ProductID))
                         {
                             var myAdjustmentLog = myStockedProductLogs.Last(item => item.Name == "Available Part Changed" && item.LogDate > logCheckDate && item.ChildID == myAdjustment.ProductID);
+                            myTransLine.quantity = calculateChangedQuantity(myAdjustmentLog).ToString();
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
+                    else if (productType == "Consumable")
+                    {
+                        //***** Get last time Adjustments ran, for use later on *****
+                        DataTable lastAdjustmentRunData = myDAL.GetLastProcessData("InventoryTrans", "AdjustmentConsumable", connectionString);
+                        DateTime logCheckDate1 = DateTime.Now.AddMinutes(-50);
+                        if (lastAdjustmentRunData.Rows.Count > 0) { logCheckDate1 = (DateTime)lastAdjustmentRunData.Rows[0]["ProcessStartDate"]; }
+                        DateTime logCheckDate2 = DateTime.Now.AddHours(-1);
+                        DateTime logCheckDate;
+                        if (logCheckDate1 > logCheckDate2) { logCheckDate = logCheckDate1; } else { logCheckDate = logCheckDate2; }
+
+                        //***** Get most recent log entry for StockedProduct record for "Available Part Changed" log type and create TransLine if exists *****
+                        if (myStockedProductLogs.Any(item => item.Name == "Consumable Part Changed" && item.LogDate > logCheckDate && item.ChildID == myAdjustment.ProductID))
+                        {
+                            var myAdjustmentLog = myStockedProductLogs.Last(item => item.Name == "Consumable Part Changed" && item.LogDate > logCheckDate && item.ChildID == myAdjustment.ProductID);
                             myTransLine.quantity = calculateChangedQuantity(myAdjustmentLog).ToString();
                         }
                         else
@@ -325,7 +374,7 @@ namespace QuantifyWebAPI.Controllers
 
                     //***** Create audit log record for Boomi to go pick up, and insert record into class activity log *****
                     DataTable myReturnResult = myDAL.InsertAuditLog(auditLog, connectionString);
-                    DataTable myActivityLog = myDAL.InsertClassActivityLog("InventoryTrans", "Adjustment" + newOrAvailable, myInventoryTransData.Lines.Count, myStartDate, DateTime.Now, connectionString);
+                    DataTable myActivityLog = myDAL.InsertClassActivityLog("InventoryTrans", "Adjustment" + productType, myInventoryTransData.Lines.Count, myStartDate, DateTime.Now, connectionString);
                 } 
             }
         }

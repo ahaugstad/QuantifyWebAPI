@@ -65,19 +65,33 @@ namespace QuantifyWebAPI.Controllers
 
             foreach (StockingLocationListItem jobsiteListItem in all_jobsites)
             {
-                StockingLocation jobsite = StockingLocation.GetStockingLocation(jobsiteListItem.StockingLocationID, false);
-                string myJobsiteNumber = jobsite.Number;
-                string timestampVersion = "0x" + String.Join("", jobsite.VersionStamp.Select(b => Convert.ToString(b, 16)));
+                string myJobsiteNumber = jobsiteListItem.Number;
+                try
+                { 
+                    StockingLocation jobsite = StockingLocation.GetStockingLocation(jobsiteListItem.StockingLocationID, false);
+                    string timestampVersion = "0x" + String.Join("", jobsite.VersionStamp.Select(b => Convert.ToString(b, 16)));
 
-                //***** Add record to data table to be written to Version table in SQL *****
-                dt = MySqlHelper.CreateVersionDataRow(dt, "Job", myJobsiteNumber, timestampVersion.ToString());           
+                    //***** Add record to data table to be written to Version table in SQL *****
+                    dt = MySqlHelper.CreateVersionDataRow(dt, "Job", myJobsiteNumber, timestampVersion.ToString());           
 
-                //***** Build Dictionary *****
-                if(!myJobsDictionary.ContainsKey(myJobsiteNumber))
+                    //***** Build Dictionary *****
+                    if(!myJobsDictionary.ContainsKey(myJobsiteNumber))
+                    {
+                        myJobsDictionary.Add(myJobsiteNumber, jobsite);
+                    }
+                }
+                catch (Exception ex)
                 {
-                    myJobsDictionary.Add(myJobsiteNumber, jobsite);
+                    //***** Create Raygun Exception Package *****
+                    RaygunExceptionPackage myRaygunValidationPackage = new RaygunExceptionPackage();
+                    myRaygunValidationPackage.Tags.Add("Validation");
+                    myRaygunValidationPackage.Tags.Add("Job");
+                    myRaygunValidationPackage.CustomData.Add("Job ID: ", myJobsiteNumber);
+
+                    myRaygunClient.SendInBackground(ex, myRaygunValidationPackage.Tags, myRaygunValidationPackage.CustomData);
                 }
             }
+
 
             //***** Call data access layer *****
             DAL myDAL = new DAL();
