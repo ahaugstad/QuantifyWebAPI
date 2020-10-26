@@ -108,7 +108,7 @@ namespace QuantifyWebAPI.Controllers
                         StockingLocation jobsite = myJobsDictionary[myJobID];
 
                         //***** Populate Fields *****
-                        myJobData.job_id = jobsite.Number;
+                        myJobData.job_id = jobsite.Number.Substring(0,6);   // Trim off any sub-numbering of jobs; will all roll into one job in WebApps
                         if (jobsite.Name != null && jobsite.Name != "")
                         {
                             myJobData.job_name = jobsite.Name;
@@ -162,11 +162,11 @@ namespace QuantifyWebAPI.Controllers
                         if (jobsite.JobList1ID != null && jobsite.JobList1ID != Guid.Empty)
                         {
                             JobList1 myJobTypeList1 = JobList1.GetJobList1(jobsite.JobList1ID);
-                            myJobData.job_type = myJobTypeList1.Name;
+                            myJobData.job_type = myJobTypeList1.Name.Substring(0,1);  // Only grab first character of job type (C, S, T or N)
                         }
                         else
                         {
-                            myJobData.job_type = "Non-Scaffold";
+                            myJobData.job_type = "N";
                         }
 
                         //***** Retainage Amount (will be mapped appropriately to WebApps Retention field in Boomi) *****
@@ -180,8 +180,8 @@ namespace QuantifyWebAPI.Controllers
                             myJobData.retainage_percent = "No Retainage";
                         }
 
-                        //***** Skip all jobs of type Non-Scaffold - will not be integrating these over *****
-                        if (myJobData.job_type != "Non-Scaffold")
+                        //***** Skip all jobs of parent type Non-Scaffold - will not be integrating these over *****
+                        if (myJobData.job_type != "N")
                         {
                             //***** Package as class, serialize to JSON and write to audit log table *****
                             myJobs.entity = "Job";
