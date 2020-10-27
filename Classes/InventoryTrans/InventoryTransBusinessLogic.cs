@@ -239,7 +239,10 @@ namespace QuantifyWebAPI.Controllers
                     LogEntryList myStockedProductLogs = LogEntryList.GetLogEntryList(LogEntry.ChildTypes.StockedProduct);
                     CreateAdjustmentTransaction("New", myInventoryTransactions, myNewAdjustmentsDictionary, connectionString, myStockedProductLogs);
                     CreateAdjustmentTransaction("Available", myInventoryTransactions, myAvailableAdjustmentsDictionary, connectionString, myStockedProductLogs);
-                    CreateAdjustmentTransaction("Consumable", myInventoryTransactions, myConsumableAdjustmentsDictionary, connectionString, myStockedProductLogs);
+
+                    //***** Create Consumable Adjustment consolidated transactions *****
+                    LogEntryList myConsumableProductLogs = LogEntryList.GetLogEntryList(LogEntry.ChildTypes.StockedConsumable);
+                    CreateAdjustmentTransaction("Consumable", myInventoryTransactions, myConsumableAdjustmentsDictionary, connectionString, myConsumableProductLogs);
 
                     //***** Create activity log record for reference *****
                     DataTable myActivityLog = myDAL.InsertClassActivityLog("InventoryTrans", "", processedRecordCount, myStartDate, DateTime.Now, connectionString);
