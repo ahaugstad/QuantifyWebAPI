@@ -346,10 +346,10 @@ namespace QuantifyWebAPI.Controllers
                         DateTime logCheckDate;
                         if (logCheckDate1 > logCheckDate2) { logCheckDate = logCheckDate1; } else { logCheckDate = logCheckDate2; }
 
-                        //***** Get most recent log entry for StockedProduct record for "Available Part Changed" log type and create TransLine if exists *****
-                        if (myStockedProductLogs.Any(item => item.Name == "Consumable Part Changed" && item.LogDate > logCheckDate && item.ChildID == myAdjustment.ProductID))
+                        //***** Get most recent log entry for StockedProduct record for "Available Part Changed" log type and create TransLine if exists (note that consumables also are logged as 'Available Part Changed') *****
+                        if (myStockedProductLogs.Any(item => item.Name == "Available Part Changed" && item.LogDate > logCheckDate && item.ChildID == myAdjustment.ProductID))
                         {
-                            var myAdjustmentLog = myStockedProductLogs.Last(item => item.Name == "Consumable Part Changed" && item.LogDate > logCheckDate && item.ChildID == myAdjustment.ProductID);
+                            var myAdjustmentLog = myStockedProductLogs.Last(item => item.Name == "Available Part Changed" && item.LogDate > logCheckDate && item.ChildID == myAdjustment.ProductID);
                             myTransLine.quantity = calculateChangedQuantity(myAdjustmentLog).ToString();
                         }
                         else
