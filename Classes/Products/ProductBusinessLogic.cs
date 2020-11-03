@@ -101,7 +101,10 @@ namespace QuantifyWebAPI.Controllers
                 }
                 else
                 {
-                    myErrorDictionary.Add(myProductID,"Duplicate product id");
+                    if (!myErrorDictionary.ContainsKey(myProductID))
+                    {
+                        myErrorDictionary.Add(myProductID, "Duplicate product id");
+                    }
                 }
             }
 
