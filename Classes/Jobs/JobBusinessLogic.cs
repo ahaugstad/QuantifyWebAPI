@@ -155,7 +155,7 @@ namespace QuantifyWebAPI.Controllers
                         else
                         {
                             myJobData.sales_tax_code = "";
-                            myErrorText = "Jobsite sales tax code is blank. Please provide a sales tax code on this invoice's associated jobsite to integrate this invoice.";
+                            myErrorText = "Jobsite sales tax code is blank. Please provide a sales tax code to integrate the Jobsite.";
                             myProcessStatus = "E1";
                         }
 
