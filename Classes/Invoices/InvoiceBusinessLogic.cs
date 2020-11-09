@@ -111,7 +111,7 @@ namespace QuantifyWebAPI.Controllers
 
                         //***** Build header data profile *****
                         myInvoiceData.invoice_id = myInvoiceID;
-                        myInvoiceData.job_number = myInvoice.JobSite.Number;
+                        myInvoiceData.job_number = myInvoice.JobSite.Number.Substring(0, 6);   // Trim off any sub-numbering of jobs; will all roll into one job in WebApps;
                         myInvoiceData.invoice_date = myInvoice.InvoiceDateTime.ToShortDateString();
                         myInvoiceData.invoice_total = myInvoice.TotalInvoice.ToString();
 

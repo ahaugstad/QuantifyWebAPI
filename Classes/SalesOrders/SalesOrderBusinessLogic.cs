@@ -160,7 +160,7 @@ namespace QuantifyWebAPI.Controllers
                             //***** Evaluate jobsite and confirm one has been selected. If one hasn't, log it as error *****
                             if (mySale.JobSite != null)
                             {
-                                mySalesOrderData.job_number = mySale.JobSite.Number;
+                                mySalesOrderData.job_number = mySale.JobSite.Number.Substring(0, 6);   // Trim off any sub-numbering of jobs; will all roll into one job in WebApps;
                             }
                             else
                             {
@@ -215,12 +215,12 @@ namespace QuantifyWebAPI.Controllers
                             //***** Evaluate Shipment Type to determine Jobsite and Warehouse to send through *****
                             if (myShipmentSale.ShipmentType == ShipmentType.Return)
                             {
-                                mySalesOrderData.job_number = myShipmentSale.FromStockingLocation.Number;
+                                mySalesOrderData.job_number = myShipmentSale.FromStockingLocation.Number.Substring(0, 6);   // Trim off any sub-numbering of jobs; will all roll into one job in WebApps;
                                 mySalesOrderData.from_warehouse = ((int)Warehouse.Available).ToString();
                             }
                             else if (myShipmentSale.ShipmentType == ShipmentType.Delivery)
                             {
-                                mySalesOrderData.job_number = myShipmentSale.ToStockingLocation.Number;
+                                mySalesOrderData.job_number = myShipmentSale.ToStockingLocation.Number.Substring(0, 6);   // Trim off any sub-numbering of jobs; will all roll into one job in WebApps;
                                 mySalesOrderData.from_warehouse = ((int)Warehouse.Consumable).ToString();
                             }
                              
