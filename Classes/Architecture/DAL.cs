@@ -434,5 +434,53 @@ namespace QuantifyWebAPI.Classes
 
         }
 
+        public DataTable UpsertQuantFieldNameValueXRef(string QuantifyID, string FieldName, string Value, String DbConnectionStr)
+        {
+            DataTable dt = new DataTable();
+
+            try
+            {
+
+                using (SqlConnection conn = new SqlConnection(DbConnectionStr))
+                {
+                    conn.Open();
+
+                    using (SqlCommand cmd = new SqlCommand())
+                    {
+                        cmd.Connection = conn;
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.CommandText = "UpsertQuantFieldNameValueXRef";
+                        cmd.Parameters.AddWithValue("@QuantifyID", QuantifyID);
+                        cmd.Parameters.AddWithValue("@FieldName", FieldName);
+                        cmd.Parameters.AddWithValue("@Value", Value);
+
+
+                        using (SqlDataAdapter da = new SqlDataAdapter(cmd))
+                        {
+
+
+                            da.Fill(dt);
+                        }
+
+                    }
+
+                }
+            }
+            catch (Exception ex)
+
+            {
+                //***** log the error ******
+                myRaygunClient.SendInBackground(ex);
+
+                //***** ReThrow Error to bubble it up to calling Class ******
+
+                throw new Exception(
+                    string.Format("There was an error attempting to execute UpsertQuantFieldNameValueXRef ."), ex);
+            }
+
+            return dt;
+
+        }
+
     }
 }

@@ -176,7 +176,21 @@ namespace QuantifyWebAPI.Controllers
                         if (jobsite.JobList1ID != null && jobsite.JobList1ID != Guid.Empty)
                         {
                             JobList1 myJobTypeList1 = JobList1.GetJobList1(jobsite.JobList1ID);
-                            myJobData.job_type = myJobTypeList1.Name.Substring(0,1);  // Only grab first character of job type (C, S, T or N)
+
+                            String JobType = myJobTypeList1.Name.Substring(0, 1);  // Only grab first character of job type (C, S, T or N)
+
+                            //***** Look to see if JobType is new or Changed ******
+                            DataTable MyJobTypeFieldRec = myDAL.UpsertQuantFieldNameValueXRef(myJobID, "job_type", JobType, connectionString);
+
+                            //***** Data Table Returned has the Original Value ******
+                            if (MyJobTypeFieldRec.Rows.Count>0) 
+                            {
+                                DataRow myTmpJobTypeRow = MyJobTypeFieldRec.Rows[0];
+                                JobType = myTmpJobTypeRow["Value"].ToString();
+
+                            }
+
+                            myJobData.job_type = JobType;
                         }
                         else
                         {
